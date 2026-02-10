@@ -7,6 +7,7 @@ import { User } from "@/models/User";
 import { TaskCounter } from "@/models/TaskCounter";
 import { verifyAuthToken } from "@/lib/auth";
 import { captureAuditLogs } from "@/lib/taskAudit";
+import cloudinary from "@/lib/cloudinary";
 
 export async function GET(request: Request) {
   try {
@@ -113,17 +114,23 @@ export async function POST(request: Request) {
       for (const f of files) {
         if (f && f instanceof File && f.size > 0) {
           const buffer = Buffer.from(await f.arrayBuffer());
-          const ext = f.name.split(".").pop() || "png";
-          const fileName = `${crypto.randomUUID()}.${ext}`;
-          const { writeFile, mkdir } = await import("fs/promises");
-          const path = (await import("path")).default;
-
-          const uploadDir = path.join(process.cwd(), "public", "uploads");
-          await mkdir(uploadDir, { recursive: true });
-          const filePath = path.join(uploadDir, fileName);
-          await writeFile(filePath, buffer);
-
-          attachments.push({ url: `/uploads/${fileName}`, filename: f.name, mimeType: f.type });
+          try {
+            const base64 = buffer.toString('base64');
+            const dataUri = `data:${f.type};base64,${base64}`;
+            const res = await cloudinary.uploader.upload(dataUri, { folder: 'tasks/attachments', resource_type: 'auto' });
+            attachments.push({ url: res.secure_url, filename: f.name, mimeType: f.type, publicId: res.public_id, size: res.bytes });
+          } catch (e) {
+            console.warn('Cloudinary task attachment upload failed, falling back to local save', e);
+            const ext = f.name.split('.').pop() || 'png';
+            const fileName = `${crypto.randomUUID()}.${ext}`;
+            const { writeFile, mkdir } = await import('fs/promises');
+            const path = (await import('path')).default;
+            const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+            await mkdir(uploadDir, { recursive: true });
+            const filePath = path.join(uploadDir, fileName);
+            await writeFile(filePath, buffer);
+            attachments.push({ url: `/uploads/${fileName}`, filename: f.name, mimeType: f.type });
+          }
         }
       }
     } else {

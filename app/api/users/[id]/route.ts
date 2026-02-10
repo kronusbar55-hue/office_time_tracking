@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { User } from "@/models/User";
+import cloudinary from "@/lib/cloudinary";
 import { Technology } from "@/models/Technology";
 
 type Params = {
@@ -63,17 +64,28 @@ export async function PUT(request: Request, { params }: Params) {
 
     const avatarFile = formData.get("avatar");
     if (avatarFile && avatarFile instanceof File && avatarFile.size > 0) {
-      const buffer = Buffer.from(await avatarFile.arrayBuffer());
-      const ext = avatarFile.name.split(".").pop() || "png";
-      const fileName = `${crypto.randomUUID()}.${ext}`;
-      const { writeFile, mkdir } = await import("fs/promises");
-      const path = (await import("path")).default;
+      try {
+        const buffer = Buffer.from(await avatarFile.arrayBuffer());
+        const base64 = buffer.toString('base64');
+        const dataUri = `data:${avatarFile.type};base64,${base64}`;
+        const res = await cloudinary.uploader.upload(dataUri, { folder: 'users/profile-images', resource_type: 'image', transformation: { width: 300, height: 300, crop: 'fill' } });
+        update.avatarUrl = res.secure_url;
+        (update as any).avatarPublicId = res.public_id;
+        (update as any).avatarSize = res.bytes;
+      } catch (e) {
+        console.warn('Cloudinary avatar upload failed, falling back to local save', e);
+        const buffer = Buffer.from(await avatarFile.arrayBuffer());
+        const ext = avatarFile.name.split('.').pop() || 'png';
+        const fileName = `${crypto.randomUUID()}.${ext}`;
+        const { writeFile, mkdir } = await import('fs/promises');
+        const path = (await import('path')).default;
 
-      const uploadDir = path.join(process.cwd(), "public", "uploads");
-      await mkdir(uploadDir, { recursive: true });
-      const filePath = path.join(uploadDir, fileName);
-      await writeFile(filePath, buffer);
-      update.avatarUrl = `/uploads/${fileName}`;
+        const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+        await mkdir(uploadDir, { recursive: true });
+        const filePath = path.join(uploadDir, fileName);
+        await writeFile(filePath, buffer);
+        update.avatarUrl = `/uploads/${fileName}`;
+      }
     }
   } else {
     const body = await request.json();

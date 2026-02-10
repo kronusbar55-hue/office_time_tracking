@@ -44,6 +44,12 @@ const ProjectSchema = new Schema<IProject>(
     logoUrl: {
       type: String
     },
+    logoPublicId: {
+      type: String
+    },
+    logoSize: {
+      type: Number
+    },
     color: {
       type: String
     },

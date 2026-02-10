@@ -62,6 +62,12 @@ const UserSchema = new Schema<IUser>(
     avatarUrl: {
       type: String
     },
+    avatarPublicId: {
+      type: String
+    },
+    avatarSize: {
+      type: Number
+    },
     isActive: {
       type: Boolean,
       default: true

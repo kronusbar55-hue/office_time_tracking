@@ -46,14 +46,25 @@ export async function PUT(request: Request, { params }: Params) {
 
     const logo = formData.get("logo");
     if (logo && logo instanceof File && logo.size > 0) {
-      const buffer = Buffer.from(await logo.arrayBuffer());
-      const ext = logo.name.split(".").pop() || "png";
-      const fileName = `${crypto.randomUUID()}.${ext}`;
-      const uploadDir = path.join(process.cwd(), "public", "uploads");
-      await mkdir(uploadDir, { recursive: true });
-      const filePath = path.join(uploadDir, fileName);
-      await writeFile(filePath, buffer);
-      update.logoUrl = `/uploads/${fileName}`;
+      try {
+        const buffer = Buffer.from(await logo.arrayBuffer());
+        const base64 = buffer.toString('base64');
+        const dataUri = `data:${logo.type};base64,${base64}`;
+        const res = await cloudinary.uploader.upload(dataUri, { folder: 'projects/logos', resource_type: 'image', transformation: { width: 400, height: 400, crop: 'limit' } });
+        update.logoUrl = res.secure_url;
+        (update as any).logoPublicId = res.public_id;
+        (update as any).logoSize = res.bytes;
+      } catch (e) {
+        console.warn('Cloudinary logo upload failed, falling back to local save', e);
+        const buffer = Buffer.from(await logo.arrayBuffer());
+        const ext = logo.name.split('.').pop() || 'png';
+        const fileName = `${crypto.randomUUID()}.${ext}`;
+        const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+        await mkdir(uploadDir, { recursive: true });
+        const filePath = path.join(uploadDir, fileName);
+        await writeFile(filePath, buffer);
+        update.logoUrl = `/uploads/${fileName}`;
+      }
     }
   } else {
     const body = (await request.json()) as {

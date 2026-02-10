@@ -3,6 +3,7 @@ import { connectDB } from "@/lib/db";
 import { User } from "@/models/User";
 import { Technology } from "@/models/Technology";
 import bcrypt from "bcryptjs";
+import cloudinary from "@/lib/cloudinary";
 
 export async function GET() {
   await connectDB();
@@ -69,19 +70,31 @@ export async function POST(request: Request) {
     const passwordHash = await bcrypt.hash(password, 10);
 
     let avatarUrl: string | undefined;
+    let avatarPublicId: string | undefined;
+    let avatarSize: number | undefined;
     const avatarFile = formData.get("avatar");
     if (avatarFile && avatarFile instanceof File && avatarFile.size > 0) {
-      const buffer = Buffer.from(await avatarFile.arrayBuffer());
-      const ext = avatarFile.name.split(".").pop() || "png";
-      const fileName = `${crypto.randomUUID()}.${ext}`;
-      const { writeFile, mkdir } = await import("fs/promises");
-      const path = (await import("path")).default;
-
-      const uploadDir = path.join(process.cwd(), "public", "uploads");
-      await mkdir(uploadDir, { recursive: true });
-      const filePath = path.join(uploadDir, fileName);
-      await writeFile(filePath, buffer);
-      avatarUrl = `/uploads/${fileName}`;
+      try {
+        const buffer = Buffer.from(await avatarFile.arrayBuffer());
+        const base64 = buffer.toString('base64');
+        const dataUri = `data:${avatarFile.type};base64,${base64}`;
+        const res = await cloudinary.uploader.upload(dataUri, { folder: 'users/profile-images', resource_type: 'image', transformation: { width: 300, height: 300, crop: 'fill' } });
+        avatarUrl = res.secure_url;
+        avatarPublicId = res.public_id;
+        avatarSize = res.bytes;
+      } catch (e) {
+        console.warn('Cloudinary avatar upload failed, falling back to local save', e);
+        const buffer = Buffer.from(await avatarFile.arrayBuffer());
+        const ext = avatarFile.name.split('.').pop() || 'png';
+        const fileName = `${crypto.randomUUID()}.${ext}`;
+        const { writeFile, mkdir } = await import('fs/promises');
+        const path = (await import('path')).default;
+        const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+        await mkdir(uploadDir, { recursive: true });
+        const filePath = path.join(uploadDir, fileName);
+        await writeFile(filePath, buffer);
+        avatarUrl = `/uploads/${fileName}`;
+      }
     }
 
     const created = await User.create({
@@ -93,7 +106,9 @@ export async function POST(request: Request) {
       technology,
       joinDate,
       isActive,
-      avatarUrl
+      avatarUrl,
+      avatarPublicId,
+      avatarSize
     });
 
     return NextResponse.json(

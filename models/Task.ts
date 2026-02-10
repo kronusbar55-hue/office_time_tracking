@@ -141,6 +141,8 @@ const TaskSchema = new Schema<ITask>(
         url: { type: String },
         filename: { type: String },
         mimeType: { type: String }
+        ,publicId: { type: String },
+        size: { type: Number }
       }
     ]
   },
