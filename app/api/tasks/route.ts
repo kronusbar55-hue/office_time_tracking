@@ -5,6 +5,7 @@ import { Task } from "@/models/Task";
 import { Project } from "@/models/Project";
 import { User } from "@/models/User";
 import { TaskCounter } from "@/models/TaskCounter";
+import TaskActivityLog from "@/models/TaskActivityLog";
 import { verifyAuthToken } from "@/lib/auth";
 import { captureAuditLogs } from "@/lib/taskAudit";
 import cloudinary from "@/lib/cloudinary";
@@ -96,8 +97,17 @@ export async function POST(request: Request) {
     await connectDB();
     const contentType = request.headers.get("content-type") || "";
 
+    // Get current user
+    const cookieStore = cookies();
+    const token = cookieStore.get("auth_token")?.value;
+    const payload = token ? verifyAuthToken(token) : null;
+    if (!payload) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!(payload.role === "admin" || payload.role === "manager")) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     let fields: any = {};
-    const attachments: Array<{ url: string; filename?: string; mimeType?: string }> = [];
+    const attachments: any[] = [];
 
     if (contentType.includes("multipart/form-data")) {
       const formData = await request.formData();
@@ -113,25 +123,44 @@ export async function POST(request: Request) {
       const files = formData.getAll("attachments");
       for (const f of files) {
         if (f && f instanceof File && f.size > 0) {
+          // Validate file size (5MB)
+          const MAX_SIZE = 5 * 1024 * 1024;
+          if (f.size > MAX_SIZE) {
+            console.warn(`File ${f.name} exceeds 5MB limit`);
+            continue;
+          }
+
+          // Validate file type
+          const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+          if (!allowedTypes.includes(f.type)) {
+            console.warn(`File ${f.name} has unsupported type: ${f.type}`);
+            continue;
+          }
+
           const buffer = Buffer.from(await f.arrayBuffer());
           try {
-            const base64 = buffer.toString('base64');
+            const base64 = buffer.toString("base64");
             const dataUri = `data:${f.type};base64,${base64}`;
-            const res = await cloudinary.uploader.upload(dataUri, { folder: 'tasks/attachments', resource_type: 'auto' });
-            // `attachments` type is intentionally narrow (url/filename/mimeType).
-            // Store Cloudinary-specific metadata separately on the Task document if needed.
-            attachments.push({ url: res.secure_url, filename: f.name, mimeType: f.type });
+            const res = await cloudinary.uploader.upload(dataUri, {
+              folder: `tasks/attachments`,
+              resource_type: "auto",
+              format: "webp", // Auto-convert to webp for better compression
+              quality: "auto"
+            });
+
+            attachments.push({
+              url: res.secure_url,
+              publicId: res.public_id,
+              fileName: f.name,
+              fileSize: f.size,
+              mimeType: f.type,
+              uploadedBy: payload.sub,
+              uploadedAt: new Date()
+            });
           } catch (e) {
-            console.warn('Cloudinary task attachment upload failed, falling back to local save', e);
-            const ext = f.name.split('.').pop() || 'png';
-            const fileName = `${crypto.randomUUID()}.${ext}`;
-            const { writeFile, mkdir } = await import('fs/promises');
-            const path = (await import('path')).default;
-            const uploadDir = path.join(process.cwd(), 'public', 'uploads');
-            await mkdir(uploadDir, { recursive: true });
-            const filePath = path.join(uploadDir, fileName);
-            await writeFile(filePath, buffer);
-            attachments.push({ url: `/uploads/${fileName}`, filename: f.name, mimeType: f.type });
+            console.error(`Cloudinary upload failed for ${f.name}:`, e);
+            // Skip this file and continue with others
+            continue;
           }
         }
       }
@@ -140,15 +169,6 @@ export async function POST(request: Request) {
     }
 
     const { title, description, type, priority, project, assignee, reporter: rawReporter, dueDate } = fields;
-
-    // enforce auth + role (admin/manager only)
-    const cookieStore = cookies();
-    const token = cookieStore.get("auth_token")?.value;
-    const payload = token ? verifyAuthToken(token) : null;
-    if (!payload) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    if (!(payload.role === "admin" || payload.role === "manager")) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
 
     // derive reporter from the previously-validated token if not provided
     const reporter = (rawReporter && String(rawReporter).trim()) || payload?.sub || undefined;
@@ -201,6 +221,21 @@ export async function POST(request: Request) {
       .populate({ path: "assignee", select: "firstName lastName email" })
       .populate({ path: "reporter", select: "firstName lastName email" })
       .lean();
+
+    // Create activity log entry
+    try {
+      await TaskActivityLog.create({
+        task: created._id,
+        user: payload.sub,
+        eventType: "TASK_CREATED",
+        description: `Task created with key ${key}`,
+        metadata: {
+          taskData: populated
+        }
+      });
+    } catch (e) {
+      console.error("Failed to create activity log:", e);
+    }
 
     // audit: task created
     try {

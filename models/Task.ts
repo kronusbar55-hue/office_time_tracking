@@ -9,6 +9,17 @@ export type TaskStatus =
   | "in_review"
   | "done";
 
+export interface IAttachment {
+  _id?: Types.ObjectId;
+  url: string;
+  publicId: string;
+  fileName: string;
+  fileSize: number;
+  mimeType: string;
+  uploadedBy: Types.ObjectId;
+  uploadedAt: Date;
+}
+
 export interface ITask {
   _id: Types.ObjectId;
   key: string;
@@ -34,13 +45,7 @@ export interface ITask {
   childTasks?: Types.ObjectId[];
   progressPercent?: number;
   isDeleted?: boolean;
-  attachments?: Array<{
-    url: string;
-    filename?: string;
-    mimeType?: string;
-    publicId?: string;
-    size?: number;
-  }>;
+  attachments?: IAttachment[];
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -154,11 +159,20 @@ const TaskSchema = new Schema<ITask>(
     },
     attachments: [
       {
-        url: { type: String },
-        filename: { type: String },
-        mimeType: { type: String }
-        ,publicId: { type: String },
-        size: { type: Number }
+        url: { type: String, required: true },
+        publicId: { type: String, required: true },
+        fileName: { type: String, required: true },
+        fileSize: { type: Number, required: true },
+        mimeType: { type: String, required: true },
+        uploadedBy: {
+          type: Schema.Types.ObjectId,
+          ref: "User",
+          required: true
+        },
+        uploadedAt: {
+          type: Date,
+          default: () => new Date()
+        }
       }
     ]
   },

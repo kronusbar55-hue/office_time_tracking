@@ -10,7 +10,7 @@ export type RoleValue = typeof ROLES[RoleKey];
 
 export const NAV_CONFIG = [
   { label: "Dashboard", href: "/", icon: "dashboard", allowed: [ROLES.ADMIN, ROLES.HR, ROLES.MANAGER, ROLES.EMPLOYEE] },
-  { label: "Time Tracking", href: "/time-tracking", icon: "time", allowed: [ROLES.ADMIN, ROLES.HR, ROLES.MANAGER, ROLES.EMPLOYEE] },
+  { label: "Time Tracking", href: "/time-tracking", icon: "time", allowed: [ROLES.HR, ROLES.MANAGER, ROLES.EMPLOYEE] },
   { label: "Attendance", href: "/attendance", icon: "calendar", allowed: [ROLES.ADMIN, ROLES.HR] },
   { label: "Check-In/Out", href: "/check-in-out", icon: "checkin", allowed: [ROLES.ADMIN, ROLES.HR, ROLES.MANAGER] },
   { label: "Timesheets", href: "/timesheets", icon: "timesheets", allowed: [ROLES.ADMIN, ROLES.HR, ROLES.MANAGER, ROLES.EMPLOYEE] },
