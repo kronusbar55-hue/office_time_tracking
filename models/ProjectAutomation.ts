@@ -104,3 +104,6 @@ export const ProjectRole: Model<IProjectRole> =
 
 export const ProjectMemberRole: Model<IProjectMemberRole> =
   (models.ProjectMemberRole as Model<IProjectMemberRole>) || model<IProjectMemberRole>("ProjectMemberRole", ProjectMemberRoleSchema);
+
+// Backward compatibility alias
+export { AutomationRule as ProjectAutomation };

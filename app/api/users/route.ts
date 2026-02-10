@@ -168,7 +168,12 @@ export async function POST(request: Request) {
       email: populated!.email,
       role: populated!.role,
       technology: populated!.technology
-        ? { id: String(populated!.technology._id || populated!.technology), name: populated!.technology.name }
+        ? {
+            id: String(
+              (populated!.technology as any)._id || populated!.technology
+            ),
+            name: (populated!.technology as any).name
+          }
         : null,
       joinDate: populated!.joinDate,
       avatarUrl: populated!.avatarUrl,

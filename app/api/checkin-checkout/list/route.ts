@@ -51,7 +51,7 @@ export async function GET(request: Request) {
       const teamMembers = await User.find({ manager: payload.sub }).select("_id");
       const teamIds = teamMembers.map((m) => m._id);
       query.$or = [{ user: payload.sub }, { user: { $in: teamIds } }];
-    } else if (currentUser.role === "hr" || currentUser.role === "admin") {
+    } else if ((currentUser.role as string) === "hr" || (currentUser.role as string) === "admin") {
       // HR and admin can see all records
       if (userId) {
         query.user = userId;

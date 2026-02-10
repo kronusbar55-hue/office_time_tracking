@@ -6,6 +6,7 @@ import { Project } from "@/models/Project";
 import { User } from "@/models/User";
 import path from "path";
 import { mkdir, writeFile } from "fs/promises";
+import cloudinary from "@/lib/cloudinary";
 
 type Params = {
   params: {
@@ -106,11 +107,11 @@ export async function PUT(request: Request, { params }: Params) {
     status: updated.status,
     logoUrl: updated.logoUrl,
     color: updated.color,
-    members: (updated.members as typeof User[]).map((m) => ({
+    members: (updated.members as any[]).map((m) => ({
       id: m._id.toString(),
-      firstName: m.firstName,
-      lastName: m.lastName,
-      avatarUrl: m.avatarUrl
+      firstName: (m as any).firstName,
+      lastName: (m as any).lastName,
+      avatarUrl: (m as any).avatarUrl
     }))
   });
 }

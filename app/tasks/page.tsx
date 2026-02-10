@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import TaskModal from "@/components/tasks/TaskModal";
 import TaskTable from "@/components/tasks/TaskTable";
 
-export default function TasksPage() {
+function TasksPageContent() {
   const [tasks, setTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [filterProject, setFilterProject] = useState<string | "all">("all");
@@ -20,7 +20,7 @@ export default function TasksPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  async function loadList() {
+  const loadList = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
@@ -43,7 +43,7 @@ export default function TasksPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [filterProject, filterStatus, filterAssignee, filterPriority]);
 
   async function loadFilterData() {
     setLoadingFilters(true);
@@ -165,11 +165,6 @@ export default function TasksPage() {
     }
   }
 
-  function openDetail(task: any) {
-    setDetailId(task._id);
-    setDetailOpen(true);
-  }
-
   return (
     <div className="p-6">
       <div className="flex items-center justify-between">
@@ -182,28 +177,68 @@ export default function TasksPage() {
       </div>
 
       <div className="mt-4 flex items-center gap-3">
-        <select value={filterProject} onChange={(e) => { setFilterProject(e.target.value as any); const p = new URLSearchParams(window.location.search); if (e.target.value === 'all') p.delete('project'); else p.set('project', e.target.value); router.replace(`${window.location.pathname}?${p.toString()}`, { shallow: true }); }} className="rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100">
+        <select
+          value={filterProject}
+          onChange={(e) => {
+            setFilterProject(e.target.value as any);
+            const p = new URLSearchParams(window.location.search);
+            if (e.target.value === "all") p.delete("project");
+            else p.set("project", e.target.value);
+            router.replace(`${window.location.pathname}?${p.toString()}`);
+          }}
+          className="rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100"
+        >
           <option value="all">All Projects</option>
           {projects.map((proj: any) => (
             <option key={proj.id} value={proj.id}>{proj.name}</option>
           ))}
         </select>
 
-        <select value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value as any); const p = new URLSearchParams(window.location.search); if (e.target.value === 'all') p.delete('status'); else p.set('status', e.target.value); router.replace(`${window.location.pathname}?${p.toString()}`, { shallow: true }); }} className="rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100">
+        <select
+          value={filterStatus}
+          onChange={(e) => {
+            setFilterStatus(e.target.value as any);
+            const p = new URLSearchParams(window.location.search);
+            if (e.target.value === "all") p.delete("status");
+            else p.set("status", e.target.value);
+            router.replace(`${window.location.pathname}?${p.toString()}`);
+          }}
+          className="rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100"
+        >
           <option value="all">All Statuses</option>
           <option value="backlog">Backlog</option>
           <option value="in_progress">In Progress</option>
           <option value="done">Done</option>
         </select>
 
-        <select value={filterAssignee} onChange={(e) => { setFilterAssignee(e.target.value as any); const p = new URLSearchParams(window.location.search); if (e.target.value === 'all') p.delete('assignee'); else p.set('assignee', e.target.value); router.replace(`${window.location.pathname}?${p.toString()}`, { shallow: true }); }} className="rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100">
+        <select
+          value={filterAssignee}
+          onChange={(e) => {
+            setFilterAssignee(e.target.value as any);
+            const p = new URLSearchParams(window.location.search);
+            if (e.target.value === "all") p.delete("assignee");
+            else p.set("assignee", e.target.value);
+            router.replace(`${window.location.pathname}?${p.toString()}`);
+          }}
+          className="rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100"
+        >
           <option value="all">All Assignees</option>
           {assignees.map((user: any) => (
             <option key={user.id} value={user.id}>{user.firstName} {user.lastName}</option>
           ))}
         </select>
 
-        <select value={filterPriority} onChange={(e) => { setFilterPriority(e.target.value as any); const p = new URLSearchParams(window.location.search); if (e.target.value === 'all') p.delete('priority'); else p.set('priority', e.target.value); router.replace(`${window.location.pathname}?${p.toString()}`, { shallow: true }); }} className="rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100">
+        <select
+          value={filterPriority}
+          onChange={(e) => {
+            setFilterPriority(e.target.value as any);
+            const p = new URLSearchParams(window.location.search);
+            if (e.target.value === "all") p.delete("priority");
+            else p.set("priority", e.target.value);
+            router.replace(`${window.location.pathname}?${p.toString()}`);
+          }}
+          className="rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100"
+        >
           <option value="all">All Priorities</option>
           <option value="Low">Low</option>
           <option value="Medium">Medium</option>
@@ -233,4 +268,11 @@ export default function TasksPage() {
   );
 }
 
+export default function TasksPage() {
+  return (
+    <Suspense fallback={<div className="p-6 text-slate-400">Loading tasks...</div>}>
+      <TasksPageContent />
+    </Suspense>
+  );
+}
 

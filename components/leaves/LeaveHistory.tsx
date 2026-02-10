@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import LeaveCard from "@/components/leaves/LeaveCard";
 
 type Leave = {
@@ -19,7 +19,7 @@ type Leave = {
 export default function LeaveHistory({ role }: { role?: string | null }) {
   const [leaves, setLeaves] = useState<Leave[] | null>(null);
 
-  const load = () => {
+  const load = useCallback(() => {
     setLeaves(null);
     const endpoint = role === "admin" ? "/api/leaves/all" : "/api/leaves/my";
     fetch(endpoint)
@@ -29,11 +29,11 @@ export default function LeaveHistory({ role }: { role?: string | null }) {
         console.error(err);
         setLeaves([]);
       });
-  };
+  }, [role]);
 
   useEffect(() => {
     load();
-  }, [role]);
+  }, [load]);
 
   if (!leaves) {
     return (

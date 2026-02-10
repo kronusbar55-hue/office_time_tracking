@@ -12,6 +12,8 @@ export interface IUser {
   technology?: Types.ObjectId | null;
   joinDate?: Date;
   avatarUrl?: string;
+  avatarPublicId?: string;
+  avatarSize?: number;
   isActive: boolean;
   isDeleted: boolean;
 }

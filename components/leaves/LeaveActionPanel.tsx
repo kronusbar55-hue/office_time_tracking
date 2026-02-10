@@ -4,7 +4,7 @@ export default function LeaveActionPanel({ leave, role, onDone }: { leave: any; 
   const handleApprove = async () => {
     try {
       const res = await fetch('/api/leaves/approve', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: leave._id }) });
-      if (res.ok) onDone && onDone();
+      if (res.ok && onDone) onDone();
       else {
         const j = await res.json();
         alert(j.error || 'Failed to approve');
@@ -19,7 +19,7 @@ export default function LeaveActionPanel({ leave, role, onDone }: { leave: any; 
     const reason = prompt('Rejection reason (optional)') || '';
     try {
       const res = await fetch('/api/leaves/reject', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: leave._id, managerComment: reason }) });
-      if (res.ok) onDone && onDone();
+      if (res.ok && onDone) onDone();
       else {
         const j = await res.json();
         alert(j.error || 'Failed to reject');
@@ -33,7 +33,7 @@ export default function LeaveActionPanel({ leave, role, onDone }: { leave: any; 
   const handleCancel = async () => {
     try {
       const res = await fetch('/api/leaves/cancel', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: leave._id }) });
-      if (res.ok) onDone && onDone();
+      if (res.ok && onDone) onDone();
       else {
         const j = await res.json();
         alert(j.error || 'Failed to cancel');

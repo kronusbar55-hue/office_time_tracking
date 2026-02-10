@@ -33,7 +33,9 @@ export async function GET(
       .populate("watchers", "firstName lastName email")
       .lean();
 
-    if (!subTask || subTask.isDeleted) {
+    // When using `.lean()`, `subTask` is either `null` or a plain object.
+    // Narrow the type before checking soft-delete flag to satisfy TypeScript.
+    if (!subTask || (subTask as any).isDeleted) {
       return NextResponse.json(
         errorResp("Sub-task not found"),
         { status: 404 }
@@ -41,34 +43,37 @@ export async function GET(
     }
 
     // Get parent task info
-    const parentTask = await SubTask.findOne({ _id: subTask.parentTask })
+    const parentTaskId = (subTask as any).parentTask;
+    const parentTask = await SubTask.findOne({ _id: parentTaskId })
       .select("key title")
       .lean();
 
     return NextResponse.json(
       successResp("Sub-task retrieved", {
-        id: subTask._id.toString(),
-        key: subTask.key,
-        title: subTask.title,
-        description: subTask.description,
-        parentTask: {
-          id: subTask.parentTask.toString(),
-          key: parentTask?.key
-        },
-        status: subTask.status,
-        priority: subTask.priority,
-        assignee: subTask.assignee,
-        reporter: subTask.reporter,
-        dueDate: subTask.dueDate,
-        estimatedTime: subTask.estimatedTime,
-        loggedTime: subTask.loggedTime,
-        loggedHours: subTask.loggedHours,
-        progressPercent: subTask.progressPercent,
-        labels: subTask.labels,
-        watchers: subTask.watchers,
-        attachments: subTask.attachments,
-        createdAt: subTask.createdAt,
-        updatedAt: subTask.updatedAt
+        id: (subTask as any)._id.toString(),
+        key: (subTask as any).key,
+        title: (subTask as any).title,
+        description: (subTask as any).description,
+        parentTask: parentTaskId
+          ? {
+              id: parentTaskId.toString(),
+              key: (parentTask as any)?.key
+            }
+          : null,
+        status: (subTask as any).status,
+        priority: (subTask as any).priority,
+        assignee: (subTask as any).assignee,
+        reporter: (subTask as any).reporter,
+        dueDate: (subTask as any).dueDate,
+        estimatedTime: (subTask as any).estimatedTime,
+        loggedTime: (subTask as any).loggedTime,
+        loggedHours: (subTask as any).loggedHours,
+        progressPercent: (subTask as any).progressPercent,
+        labels: (subTask as any).labels,
+        watchers: (subTask as any).watchers,
+        attachments: (subTask as any).attachments,
+        createdAt: (subTask as any).createdAt,
+        updatedAt: (subTask as any).updatedAt
       })
     );
   } catch (err: any) {

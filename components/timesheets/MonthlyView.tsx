@@ -43,7 +43,7 @@ export function MonthlyView({ date }: MonthlyViewProps) {
     };
 
     fetchMonthly();
-  }, [date]);
+  }, [parsedDate]);
 
   if (loading) {
     return <div className="py-8 text-center text-slate-500">Loading monthly calendar...</div>;

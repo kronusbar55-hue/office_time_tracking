@@ -12,6 +12,9 @@ export async function POST(request: Request) {
   try {
     const { authorized, payload, response } = await requirePermission(["create_project"]);
     if (!authorized) return response;
+    if (!payload) {
+      return NextResponse.json(errorResp("Unauthorized"), { status: 401 });
+    }
 
     await connectDB();
 
@@ -125,7 +128,7 @@ export async function POST(request: Request) {
       successResp("Project created successfully", {
         id: project._id.toString(),
         name: project.name,
-        key: project.key,
+        key: body.key.toUpperCase(),
         type: body.type
       }),
       { status: 201 }

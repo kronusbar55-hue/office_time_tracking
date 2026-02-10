@@ -76,7 +76,7 @@ export default function ReportsPage() {
     }
 
     void load();
-  }, [employeeId, startDate, endDate]);
+  }, [employeeId, startDate, endDate, setData]);
 
   const bars = useMemo(() => {
     if (!data || !Array.isArray(data.byDay)) return [];

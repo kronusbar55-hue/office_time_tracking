@@ -11,6 +11,9 @@ export async function POST(request: Request) {
   try {
     const { authorized, payload, response } = await requirePermission(["create_sprint"]);
     if (!authorized) return response;
+    if (!payload) {
+      return NextResponse.json(errorResp("Unauthorized"), { status: 401 });
+    }
 
     await connectDB();
 
@@ -112,6 +115,9 @@ export async function PUT(request: Request) {
   try {
     const { authorized, payload, response } = await requirePermission(["manage_sprint"]);
     if (!authorized) return response;
+    if (!payload) {
+      return NextResponse.json(errorResp("Unauthorized"), { status: 401 });
+    }
 
     await connectDB();
 

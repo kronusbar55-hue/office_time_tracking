@@ -88,7 +88,7 @@ export async function POST(request: Request) {
               errors.push("label required");
               continue;
             }
-            updateData.labels = issue.labels?.filter((l) => l !== body.data.label) || [];
+            updateData.labels = issue.labels?.filter((l: string) => l !== body.data.label) || [];
             break;
 
           case "move_parent":

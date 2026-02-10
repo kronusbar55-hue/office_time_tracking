@@ -44,11 +44,11 @@ export async function GET(request: Request) {
       status: p.status,
       logoUrl: p.logoUrl,
       color: p.color,
-      members: (p.members as typeof User[]).map((m) => ({
+      members: (p.members as any[]).map((m) => ({
         id: m._id.toString(),
-        firstName: m.firstName,
-        lastName: m.lastName,
-        avatarUrl: m.avatarUrl
+        firstName: (m as any).firstName,
+        lastName: (m as any).lastName,
+        avatarUrl: (m as any).avatarUrl
       }))
     }))
   );
@@ -163,11 +163,11 @@ export async function POST(request: Request) {
       status: populated.status,
       logoUrl: populated.logoUrl,
       color: populated.color,
-      members: (populated.members as typeof User[]).map((m) => ({
+      members: (populated.members as any[]).map((m) => ({
         id: m._id.toString(),
-        firstName: m.firstName,
-        lastName: m.lastName,
-        avatarUrl: m.avatarUrl
+        firstName: (m as any).firstName,
+        lastName: (m as any).lastName,
+        avatarUrl: (m as any).avatarUrl
       }))
     },
     { status: 201 }

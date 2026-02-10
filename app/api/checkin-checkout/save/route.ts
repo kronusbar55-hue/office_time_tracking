@@ -123,6 +123,13 @@ export async function POST(request: Request) {
       });
     }
 
+    if (!record) {
+      return NextResponse.json(
+        errorResp("Failed to save check-in/out record"),
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json(
       successResp("Check-in/out record saved successfully", {
         id: record._id,

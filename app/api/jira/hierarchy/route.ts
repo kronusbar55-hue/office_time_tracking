@@ -57,7 +57,15 @@ export async function POST(request: Request) {
             { status: 400 }
           );
         }
-        result = await autoCloseParents(body.issueId || body.projectId, payload.sub);
+        // Ensure we pass a definite string to autoCloseParents
+        const targetId = body.issueId ?? body.projectId;
+        if (!targetId) {
+          return NextResponse.json(
+            errorResp("Missing projectId or issueId"),
+            { status: 400 }
+          );
+        }
+        result = await autoCloseParents(targetId, payload.sub);
         break;
 
       case "rollup_progress":
@@ -216,7 +224,7 @@ async function autoCloseParents(issueId: string, userId: string) {
     );
 
     // Notify watchers
-    if (parentTask.watchers?.length > 0) {
+    if (parentTask.watchers && parentTask.watchers.length > 0) {
       for (const watcher of parentTask.watchers) {
         await Notification.create({
           recipient: watcher,
@@ -232,7 +240,7 @@ async function autoCloseParents(issueId: string, userId: string) {
     updated++;
 
     // Recursively check parent's parent
-    if (updated_issue.parentTask) {
+    if (updated_issue && updated_issue.parentTask) {
       const parentUpdated = await autoCloseParents(
         updated_issue.parentTask.toString(),
         userId

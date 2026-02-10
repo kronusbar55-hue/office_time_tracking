@@ -33,7 +33,14 @@ export async function GET() {
       id: e._id.toString(),
       clockIn: e.clockIn,
       clockOut: e.clockOut,
-      durationMinutes: e.durationMinutes
+      // `TimeEntry` does not store `durationMinutes` directly; derive it here.
+      durationMinutes: e.clockOut
+        ? Math.round(
+            (new Date(e.clockOut).getTime() - new Date(e.clockIn).getTime()) /
+              1000 /
+              60
+          )
+        : null
     }))
   });
 }

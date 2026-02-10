@@ -32,7 +32,17 @@ export interface ITask {
   watchers?: Types.ObjectId[];
   parentTask?: Types.ObjectId;
   childTasks?: Types.ObjectId[];
+  progressPercent?: number;
   isDeleted?: boolean;
+  attachments?: Array<{
+    url: string;
+    filename?: string;
+    mimeType?: string;
+    publicId?: string;
+    size?: number;
+  }>;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 const TaskSchema = new Schema<ITask>(
@@ -130,6 +140,12 @@ const TaskSchema = new Schema<ITask>(
       type: [Schema.Types.ObjectId],
       ref: "Task",
       default: []
+    },
+    progressPercent: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 100
     },
     isDeleted: {
       type: Boolean,

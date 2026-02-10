@@ -123,9 +123,11 @@ export async function POST(request: Request) {
       }
 
       if (notificationChannels.includes("slack")) {
-        if (recipient.slackUserId) {
-          await sendSlackMessage(recipient.slackUserId, `${body.title}: ${body.message}`);
-        }
+        // Slack integration is not yet wired to the User model.
+        // Once a `slackUserId` (or similar) field is added to `IUser`,
+        // this block can be updated to use that field.
+        //
+        // For now, we skip sending Slack messages to avoid type/runtime errors.
       }
     }
 

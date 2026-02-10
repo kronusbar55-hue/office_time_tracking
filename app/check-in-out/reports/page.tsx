@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { format } from "date-fns";
 import CheckInOutCharts from "@/components/time-tracking/CheckInOutCharts";
 import CheckInOutTable from "@/components/time-tracking/CheckInOutTable";
@@ -32,11 +32,7 @@ export default function CheckInOutReportsPage() {
   );
   const [endDate, setEndDate] = useState(format(new Date(), "yyyy-MM-dd"));
 
-  useEffect(() => {
-    fetchReport();
-  }, [period, selectedRole, startDate, endDate]);
-
-  const fetchReport = async () => {
+  const fetchReport = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -61,7 +57,11 @@ export default function CheckInOutReportsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [period, selectedRole, startDate, endDate]);
+
+  useEffect(() => {
+    fetchReport();
+  }, [fetchReport]);
 
   const exportReport = () => {
     if (!report) return;

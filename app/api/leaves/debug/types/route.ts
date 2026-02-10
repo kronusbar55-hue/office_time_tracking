@@ -4,6 +4,10 @@ import { connectDB } from "@/lib/db";
 import { verifyAuthToken } from "@/lib/auth";
 import { LeaveType } from "@/models/LeaveType";
 
+// This debug endpoint relies on cookies/auth and must always be dynamic.
+// Mark it as force-dynamic so Next.js doesn't try to statically prerender it.
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const cookieStore = cookies();

@@ -77,7 +77,7 @@ export async function GET(request: Request) {
     if (groupBy === "project") {
       const grouped: Record<string, any> = {};
       for (const t of tasks) {
-        const name = t.project?.name || "Unassigned Project";
+        const name = (t as any).project?.name || "Unassigned Project";
         if (!grouped[name]) grouped[name] = [];
         grouped[name].push(t);
       }
@@ -118,7 +118,9 @@ export async function POST(request: Request) {
             const base64 = buffer.toString('base64');
             const dataUri = `data:${f.type};base64,${base64}`;
             const res = await cloudinary.uploader.upload(dataUri, { folder: 'tasks/attachments', resource_type: 'auto' });
-            attachments.push({ url: res.secure_url, filename: f.name, mimeType: f.type, publicId: res.public_id, size: res.bytes });
+            // `attachments` type is intentionally narrow (url/filename/mimeType).
+            // Store Cloudinary-specific metadata separately on the Task document if needed.
+            attachments.push({ url: res.secure_url, filename: f.name, mimeType: f.type });
           } catch (e) {
             console.warn('Cloudinary task attachment upload failed, falling back to local save', e);
             const ext = f.name.split('.').pop() || 'png';

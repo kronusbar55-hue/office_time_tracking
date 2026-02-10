@@ -10,6 +10,8 @@ export interface IProject {
   status: ProjectStatus;
   members: Types.ObjectId[];
   logoUrl?: string;
+  logoPublicId?: string;
+  logoSize?: number;
   color?: string;
   createdBy: Types.ObjectId;
 }

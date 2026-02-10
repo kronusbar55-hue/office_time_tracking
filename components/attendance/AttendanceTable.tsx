@@ -125,7 +125,7 @@ export function AttendanceTable({
                       {record.role}
                     </p>
                     <p className="text-xs text-slate-400">
-                      {record.department || "N/A"}
+                      {record.technology?.name || "N/A"}
                     </p>
                   </div>
                 </td>

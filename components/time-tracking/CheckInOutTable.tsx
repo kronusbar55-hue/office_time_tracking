@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { format } from "date-fns";
 
 interface CheckInOutTableRecord {
@@ -47,11 +47,7 @@ export default function CheckInOutTable({
   const [filterRole, setFilterRole] = useState(role || "");
   const [filterStatus, setFilterStatus] = useState<"all" | "checked-in" | "checked-out">("all");
 
-  useEffect(() => {
-    fetchRecords();
-  }, [currentPage, sortBy, sortOrder, filterRole, filterStatus, startDate, endDate]);
-
-  const fetchRecords = async () => {
+  const fetchRecords = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -80,7 +76,11 @@ export default function CheckInOutTable({
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, sortBy, sortOrder, filterRole, startDate, endDate, pageSize]);
+
+  useEffect(() => {
+    fetchRecords();
+  }, [fetchRecords]);
 
   const formatTime = (dateString: string) => {
     return format(new Date(dateString), "HH:mm:ss");

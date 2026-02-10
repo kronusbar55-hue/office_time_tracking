@@ -5,7 +5,7 @@
  * in the Jira module. Use this when building automation features.
  * 
  * @example
- * import { executeAutomations } from "@/app/api/jira/automations/route";
+ * import { executeAutomations } from "@/lib/automationExecutor";
  * 
  * // When issue is created
  * await executeAutomations("task_created", issueId, projectId, {
@@ -351,7 +351,7 @@ export function validateAutomationRule(
 // ============================================================================
 
 export class ConditionBuilder {
-  private conditions: AutomationRuleConfig["conditions"] = {};
+  private conditions: NonNullable<AutomationRuleConfig["conditions"]> = {};
 
   withStatus(status: string): this {
     this.conditions.status = status;
@@ -472,7 +472,7 @@ if (!validation.valid) {
 }
 
 // Example 4: Executing automations when events occur
-import { executeAutomations } from "@/app/api/jira/automations/route";
+import { executeAutomations } from "@/lib/automationExecutor";
 
 // When someone creates a new issue
 await executeAutomations("task_created", issueId, projectId, {
@@ -492,7 +492,7 @@ await executeAutomations("assigned", issueId, projectId, {
 });
 */
 
-export default {
+const automationHelpers = {
   EXAMPLE_RULES,
   createAutoAssignRule,
   createNotificationRule,
@@ -501,3 +501,5 @@ export default {
   ConditionBuilder,
   ActionBuilder
 };
+
+export default automationHelpers;

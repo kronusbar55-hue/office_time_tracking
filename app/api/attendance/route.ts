@@ -17,7 +17,8 @@ export interface AttendanceRecord {
   checkOut?: Date | null;
   breaks: Array<{
     startTime: Date;
-    endTime?: Date;
+    endTime?: Date | null;
+    reason?: string;
   }>;
   workingHours: number;
   breakDuration: number;
@@ -70,18 +71,39 @@ export async function GET(request: Request) {
 
         if (entry) {
           const clockOut = entry.clockOut;
-          const durationMs = clockOut
-            ? clockOut.getTime() - entry.clockIn.getTime()
-            : new Date().getTime() - entry.clockIn.getTime();
 
-          workingHours = durationMs / (1000 * 60 * 60);
-          breakDuration = entry.durationMinutes
-            ? (entry.durationMinutes - workingHours * 60) / 60
-            : 0;
+          // Base duration from clock-in until clock-out (or now if still working)
+          const durationMs = (clockOut ?? new Date()).getTime() - entry.clockIn.getTime();
 
-          if (!clockOut) {
+          // Calculate break duration from breaks array.
+          // For ongoing breaks (no endTime yet), count time up to now.
+          let totalBreakMs = 0;
+          let hasActiveBreak = false;
+
+          if (entry.breaks && entry.breaks.length > 0) {
+            entry.breaks.forEach((breakItem) => {
+              if (!breakItem.endTime) {
+                hasActiveBreak = true;
+              }
+
+              const effectiveEnd =
+                breakItem.endTime ?? (clockOut ?? new Date());
+
+              if (effectiveEnd > breakItem.startTime) {
+                totalBreakMs += effectiveEnd.getTime() - breakItem.startTime.getTime();
+              }
+            });
+          }
+
+          breakDuration = totalBreakMs / (1000 * 60 * 60);
+          workingHours = durationMs / (1000 * 60 * 60) - breakDuration;
+
+          // Derive status based on clock-out and active break state
+          if (hasActiveBreak && !clockOut) {
+            attendanceStatus = "on-break";
+          } else if (!clockOut) {
             attendanceStatus = "checked-in";
-          } else if (clockOut) {
+          } else {
             attendanceStatus = "checked-out";
           }
         }
@@ -97,11 +119,11 @@ export async function GET(request: Request) {
           avatar: user.avatarUrl,
           checkIn: entry?.clockIn,
           checkOut: entry?.clockOut || null,
-          breaks: [],
+          breaks: entry?.breaks || [],
           workingHours: Math.round(workingHours * 100) / 100,
           breakDuration: Math.round(breakDuration * 100) / 100,
           status: attendanceStatus,
-          notes: entry?.note
+          notes: entry?.notes
         };
       })
       .filter((record) => {

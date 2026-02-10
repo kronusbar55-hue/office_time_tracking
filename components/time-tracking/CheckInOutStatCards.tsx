@@ -81,9 +81,9 @@ export default function CheckInOutStatCards({ period = "today", role }: CheckInO
     },
     {
       title: "Average Attendance",
-      value: `${(stats?.averageAttendance || 0).toFixed(1)}%`,
+      value: `${(stats?.averageAttendance ?? 0).toFixed(1)}%`,
       icon: "📊",
-      color: stats?.averageAttendance! >= 80 ? "green" : "red",
+      color: (stats?.averageAttendance ?? 0) >= 80 ? "green" : "red",
       subtext: "of expected hours"
     },
     {

@@ -26,8 +26,8 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url);
     const type = searchParams.get("type");
-    const projectId = searchParams.get("projectId");
-    const issueId = searchParams.get("issueId");
+    const projectId = searchParams.get("projectId") || undefined;
+    const issueId = searchParams.get("issueId") || undefined;
 
     if (!type) {
       return NextResponse.json(
@@ -44,7 +44,7 @@ export async function GET(request: Request) {
         break;
 
       case "blocked_tasks":
-        result = await getBlockedTasksReport(projectId);
+        result = await getBlockedTasksReport(projectId||undefined);
         break;
 
       case "subtask_distribution":
@@ -84,7 +84,7 @@ export async function GET(request: Request) {
  * Get hierarchy progress: Epic → Story → Task → SubTask progress
  */
 async function getHierarchyProgressReport(issueId?: string) {
-  let issues = [];
+  let issues: any[] = [];
 
   if (issueId) {
     // Get single issue and its hierarchy

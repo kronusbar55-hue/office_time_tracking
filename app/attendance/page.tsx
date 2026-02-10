@@ -1,31 +1,11 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 import { AttendanceSummaryCards } from "@/components/attendance/AttendanceSummaryCards";
 import { AttendanceFilters } from "@/components/attendance/AttendanceFilters";
 import { AttendanceTable } from "@/components/attendance/AttendanceTable";
-
-// Client-side type for attendance records (do not import server route file in a client component)
-type AttendanceStatus = "checked-in" | "checked-out" | "on-break" | "not-checked-in";
-
-type AttendanceRecord = {
-  id: string;
-  userId: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  role: string;
-  technology?: { id: string; name: string } | null;
-  avatar?: string;
-  checkIn?: string | Date;
-  checkOut?: string | Date | null;
-  breaks: Array<{ startTime: string | Date; endTime?: string | Date }>;
-  workingHours: number;
-  breakDuration: number;
-  status: AttendanceStatus;
-  notes?: string;
-};
+import type { AttendanceRecord } from "@/app/api/attendance/route";
 
 export default function AttendancePage() {
   const [records, setRecords] = useState<AttendanceRecord[]>([]);

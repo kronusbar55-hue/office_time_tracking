@@ -124,7 +124,7 @@ export async function POST(request: Request) {
       }
 
       const item = checklist.items?.find(
-        (i) => i._id?.toString() === body.itemId
+        (i: any) => i._id?.toString() === body.itemId
       );
 
       if (!item) {
@@ -155,7 +155,7 @@ export async function POST(request: Request) {
       }
 
       checklist.items = checklist.items?.filter(
-        (i) => i._id?.toString() !== body.itemId
+        (i: any) => i._id?.toString() !== body.itemId
       );
 
       await checklist.save();
@@ -178,7 +178,7 @@ export async function POST(request: Request) {
       // Update order for each item
       body.items.forEach((item) => {
         const checklistItem = checklist?.items?.find(
-          (i) => i._id?.toString() === item._id
+          (i: any) => i._id?.toString() === item._id
         );
         if (checklistItem) {
           checklistItem.order = item.order;
@@ -199,7 +199,7 @@ export async function POST(request: Request) {
       successResp("Checklist retrieved", {
         id: checklist._id.toString(),
         issueId: body.issueId,
-        items: checklist.items?.map((item) => ({
+        items: checklist.items?.map((item: any) => ({
           id: item._id?.toString(),
           title: item.title,
           completed: item.completed,
@@ -248,7 +248,7 @@ export async function GET(request: Request) {
 
     const checklist = await Checklist.findOne({ issue: issueId })
       .populate("items.assignee", "firstName lastName")
-      .lean();
+      .lean() as any;
 
     if (!checklist) {
       return NextResponse.json(
@@ -261,7 +261,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(
       successResp("Checklist retrieved", {
-        id: checklist._id.toString(),
+        id: (checklist as any)._id.toString(),
         items: checklist.items?.map((item: any) => ({
           id: item._id?.toString(),
           title: item.title,

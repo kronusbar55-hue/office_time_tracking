@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { Types } from "mongoose";
 import { verifyAuthToken } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
-import { Task } from "@/models/Task";
+import { Task, type TaskStatus } from "@/models/Task";
 import { IssueComment, TimeLog } from "@/models/IssueCollaboration";
 import { AuditLog } from "@/models/AuditLog";
 import { requirePermission } from "@/lib/jiraPermissions";
@@ -13,6 +13,9 @@ export async function POST(request: Request) {
   try {
     const { authorized, payload, response } = await requirePermission(["create_issue"]);
     if (!authorized) return response;
+    if (!payload) {
+      return NextResponse.json(errorResp("Unauthorized"), { status: 401 });
+    }
 
     await connectDB();
 
@@ -161,12 +164,15 @@ export async function PUT(request: Request) {
   try {
     const { authorized, payload, response } = await requirePermission(["edit_issue"]);
     if (!authorized) return response;
+    if (!payload) {
+      return NextResponse.json(errorResp("Unauthorized"), { status: 401 });
+    }
 
     await connectDB();
 
     const body = (await request.json().catch(() => ({}))) as {
       issueId: string;
-      status?: string;
+      status?: TaskStatus;
       assignee?: string;
       priority?: string;
       dueDate?: string;
