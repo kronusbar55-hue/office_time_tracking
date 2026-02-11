@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { X, Check } from "lucide-react";
 import { toast } from "react-toastify";
 
+
 type Tech = {
   id?: string;
   name: string;
