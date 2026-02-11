@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/components/auth/AuthProvider";
 import { toast } from "react-toastify";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { setAuth } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -28,9 +30,15 @@ export default function LoginPage() {
         throw new Error(body?.error || "Invalid credentials");
       }
 
+      const body = await res.json().catch(() => null) as any;
+      // server sets httpOnly cookie and returns user in body
+      try {
+        // set a client-detectable token so AuthProvider will run session fetch
+        setAuth("local_auth", body?.data?.user ?? null);
+      } catch {}
+
       toast.success("Login successful!");
-      router.push("/");
-      router.refresh();
+      router.replace("/");
     } catch (e) {
       const errorMessage = e instanceof Error ? e.message : "Unable to sign in. Please try again.";
       setError(errorMessage);

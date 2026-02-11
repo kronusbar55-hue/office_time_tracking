@@ -22,8 +22,6 @@ const LeaveTypeSchema = new Schema<ILeaveType>(
   { timestamps: true }
 );
 
-LeaveTypeSchema.index({ code: 1 });
-
 export const LeaveType: Model<ILeaveType> =
   (models.LeaveType as Model<ILeaveType>) || model<ILeaveType>("LeaveType", LeaveTypeSchema);
 

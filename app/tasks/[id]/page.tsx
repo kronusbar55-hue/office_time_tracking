@@ -6,6 +6,7 @@ import { ChevronLeft, Upload } from "lucide-react";
 import { toast } from "react-toastify";
 import ActivityTimeline from "@/components/tasks/ActivityTimeline";
 import ImageGallery from "@/components/tasks/ImageGallery";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 export default function TaskViewPage() {
   const router = useRouter();
@@ -14,7 +15,7 @@ export default function TaskViewPage() {
   
   const [task, setTask] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any | null>(null);
+  const { user } = useAuth();
   const [updating, setUpdating] = useState(false);
   const [newAssignee, setNewAssignee] = useState<string | null>(null);
   const [newStatus, setNewStatus] = useState<string | null>(null);
@@ -27,16 +28,10 @@ export default function TaskViewPage() {
     async function loadData() {
       try {
         setLoading(true);
-        const [meRes, taskRes, projRes] = await Promise.all([
-          fetch("/api/auth/me"),
+        const [taskRes, projRes] = await Promise.all([
           fetch(`/api/tasks/${taskId}`),
           fetch("/api/projects")
         ]);
-
-        if (meRes.ok) {
-          const meData = await meRes.json();
-          setUser(meData.user || null);
-        }
 
         if (taskRes.ok) {
           const taskData = await taskRes.json();

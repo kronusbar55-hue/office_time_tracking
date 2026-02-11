@@ -97,7 +97,6 @@ const CheckInOutSchema = new Schema<ICheckInOut>(
 
 CheckInOutSchema.index({ user: 1, date: 1 });
 CheckInOutSchema.index({ userRole: 1, date: 1 });
-CheckInOutSchema.index({ date: 1 });
 
 export const CheckInOut: Model<ICheckInOut> =
   (models.CheckInOut as Model<ICheckInOut>) || model<ICheckInOut>("CheckInOut", CheckInOutSchema);

@@ -3,6 +3,7 @@
 import { Clock, LogOut, Coffee, Plus } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { useState, useEffect } from "react";
+import { useAuth } from "@/components/auth/AuthProvider";
 import { toast } from "react-toastify";
 import type { DailyTimesheetData } from "@/app/api/timesheets/daily/route";
 
@@ -62,22 +63,15 @@ export function DailyView({
     fetchData();
   }, [date]);
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const res = await fetch('/api/auth/me');
-        if (!res.ok) return;
-        const json = await res.json();
-        if (json?.user) {
-          setCurrentUserName(`${json.user.firstName} ${json.user.lastName}`);
-        }
-      } catch (e) {
-        // ignore silently
-      }
-    };
+  const { user } = useAuth();
 
-    fetchUser();
-  }, []);
+  useEffect(() => {
+    if (user) {
+      setCurrentUserName(`${user.firstName ?? ""} ${user.lastName ?? ""}`.trim());
+    } else {
+      setCurrentUserName(userName || null);
+    }
+  }, [user, userName]);
 
   const handleClockIn = async () => {
     try {

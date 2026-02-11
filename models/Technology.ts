@@ -31,8 +31,6 @@ const TechnologySchema = new Schema<ITechnology>(
   }
 );
 
-TechnologySchema.index({ name: 1 }, { unique: true });
-
 export const Technology: Model<ITechnology> =
   (models.Technology as Model<ITechnology>) || model<ITechnology>("Technology", TechnologySchema);
 

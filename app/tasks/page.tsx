@@ -2,6 +2,7 @@
 
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useAuth } from "@/components/auth/AuthProvider";
 import TaskModal from "@/components/tasks/TaskModal";
 import TaskTable from "@/components/tasks/TaskTable";
 
@@ -13,6 +14,7 @@ function TasksPageContent() {
   const [filterAssignee, setFilterAssignee] = useState<string | "all">("all");
   const [filterPriority, setFilterPriority] = useState<string | "all">("all");
   const [me, setMe] = useState<any | null>(null);
+  const { user } = useAuth();
   const [showModal, setShowModal] = useState(false);
   const [projects, setProjects] = useState<any[]>([]);
   const [assignees, setAssignees] = useState<any[]>([]);
@@ -102,23 +104,9 @@ function TasksPageContent() {
     if (fa) setFilterAssignee(fa);
     if (fq) setFilterPriority(fq);
 
-    // fetch current user
-    let mounted = true;
-    (async () => {
-      try {
-        const meRes = await fetch("/api/auth/me");
-        const meR = await meRes.json();
-        if (!mounted) return;
-        setMe(meR?.user || null);
-        if (meR?.user?.role === "employee") {
-          setFilterAssignee(meR.user.id);
-        }
-      } catch (e) {
-        console.error(e);
-      }
-    })();
-
-    return () => { mounted = false };
+    // hydrate from AuthProvider instead of calling /api/auth/me directly
+    setMe(user || null);
+    if (user?.role === "employee") setFilterAssignee(user.id);
   // only run on mount
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

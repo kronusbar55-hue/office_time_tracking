@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useAuth } from "@/components/auth/AuthProvider";
 import { Clock3, LayoutDashboard, CalendarCheck, FileSpreadsheet, BarChart3, Code, UserSquare2, ListChecks, Megaphone, Users, Settings, CalendarDays } from "lucide-react";
 import { NAV_CONFIG, ROLES } from "@/lib/roles";
 
@@ -29,26 +30,15 @@ const ICON_MAP: Record<string, any> = {
 
 export function Sidebar() {
   const pathname = usePathname();
-  const [role, setRole] = useState<string | null>(null);
-  const [mounted, setMounted] = useState(false);
+  const { user, isAuthenticated } = useAuth();
 
-  useEffect(() => {
-    setMounted(true);
-    let mounted = true;
-    fetch("/api/auth/me")
-      .then((r) => r.json())
-      .then((d) => {
-        if (!mounted) return;
-        setRole(d?.user?.role ?? null);
-      })
-      .catch(() => setRole(null));
-    return () => { mounted = false };
-  }, []);
-
-  const navItems = mounted ? NAV_CONFIG.filter((n) => {
+  const role = user?.role ?? null;
+  const navItems = isAuthenticated ? NAV_CONFIG.filter((n) => {
     if (!role) return false;
     return n.allowed.includes(role as any);
   }) : [];
+
+  if (!isAuthenticated) return null;
 
   return (
     <aside className="hidden w-64 flex-col border-r border-slate-800 bg-sidebar/95 px-4 pb-4 pt-6 shadow-2xl shadow-black/60 md:flex">

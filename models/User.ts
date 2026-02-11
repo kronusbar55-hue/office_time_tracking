@@ -84,8 +84,6 @@ const UserSchema = new Schema<IUser>(
   }
 );
 
-UserSchema.index({ email: 1 });
-
 export const User: Model<IUser> =
   (models.User as Model<IUser>) || model<IUser>("User", UserSchema);
 

@@ -3,6 +3,7 @@
 import { format } from "date-fns";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/components/auth/AuthProvider";
 import { UserSquare2 } from "lucide-react";
 
 type MeUser = {
@@ -13,35 +14,18 @@ type MeUser = {
 
 export function Topbar() {
   const router = useRouter();
-  const [user, setUser] = useState<MeUser | null>(null);
+  const { user, logout } = useAuth();
   const [today, setToday] = useState<string>("");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
     setToday(format(new Date(), "EEEE, dd MMM yyyy"));
-    
-    async function fetchMe() {
-      try {
-        const res = await fetch("/api/auth/me");
-        if (!res.ok) return;
-        const data = (await res.json()) as { user: MeUser | null };
-        if (data.user) setUser(data.user);
-      } catch {
-        // ignore
-      }
-    }
-
-    void fetchMe();
   }, []);
 
-  async function handleLogout() {
-    try {
-      await fetch("/api/auth/logout", { method: "POST" });
-    } finally {
-      router.push("/login");
-      router.refresh();
-    }
+  function handleLogout() {
+    // AuthProvider.logout handles server call, storage clearing and redirect
+    logout();
   }
 
   if (!mounted) {
@@ -84,11 +68,11 @@ export function Topbar() {
         <div className="hidden flex-col text-right text-[11px] leading-tight sm:flex">
           <span className="font-medium text-slate-100">
             {user
-              ? `${user.firstName} ${user.lastName}`
+              ? `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim()
               : "Not signed in"}
           </span>
           <span className="text-slate-400">
-            {user ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : ""}
+            {user && user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : ""}
           </span>
         </div>
         <button
