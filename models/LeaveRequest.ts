@@ -15,6 +15,8 @@ export interface ILeaveRequest {
   manager?: Types.ObjectId | null;
   managerComment?: string;
   appliedAt?: Date;
+  /** User IDs to CC on this leave request */
+  ccUsers?: Types.ObjectId[];
 }
 
 const LeaveRequestSchema = new Schema<ILeaveRequest>(
@@ -28,7 +30,8 @@ const LeaveRequestSchema = new Schema<ILeaveRequest>(
     status: { type: String, enum: ["pending", "approved", "rejected", "cancelled"], default: "pending", index: true },
     manager: { type: Schema.Types.ObjectId, ref: "User", default: null },
     managerComment: { type: String },
-    appliedAt: { type: Date, default: () => new Date() }
+    appliedAt: { type: Date, default: () => new Date() },
+    ccUsers: [{ type: Schema.Types.ObjectId, ref: "User" }]
   },
   { timestamps: true }
 );

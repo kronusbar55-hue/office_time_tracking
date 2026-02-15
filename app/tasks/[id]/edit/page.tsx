@@ -4,15 +4,16 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ChevronLeft, Check, X } from "lucide-react";
 import { toast } from "react-toastify";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 export default function TaskEditPage() {
   const router = useRouter();
   const params = useParams();
   const taskId = params.id as string;
+  const { user } = useAuth();
 
   const [task, setTask] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const [title, setTitle] = useState("");
@@ -33,12 +34,9 @@ export default function TaskEditPage() {
     async function loadData() {
       try {
         setLoading(true);
-        const meRes = await fetch("/api/auth/me");
-        const meData = await meRes.json();
-        setUser(meData.user || null);
 
         // Check if user is admin or manager
-        if (!meData.user || (meData.user.role !== "admin" && meData.user.role !== "manager")) {
+        if (!user || (user.role !== "admin" && user.role !== "manager")) {
           toast.error("You don't have permission to edit tasks");
           router.push(`/tasks/${taskId}`);
           return;
@@ -67,7 +65,7 @@ export default function TaskEditPage() {
     }
 
     loadData();
-  }, [taskId, router]);
+  }, [taskId, router, user]);
 
   useEffect(() => {
     if (!task) return;

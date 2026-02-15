@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { Clock3, LayoutDashboard, CalendarCheck, FileSpreadsheet, BarChart3, Code, UserSquare2, ListChecks, Megaphone, Users, Settings, CalendarDays } from "lucide-react";
 import { NAV_CONFIG, ROLES } from "@/lib/roles";
+import { LogOut } from "lucide-react";
 
 type NavItem = {
   label: string;
@@ -29,8 +30,8 @@ const ICON_MAP: Record<string, any> = {
 };
 
 export function Sidebar() {
+  const { user, isAuthenticated, logout } = useAuth();
   const pathname = usePathname();
-  const { user, isAuthenticated } = useAuth();
 
   const role = user?.role ?? null;
   const navItems = isAuthenticated ? NAV_CONFIG.filter((n) => {
@@ -67,9 +68,17 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="mt-4 rounded-lg border border-slate-800 bg-slate-900/60 px-3 py-2 text-[11px] text-slate-400">
-        <p className="font-medium text-slate-300">Today&apos;s Snapshot</p>
-        <p>Track time, attendance, and work updates in one place.</p>
+      <div className="mt-4 space-y-3">
+
+
+        <button
+          onClick={logout}
+          type="button"
+          className="w-full flex items-center justify-center gap-2 rounded-lg bg-slate-900/60 border border-slate-800 px-3 py-2 text-[11px] font-semibold text-slate-100 hover:bg-red-950/40 hover:border-red-800 hover:text-red-300 transition-colors"
+        >
+          <LogOut className="h-4 w-4" />
+          Logout
+        </button>
       </div>
     </aside>
   );

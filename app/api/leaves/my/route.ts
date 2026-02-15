@@ -22,10 +22,15 @@ export async function GET() {
       query.user = userId;
     }
 
-    const records = await LeaveRequest.find(query).sort({ createdAt: -1 }).lean();
+    const records = await LeaveRequest.find(query)
+      .populate("user", "firstName lastName email avatarUrl")
+      .populate("leaveType", "name code")
+      .populate("ccUsers", "firstName lastName email")
+      .sort({ createdAt: -1 })
+      .lean();
 
     // attach attachments
-    const result = await Promise.all(records.map(async (r) => {
+    const result = await Promise.all(records.map(async (r: any) => {
       const atts = await LeaveAttachment.find({ leaveRequest: r._id }).lean();
       return { ...r, attachments: atts };
     }));

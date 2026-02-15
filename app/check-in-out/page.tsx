@@ -1,32 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useAuth } from "@/components/auth/AuthProvider";
 import CheckInOutStatCards from "@/components/time-tracking/CheckInOutStatCards";
 import CheckInOutList from "@/components/time-tracking/CheckInOutList";
 import CheckInOutCharts from "@/components/time-tracking/CheckInOutCharts";
 import CheckInOutTable from "@/components/time-tracking/CheckInOutTable";
 
 export default function CheckInOutPage() {
+  const { user } = useAuth();
   const [period, setPeriod] = useState<"today" | "week" | "month">("today");
   const [viewMode, setViewMode] = useState<"summary" | "detailed" | "analytics">("summary");
-  const [userRole, setUserRole] = useState<string>("");
-
-  useEffect(() => {
-    // Get user role from session storage or fetch from API
-    const fetchUserRole = async () => {
-      try {
-        const res = await fetch("/api/auth/me");
-        const data = await res.json();
-        if (data.user?.role) {
-          setUserRole(data.user.role);
-        }
-      } catch (err) {
-        console.error("Failed to fetch user role:", err);
-      }
-    };
-
-    fetchUserRole();
-  }, []);
+  const userRole = user?.role || "";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 to-slate-900 p-6">

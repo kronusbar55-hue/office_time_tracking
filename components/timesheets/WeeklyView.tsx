@@ -16,6 +16,7 @@ interface DaySummary {
   trackedMinutes: number;
   breakMinutes: number;
   payrollMinutes: number;
+  overtimeMinutes?: number;
   isRestDay: boolean;
   isOngoing: boolean;
 }
@@ -113,25 +114,48 @@ export function WeeklyView({ date }: WeeklyViewProps) {
               <td className="px-4 py-3 text-right font-semibold text-slate-900">{weeklyTotals ? `${Math.floor(weeklyTotals.totalTrackedMinutes/60)}h ${weeklyTotals.totalTrackedMinutes%60}m` : "-"}</td>
             </tr>
 
-            <tr>
+            <tr className="border-b border-slate-200">
+              <td className="px-4 py-3 font-medium text-slate-900">Break hours</td>
+              {days.map((d) => (
+                <td key={`break-${d.date}`} className={`px-4 py-3 text-center font-medium ${isToday(parseISO(d.date)) ? "bg-orange-50 text-orange-600" : "text-slate-900"}`}>
+                  {d.breakMinutes ? `${Math.floor(d.breakMinutes / 60)}h ${d.breakMinutes % 60}m` : "-"}
+                </td>
+              ))}
+              <td className="px-4 py-3 text-right font-semibold text-slate-900">{weeklyTotals ? `${Math.floor(weeklyTotals.totalBreakMinutes / 60)}h ${weeklyTotals.totalBreakMinutes % 60}m` : "-"}</td>
+            </tr>
+            <tr className="border-b border-slate-200">
               <td className="px-4 py-3 font-medium text-slate-900">Payroll hours</td>
               {days.map((d) => (
                 <td key={`payroll-${d.date}`} className={`px-4 py-3 text-center font-medium ${isToday(parseISO(d.date)) ? "bg-orange-50 text-orange-600" : "text-slate-900"}`}>
-                  {d.payrollMinutes ? `${Math.floor(d.payrollMinutes/60)}h ${d.payrollMinutes%60}m` : "-"}
+                  {d.payrollMinutes ? `${Math.floor(d.payrollMinutes / 60)}h ${d.payrollMinutes % 60}m` : "-"}
                 </td>
               ))}
-              <td className="px-4 py-3 text-right font-semibold text-slate-900">{weeklyTotals ? `${Math.floor(weeklyTotals.totalPayrollMinutes/60)}h ${weeklyTotals.totalPayrollMinutes%60}m` : "-"}</td>
+              <td className="px-4 py-3 text-right font-semibold text-slate-900">{weeklyTotals ? `${Math.floor(weeklyTotals.totalPayrollMinutes / 60)}h ${weeklyTotals.totalPayrollMinutes % 60}m` : "-"}</td>
+            </tr>
+            <tr>
+              <td className="px-4 py-3 font-medium text-slate-900">Overtime</td>
+              {days.map((d) => (
+                <td key={`ot-${d.date}`} className={`px-4 py-3 text-center font-medium ${d.overtimeMinutes ? "text-amber-600" : "text-slate-500"}`}>
+                  {d.overtimeMinutes ? `${Math.floor(d.overtimeMinutes / 60)}h ${d.overtimeMinutes % 60}m` : "-"}
+                </td>
+              ))}
+              <td className="px-4 py-3 text-right font-semibold text-amber-600">{weeklyTotals?.totalOvertimeMinutes ? `${Math.floor(weeklyTotals.totalOvertimeMinutes / 60)}h ${weeklyTotals.totalOvertimeMinutes % 60}m` : "-"}</td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      {/* Weekly Total */}
-      <div className="flex justify-end">
+      <div className="flex flex-wrap justify-end gap-8">
         <div className="text-right">
           <p className="text-sm text-slate-600">Weekly total</p>
-          <p className="text-2xl font-semibold text-slate-900">{weeklyTotals ? `${Math.floor(weeklyTotals.totalTrackedMinutes/60)}h ${weeklyTotals.totalTrackedMinutes%60}m` : "-"}</p>
+          <p className="text-2xl font-semibold text-slate-900">{weeklyTotals ? `${Math.floor(weeklyTotals.totalTrackedMinutes / 60)}h ${weeklyTotals.totalTrackedMinutes % 60}m` : "-"}</p>
         </div>
+        {weeklyTotals?.totalOvertimeMinutes > 0 && (
+          <div className="text-right">
+            <p className="text-sm text-slate-600">Overtime total</p>
+            <p className="text-2xl font-semibold text-amber-600">{`${Math.floor(weeklyTotals.totalOvertimeMinutes / 60)}h ${weeklyTotals.totalOvertimeMinutes % 60}m`}</p>
+          </div>
+        )}
       </div>
     </div>
   );

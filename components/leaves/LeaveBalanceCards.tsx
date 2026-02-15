@@ -33,31 +33,36 @@ export default function LeaveBalanceCards() {
 
   if (!balances) {
     return (
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-24 animate-pulse rounded-lg bg-slate-900/40 p-4" />
+          <div key={i} className="h-28 animate-pulse rounded-xl bg-slate-800/40" />
         ))}
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {balances.map((b) => {
         const remainingDays = Math.round((b.remaining || 0) / 480);
         const totalDays = Math.round((b.totalAllocated || 0) / 480);
+        const label = b.leaveType.code || b.leaveType.name;
+
         return (
-          <div key={b._id} className="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-slate-400">{b.leaveType.code || b.leaveType.name}</p>
-                <p className="font-medium">{b.leaveType.name}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-sm font-semibold">{remainingDays}</p>
-                <p className="text-xs text-slate-500">Remaining / {totalDays}</p>
-              </div>
+          <div
+            key={b._id}
+            className="rounded-xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/5 to-transparent p-5 transition-all hover:border-emerald-500/30 hover:shadow-lg"
+          >
+            <div className="mb-2 flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full bg-emerald-400" />
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                {label}
+              </span>
             </div>
+            <p className="text-2xl font-bold text-white">
+              {remainingDays} <span className="text-sm font-normal text-slate-500">/ {totalDays}</span>
+            </p>
+            <p className="mt-1 text-xs text-slate-400">Remaining days</p>
           </div>
         );
       })}

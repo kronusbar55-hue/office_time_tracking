@@ -33,7 +33,12 @@ export async function GET(request: Request) {
       ];
     }
 
-    const leaves = await LeaveRequest.find(filter).sort({ appliedAt: -1 }).lean();
+    const leaves = await LeaveRequest.find(filter)
+      .populate("user", "firstName lastName email avatarUrl")
+      .populate("leaveType", "name code")
+      .populate("ccUsers", "firstName lastName email")
+      .sort({ appliedAt: -1 })
+      .lean();
 
     const result = await Promise.all(leaves.map(async (r: any) => {
       const atts = await LeaveAttachment.find({ leaveRequest: r._id }).lean();

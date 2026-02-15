@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { format } from "date-fns";
+import Link from "next/link";
 import { TimesheetHeader } from "@/components/timesheets/TimesheetHeader";
 import { DateNavigator } from "@/components/timesheets/DateNavigator";
 import { DailyView } from "@/components/timesheets/DailyView";
@@ -27,6 +28,7 @@ export default function TimesheetsPage() {
           <div className="space-y-6">
             {/* Controls Row */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
               {/* View Selector */}
               <div className="flex items-center gap-2">
                 <label className="text-sm font-medium text-slate-700">
@@ -41,6 +43,15 @@ export default function TimesheetsPage() {
                   <option value="weekly">Weekly</option>
                   <option value="monthly">Monthly</option>
                 </select>
+              </div>
+              {viewType === "daily" && (
+                <Link
+                  href={`/timesheets/${currentDate}/details`}
+                  className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                >
+                  View full details
+                </Link>
+              )}
               </div>
 
               {/* Date Navigator */}

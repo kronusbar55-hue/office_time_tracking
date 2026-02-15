@@ -38,6 +38,17 @@ export async function POST(request: Request) {
       fields.endDate = String(fd.get("endDate") || "");
       fields.duration = String(fd.get("duration") || "full-day");
       fields.reason = String(fd.get("reason") || "");
+      const ccRaw = fd.get("ccUsers");
+      if (ccRaw && typeof ccRaw === "string") {
+        try {
+          const arr = JSON.parse(ccRaw);
+          fields.ccUsers = Array.isArray(arr) ? arr.filter((id) => id && /^[0-9a-fA-F]{24}$/.test(String(id))) : [];
+        } catch {
+          fields.ccUsers = [];
+        }
+      } else {
+        fields.ccUsers = [];
+      }
 
       const files = fd.getAll("attachments");
       for (const f of files) {
@@ -73,7 +84,7 @@ export async function POST(request: Request) {
 
     const userId = new mongoose.Types.ObjectId(payload.sub);
     console.log("[leaves/apply] userId:", userId);
-    const { leaveType: leaveTypeInput, startDate, endDate, duration, reason } = fields;
+    const { leaveType: leaveTypeInput, startDate, endDate, duration, reason, ccUsers = [] } = fields;
 
     if (!leaveTypeInput || !startDate || !endDate || !reason) {
       console.warn("[leaves/apply] missing fields", { leaveTypeInput, startDate, endDate, reason });
@@ -171,6 +182,8 @@ export async function POST(request: Request) {
       }
     }
 
+    const ccUserIds = (ccUsers as string[]).map((id) => new mongoose.Types.ObjectId(id)).filter(Boolean);
+
     const created = await LeaveRequest.create({
       user: userId,
       leaveType: leaveTypeId,
@@ -179,7 +192,8 @@ export async function POST(request: Request) {
       duration,
       reason,
       status: lt.requiresApproval ? "pending" : "approved",
-      appliedAt: new Date()
+      appliedAt: new Date(),
+      ccUsers: ccUserIds
     });
 
     for (const a of attachments) {

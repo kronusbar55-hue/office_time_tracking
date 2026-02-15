@@ -16,7 +16,7 @@ const LeaveAttachmentSchema = new Schema<ILeaveAttachment>(
     url: { type: String, required: true },
     filename: { type: String },
     mimeType: { type: String }
-    ,publicId: { type: String },
+    , publicId: { type: String },
     size: { type: Number }
   },
   { timestamps: true }

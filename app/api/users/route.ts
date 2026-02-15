@@ -1,11 +1,18 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { connectDB } from "@/lib/db";
+import { verifyAuthToken } from "@/lib/auth";
 import { User } from "@/models/User";
 import { Technology } from "@/models/Technology";
 import bcrypt from "bcryptjs";
 import cloudinary from "@/lib/cloudinary";
 
 export async function GET() {
+  const cookieStore = cookies();
+  const token = cookieStore.get("auth_token")?.value;
+  const payload = token ? verifyAuthToken(token) : null;
+  if (!payload) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   await connectDB();
 
   const users = await User.find({ isDeleted: false })

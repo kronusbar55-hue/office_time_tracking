@@ -106,21 +106,18 @@ export function DateNavigator({
         <ChevronLeft className="h-5 w-5" />
       </button>
 
-      <div className="flex items-center gap-2 min-w-[200px] justify-center">
-        <span className="text-sm font-medium text-slate-700">
-          {getDisplayText()}
-        </span>
+      <div className="flex items-center gap-2">
         <input
           type="date"
           value={currentDate}
           onChange={handleDatePick}
           max={format(new Date(), "yyyy-MM-dd")}
-          className="hidden"
+          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
           id="dateInput"
         />
-        <label htmlFor="dateInput" className="cursor-pointer">
-          <Calendar className="h-4 w-4 text-slate-500 hover:text-slate-700" />
-        </label>
+        <span className="text-sm font-medium text-slate-700 min-w-[140px]">
+          {getDisplayText()}
+        </span>
       </div>
 
       <button

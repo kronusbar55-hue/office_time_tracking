@@ -12,6 +12,8 @@ import {
   addDays
 } from "date-fns";
 
+const SHIFT_MINUTES = 8 * 60;
+
 export interface WeeklyTimesheetData {
   weekStart: string;
   weekEnd: string;
@@ -24,6 +26,7 @@ export interface WeeklyTimesheetData {
     trackedMinutes: number;
     breakMinutes: number;
     payrollMinutes: number;
+    overtimeMinutes: number;
     isRestDay: boolean;
     isOngoing: boolean;
   }>;
@@ -31,6 +34,7 @@ export interface WeeklyTimesheetData {
     totalTrackedMinutes: number;
     totalBreakMinutes: number;
     totalPayrollMinutes: number;
+    totalOvertimeMinutes: number;
   };
 }
 
@@ -39,11 +43,11 @@ export async function GET(request: Request) {
     await connectDB();
 
     const { searchParams } = new URL(request.url);
-    const dateStr = searchParams.get("date");
+    const dateStr = searchParams.get("date") || searchParams.get("startDate");
 
     if (!dateStr) {
       return NextResponse.json(
-        { error: "Date parameter required" },
+        { error: "Date parameter required (date or startDate)" },
         { status: 400 }
       );
     }
@@ -139,6 +143,8 @@ export async function GET(request: Request) {
         });
       }
 
+      const payrollMinutes = totalTrackedMinutes - totalBreakMinutes;
+      const overtimeMinutes = Math.max(0, payrollMinutes - SHIFT_MINUTES);
       return {
         date: dayStr,
         dayName: format(day, "EEE"),
@@ -147,7 +153,8 @@ export async function GET(request: Request) {
         lastClockOut,
         trackedMinutes: totalTrackedMinutes,
         breakMinutes: totalBreakMinutes,
-        payrollMinutes: totalTrackedMinutes - totalBreakMinutes,
+        payrollMinutes,
+        overtimeMinutes,
         isRestDay: entries.length === 0,
         isOngoing
       };
@@ -157,7 +164,8 @@ export async function GET(request: Request) {
     const weeklyTotals = {
       totalTrackedMinutes: days.reduce((sum, d) => sum + d.trackedMinutes, 0),
       totalBreakMinutes: days.reduce((sum, d) => sum + d.breakMinutes, 0),
-      totalPayrollMinutes: days.reduce((sum, d) => sum + d.payrollMinutes, 0)
+      totalPayrollMinutes: days.reduce((sum, d) => sum + d.payrollMinutes, 0),
+      totalOvertimeMinutes: days.reduce((sum, d) => sum + d.overtimeMinutes, 0)
     };
 
     return NextResponse.json({

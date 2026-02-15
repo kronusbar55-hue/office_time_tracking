@@ -13,11 +13,23 @@ type Leave = {
   status: string;
   attachments?: any[];
   user?: any;
+  ccUsers?: any[];
   appliedAt?: string;
 };
 
-export default function LeaveHistory({ role }: { role?: string | null }) {
+type Filter = "all" | "approved" | "pending" | "rejected";
+
+export default function LeaveHistory({
+  role,
+  onOpenApply,
+  showApply,
+}: {
+  role?: string | null;
+  onOpenApply?: () => void;
+  showApply?: boolean;
+}) {
   const [leaves, setLeaves] = useState<Leave[] | null>(null);
+  const [filter, setFilter] = useState<Filter>("all");
 
   const load = useCallback(() => {
     setLeaves(null);
@@ -35,32 +47,82 @@ export default function LeaveHistory({ role }: { role?: string | null }) {
     load();
   }, [load]);
 
+  const filtered =
+    leaves === null
+      ? []
+      : filter === "all"
+        ? leaves
+        : leaves.filter((l) => l.status === filter);
+
   if (!leaves) {
     return (
-      <div className="mt-6 space-y-3">
-        <div className="h-6 w-1/4 animate-pulse rounded bg-slate-800" />
+      <div className="space-y-4">
+        <div className="h-8 w-1/4 animate-pulse rounded bg-slate-800" />
         {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="h-36 animate-pulse rounded-lg bg-slate-800/40" />
+          <div key={i} className="h-40 animate-pulse rounded-xl bg-slate-800/40" />
         ))}
       </div>
     );
   }
 
-  if (leaves.length === 0) {
-    return (
-      <div className="mt-6 rounded-lg border border-slate-800 bg-slate-900/60 p-8 text-center">
-        <div className="mx-auto mb-4 h-24 w-24 rounded-full bg-slate-800/40 flex items-center justify-center text-4xl">📭</div>
-        <h3 className="text-lg font-semibold">No leave records found</h3>
-        <p className="text-sm text-slate-400">No leave records found. Apply your first leave request.</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="mt-6 space-y-4">
-      {leaves.map((l) => (
-        <LeaveCard key={l._id} leave={l} role={role} onDone={() => load()} />
-      ))}
+    <div>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-4">
+        <h2 className="font-display text-xl font-semibold text-emerald-400">
+          Leave Requests
+        </h2>
+        <div className="flex gap-2">
+          {(["all", "approved", "pending", "rejected"] as Filter[]).map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`rounded-lg px-4 py-2 text-sm font-medium transition-all ${
+                filter === f
+                  ? "border border-emerald-500/50 bg-emerald-500/20 text-emerald-400"
+                  : "border border-white/10 bg-transparent text-slate-400 hover:border-white/20 hover:bg-slate-800/40 hover:text-slate-200"
+              }`}
+            >
+              {f.charAt(0).toUpperCase() + f.slice(1)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {filtered.length === 0 ? (
+        <div className="rounded-xl border border-white/5 bg-slate-900/30 py-16 text-center">
+          <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-slate-800/60 text-4xl">
+            📋
+          </div>
+          <h3 className="text-lg font-semibold text-slate-200">
+            No {filter !== "all" ? filter : ""} leave requests
+          </h3>
+          <p className="mt-2 text-sm text-slate-500">
+            {showApply
+              ? "Apply for leave using the form on the right."
+              : "No leave records match your filters."}
+          </p>
+          {showApply && onOpenApply && (
+            <button
+              onClick={onOpenApply}
+              className="mt-4 rounded-lg bg-emerald-500/20 px-4 py-2 text-sm font-medium text-emerald-400 hover:bg-emerald-500/30"
+            >
+              + Apply for Leave
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {filtered.map((l, i) => (
+            <div
+              key={l._id}
+              className="animate-fade-in-up"
+              style={{ animationDelay: `${i * 80}ms` }}
+            >
+              <LeaveCard leave={l} role={role} onDone={() => load()} />
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

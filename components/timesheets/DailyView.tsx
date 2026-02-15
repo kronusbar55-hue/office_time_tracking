@@ -372,6 +372,7 @@ export function DailyView({
                   <TimeEntryRow
                     clockIn={parseISO(entry.clockIn)}
                     clockOut={entry.clockOut ? parseISO(entry.clockOut) : null}
+                    sessionMinutes={entry.trackedMinutes}
                   />
                   {entry.breaks.map((breakItem, idx) => (
                     <BreakRow
@@ -513,16 +514,28 @@ function SummaryCard({ label, value }: SummaryCardProps) {
 interface TimeEntryRowProps {
   clockIn: Date;
   clockOut: Date | null;
+  sessionMinutes?: number;
 }
 
-function TimeEntryRow({ clockIn, clockOut }: TimeEntryRowProps) {
+function TimeEntryRow({ clockIn, clockOut, sessionMinutes }: TimeEntryRowProps) {
+  const mins = sessionMinutes ?? (clockOut ? Math.round((clockOut.getTime() - clockIn.getTime()) / 60000) : 0);
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
   return (
-    <div className="flex items-center gap-4 py-3 border-b border-slate-100 last:border-0">
-      <Clock className="h-5 w-5 text-green-500 flex-shrink-0" />
-      <div className="flex-1">
-        <p className="text-sm font-medium text-slate-900">Clock in</p>
+    <div className="rounded-lg border border-slate-100 bg-slate-50/50 p-3 mb-3">
+      <div className="flex items-center gap-4 py-2">
+        <Clock className="h-5 w-5 text-green-500 flex-shrink-0" />
+        <span className="text-sm text-slate-600">Clock in</span>
+        <span className="text-sm font-medium text-slate-900">{format(clockIn, "h:mm a")}</span>
       </div>
-      <p className="text-sm text-slate-600">{format(clockIn, "h:mm a")}</p>
+      {clockOut && (
+        <div className="flex items-center gap-4 py-2 border-t border-slate-100">
+          <LogOut className="h-5 w-5 text-slate-500 flex-shrink-0" />
+          <span className="text-sm text-slate-600">Clock out</span>
+          <span className="text-sm font-medium text-slate-900">{format(clockOut, "h:mm a")}</span>
+          <span className="ml-auto text-xs font-semibold text-slate-600">{h}h {m}m</span>
+        </div>
+      )}
     </div>
   );
 }

@@ -28,7 +28,7 @@ import "@/models/IssueLink";
 import "@/models/SubTaskTemplate";
 import "@/models/IssueHierarchy";
 
-const MONGODB_URI = 'mongodb+srv://doadmin:X2NO37Us0D65Q48W@Broot-Linkedin-Test-7de8163b.mongo.ondigitalocean.com/timing?tls=true&authSource=admin';
+const MONGODB_URI = process.env.MONGODB_URI;
 
 if (!MONGODB_URI) {
   throw new Error("Missing MONGODB_URI environment variable");
@@ -57,7 +57,9 @@ export async function connectDB() {
   if (!cached.promise) {
     cached.promise = mongoose
       .connect(MONGODB_URI, {
-        dbName: process.env.MONGODB_DB_NAME || "office_time_tracking"
+        dbName: process.env.MONGODB_DB_NAME || "office_time_tracking",
+        serverSelectionTimeoutMS: 15000,
+        connectTimeoutMS: 15000,
       })
       .then((m) => m);
   }

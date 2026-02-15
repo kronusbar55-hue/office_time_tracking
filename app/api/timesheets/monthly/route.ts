@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { TimeEntry } from "@/models/TimeEntry";
+import { LeaveRequest } from "@/models/LeaveRequest";
 import { cookies } from "next/headers";
 import { verifyAuthToken } from "@/lib/auth";
 import {
@@ -13,13 +14,28 @@ import {
   addDays
 } from "date-fns";
 
+const SHIFT_HOURS = 8;
+const SHIFT_MINUTES = SHIFT_HOURS * 60;
+
+function formatHoursMinutes(totalMinutes: number) {
+  const h = Math.floor(totalMinutes / 60);
+  const m = totalMinutes % 60;
+  return `${h}h ${m}m`;
+}
+
 export interface MonthlySummary {
   [key: string]: {
     date: string;
     trackedMinutes: number;
     breakMinutes: number;
     payrollMinutes: number;
+    overtimeMinutes: number;
+    workedHours: string;
+    breakHours: string;
+    overtimeHours: string;
     isRestDay: boolean;
+    isLeave: boolean;
+    leaveType?: string;
   };
 }
 
@@ -31,6 +47,7 @@ export interface MonthlyTimesheetData {
     totalTrackedMinutes: number;
     totalBreakMinutes: number;
     totalPayrollMinutes: number;
+    totalOvertimeMinutes: number;
   };
   weeklyTotals: {
     [weekNum: number]: {
@@ -46,11 +63,16 @@ export async function GET(request: Request) {
     await connectDB();
 
     const { searchParams } = new URL(request.url);
-    const monthStr = searchParams.get("month"); // YYYY-MM format
+    let monthStr = searchParams.get("month");
+    const yearParam = searchParams.get("year");
+    const monthNum = searchParams.get("month");
 
+    if (!monthStr && monthNum && yearParam) {
+      monthStr = `${yearParam}-${String(monthNum).padStart(2, "0")}`;
+    }
     if (!monthStr) {
       return NextResponse.json(
-        { error: "Month parameter required (YYYY-MM)" },
+        { error: "Month parameter required (YYYY-MM or month+year)" },
         { status: 400 }
       );
     }
@@ -69,13 +91,31 @@ export async function GET(request: Request) {
 
     const userId = payload.sub;
 
-    const timeEntries = await TimeEntry.find({
-      user: userId,
-      clockIn: {
-        $gte: monthStart,
-        $lte: monthEnd
+    const [timeEntries, approvedLeaves] = await Promise.all([
+      TimeEntry.find({
+        user: userId,
+        clockIn: { $gte: monthStart, $lte: monthEnd }
+      }).lean(),
+      LeaveRequest.find({
+        user: userId,
+        status: "approved",
+        startDate: { $lte: format(monthEnd, "yyyy-MM-dd") },
+        endDate: { $gte: format(monthStart, "yyyy-MM-dd") }
+      })
+        .populate("leaveType", "name")
+        .lean()
+    ]);
+
+    const leaveDates = new Set<string>();
+    approvedLeaves.forEach((l: any) => {
+      const start = parseISO(l.startDate);
+      const end = parseISO(l.endDate);
+      let d = start;
+      while (d <= end) {
+        leaveDates.add(format(d, "yyyy-MM-dd"));
+        d = addDays(d, 1);
       }
-    }).lean();
+    });
 
     // Group entries by day
     const dayMap: {
@@ -123,7 +163,8 @@ export async function GET(request: Request) {
         weeklyTotals[weekNum] = {
           totalTrackedMinutes: 0,
           totalBreakMinutes: 0,
-          totalPayrollMinutes: 0
+          totalPayrollMinutes: 0,
+          totalOvertimeMinutes: 0
         };
       }
 
@@ -162,35 +203,40 @@ export async function GET(request: Request) {
       }
 
       const payrollMinutes = totalTrackedMinutes - totalBreakMinutes;
+      const overtimeMinutes = Math.max(0, payrollMinutes - SHIFT_MINUTES);
+      const isLeave = leaveDates.has(dayStr);
+      const leaveRec = approvedLeaves.find((l: any) => {
+        const start = parseISO(l.startDate);
+        const end = parseISO(l.endDate);
+        const day = parseISO(dayStr);
+        return day >= start && day <= end;
+      });
 
       days[dayStr] = {
         date: dayStr,
         trackedMinutes: totalTrackedMinutes,
         breakMinutes: totalBreakMinutes,
         payrollMinutes,
-        isRestDay: entries.length === 0
+        overtimeMinutes,
+        workedHours: formatHoursMinutes(totalTrackedMinutes),
+        breakHours: formatHoursMinutes(totalBreakMinutes),
+        overtimeHours: formatHoursMinutes(overtimeMinutes),
+        isRestDay: entries.length === 0 && !isLeave,
+        isLeave,
+        leaveType: leaveRec ? (leaveRec.leaveType as any)?.name : undefined
       };
 
-      // Add to weekly total
       weeklyTotals[weekNum].totalTrackedMinutes += totalTrackedMinutes;
       weeklyTotals[weekNum].totalBreakMinutes += totalBreakMinutes;
       weeklyTotals[weekNum].totalPayrollMinutes += payrollMinutes;
+      weeklyTotals[weekNum].totalOvertimeMinutes += overtimeMinutes;
     }
 
-    // Calculate monthly totals
     const monthlyTotals = {
-      totalTrackedMinutes: Object.values(days).reduce(
-        (sum, d) => sum + d.trackedMinutes,
-        0
-      ),
-      totalBreakMinutes: Object.values(days).reduce(
-        (sum, d) => sum + d.breakMinutes,
-        0
-      ),
-      totalPayrollMinutes: Object.values(days).reduce(
-        (sum, d) => sum + d.payrollMinutes,
-        0
-      )
+      totalTrackedMinutes: Object.values(days).reduce((sum, d) => sum + d.trackedMinutes, 0),
+      totalBreakMinutes: Object.values(days).reduce((sum, d) => sum + d.breakMinutes, 0),
+      totalPayrollMinutes: Object.values(days).reduce((sum, d) => sum + d.payrollMinutes, 0),
+      totalOvertimeMinutes: Object.values(days).reduce((sum, d) => sum + d.overtimeMinutes, 0)
     };
 
     return NextResponse.json({

@@ -1,21 +1,21 @@
-import React from 'react';
+"use client";
 
 export default function LeaveStatusBadge({ status }: { status: string }) {
-  const map: Record<string, string> = {
-    pending: 'bg-amber-600/10 text-amber-300',
-    approved: 'bg-emerald-600/20 text-emerald-300',
-    rejected: 'bg-rose-600/10 text-rose-300',
-    cancelled: 'bg-slate-600/10 text-slate-300'
+  const map: Record<string, { bg: string; text: string }> = {
+    approved: { bg: "bg-emerald-500/20 border-emerald-500/50", text: "text-emerald-400" },
+    pending: { bg: "bg-amber-500/20 border-amber-500/50", text: "text-amber-400" },
+    rejected: { bg: "bg-rose-500/20 border-rose-500/50", text: "text-rose-400" },
+    cancelled: { bg: "bg-slate-500/20 border-slate-500/50", text: "text-slate-400" },
   };
 
-  const label = status?.toString() || 'pending';
+  const label = status?.toString() || "pending";
+  const styles = map[label] || map.pending;
 
   return (
     <span
       role="status"
       aria-label={`Leave status: ${label}`}
-      title={`Status: ${label}`}
-      className={`rounded-full px-3 py-1 text-xs font-medium ${map[label] || map.pending}`}
+      className={`inline-flex rounded-full border px-3 py-1.5 text-xs font-semibold uppercase tracking-wider ${styles.bg} ${styles.text}`}
     >
       {label}
     </span>
