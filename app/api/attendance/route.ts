@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { connectDB } from "@/lib/db";
+import { verifyAuthToken } from "@/lib/auth";
 import { User } from "@/models/User";
-import { TimeEntry } from "@/models/TimeEntry";
-import { formatISO, parseISO, startOfDay, endOfDay } from "date-fns";
+import { TimeSession } from "@/models/TimeSession";
+import { TimeSessionBreak } from "@/models/TimeSessionBreak";
+import { formatISO } from "date-fns";
 
 export interface AttendanceRecord {
   id: string;
@@ -28,141 +31,177 @@ export interface AttendanceRecord {
 
 export async function GET(request: Request) {
   try {
+    const cookieStore = cookies();
+    const token = cookieStore.get("auth_token")?.value;
+    const payload = token ? verifyAuthToken(token) : null;
+    if (!payload) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     await connectDB();
 
     const { searchParams } = new URL(request.url);
-    const date = searchParams.get("date") || new Date().toISOString();
+    let dateParam = searchParams.get("date") || new Date().toISOString();
+
+    if (dateParam.includes("T")) {
+      dateParam = dateParam.split("T")[0];
+    }
+
     const technology = searchParams.get("technology");
     const search = searchParams.get("search")?.toLowerCase() || "";
     const status = searchParams.get("status");
 
-    const selectedDate = parseISO(date);
-    const dayStart = startOfDay(selectedDate);
-    const dayEnd = endOfDay(selectedDate);
+    const dateStr = dateParam;
+    const now = new Date();
 
-    // Get all active users
-    let userQuery = User.find({ isDeleted: false, isActive: true }).populate({ path: "technology", select: "name" });
+    let userQuery = User.find({ isDeleted: false, isActive: true }).populate({
+      path: "technology",
+      select: "name"
+    });
 
     if (technology && technology !== "all") {
       userQuery = userQuery.where("technology").equals(technology);
     }
 
     const users = await userQuery.lean();
+    const userIds = users.map((u: { _id: unknown }) => u._id);
 
-    // Get time entries for the selected date
-    const timeEntries = await TimeEntry.find({
-      user: { $in: users.map((u) => u._id) },
-      clockIn: {
-        $gte: dayStart,
-        $lte: dayEnd
-      }
+    const sessions = await TimeSession.find({
+      user: { $in: userIds },
+      date: dateStr
     }).lean();
 
-    // Build attendance records
-    const attendanceRecords: AttendanceRecord[] = users
-      .map((user) => {
-        const entry = timeEntries.find(
-          (t) => t.user.toString() === user._id.toString()
+    const sessionIds = sessions.map((s: { _id: unknown }) => s._id);
+    const breaks =
+      sessionIds.length > 0
+        ? await TimeSessionBreak.find({ timeSession: { $in: sessionIds } }).lean()
+        : [];
+
+    const sessionBreaksMap = new Map<string, Array<{ breakStart: Date; breakEnd: Date | null | undefined; durationMinutes?: number }>>();
+    let hasOngoingBreakBySession = new Map<string, boolean>();
+
+    breaks.forEach((b: { timeSession: { toString: () => string }; breakStart: Date; breakEnd?: Date | null; durationMinutes?: number }) => {
+      const sid = b.timeSession?.toString?.() ?? String(b.timeSession);
+      if (!sessionBreaksMap.has(sid)) {
+        sessionBreaksMap.set(sid, []);
+        hasOngoingBreakBySession.set(sid, false);
+      }
+      sessionBreaksMap.get(sid)!.push({
+        breakStart: b.breakStart,
+        breakEnd: b.breakEnd ?? null,
+        durationMinutes: b.durationMinutes
+      });
+      if (!b.breakEnd) {
+        hasOngoingBreakBySession.set(sid, true);
+      }
+    });
+
+    const allRecords: AttendanceRecord[] = users
+      .map((user: any) => {
+        const uid = user._id.toString();
+        const session = sessions.find(
+          (s: { user: { toString: () => string } }) => s.user.toString() === uid
         );
 
         let attendanceStatus: AttendanceRecord["status"] = "not-checked-in";
         let workingHours = 0;
         let breakDuration = 0;
+        let checkIn: Date | undefined;
+        let checkOut: Date | null = null;
+        const breaksList: Array<{ startTime: Date; endTime?: Date | null; reason?: string }> = [];
 
-        if (entry) {
-          const clockOut = entry.clockOut;
+        if (session) {
+          checkIn = session.clockIn;
+          checkOut = session.clockOut ?? null;
+          const sid = session._id.toString();
+          const sessionBreaks = sessionBreaksMap.get(sid) || [];
+          const hasOngoingBreak = hasOngoingBreakBySession.get(sid) ?? false;
 
-          // Base duration from clock-in until clock-out (or now if still working)
-          const durationMs = (clockOut ?? new Date()).getTime() - entry.clockIn.getTime();
-
-          // Calculate break duration from breaks array.
-          // For ongoing breaks (no endTime yet), count time up to now.
-          let totalBreakMs = 0;
-          let hasActiveBreak = false;
-
-          if (entry.breaks && entry.breaks.length > 0) {
-            entry.breaks.forEach((breakItem) => {
-              if (!breakItem.endTime) {
-                hasActiveBreak = true;
-              }
-
-              const effectiveEnd =
-                breakItem.endTime ?? (clockOut ?? new Date());
-
-              if (effectiveEnd > breakItem.startTime) {
-                totalBreakMs += effectiveEnd.getTime() - breakItem.startTime.getTime();
-              }
+          sessionBreaks.forEach((b) => {
+            breaksList.push({
+              startTime: b.breakStart,
+              endTime: b.breakEnd,
+              reason: undefined
             });
-          }
+          });
 
-          breakDuration = totalBreakMs / (1000 * 60 * 60);
-          workingHours = durationMs / (1000 * 60 * 60) - breakDuration;
+          breakDuration = (session.totalBreakMinutes || 0) / 60;
 
-          // Derive status based on clock-out and active break state
-          if (hasActiveBreak && !clockOut) {
-            attendanceStatus = "on-break";
-          } else if (!clockOut) {
-            attendanceStatus = "checked-in";
-          } else {
+          if (session.status === "completed") {
+            workingHours = (session.totalWorkMinutes || 0) / 60;
             attendanceStatus = "checked-out";
+          } else {
+            const clockInMs = new Date(session.clockIn).getTime();
+            const endMs = checkOut ? new Date(checkOut).getTime() : now.getTime();
+            let totalBreakMs = 0;
+            sessionBreaks.forEach((b) => {
+              const end = b.breakEnd ? new Date(b.breakEnd).getTime() : now.getTime();
+              totalBreakMs += end - new Date(b.breakStart).getTime();
+            });
+            workingHours = Math.max(0, (endMs - clockInMs) / 3600000 - totalBreakMs / 3600000);
+
+            if (hasOngoingBreak) {
+              attendanceStatus = "on-break";
+            } else {
+              attendanceStatus = "checked-in";
+            }
           }
         }
 
         return {
-          id: user._id.toString(),
-          userId: user._id.toString(),
+          id: uid,
+          userId: uid,
           firstName: user.firstName,
           lastName: user.lastName,
           email: user.email,
           role: user.role,
-          technology: user.technology ? { id: String((user as any).technology._id || (user as any).technology), name: (user as any).technology.name } : null,
+          technology: user.technology && typeof user.technology === "object" && "name" in user.technology
+            ? {
+                id: String((user.technology as { _id?: unknown })._id ?? user.technology),
+                name: (user.technology as { name: string }).name
+              }
+            : null,
           avatar: user.avatarUrl,
-          checkIn: entry?.clockIn,
-          checkOut: entry?.clockOut || null,
-          breaks: entry?.breaks || [],
+          checkIn,
+          checkOut,
+          breaks: breaksList,
           workingHours: Math.round(workingHours * 100) / 100,
           breakDuration: Math.round(breakDuration * 100) / 100,
           status: attendanceStatus,
-          notes: entry?.notes
+          notes: (session as { notes?: string })?.notes
         };
       })
-      .filter((record) => {
-        // Apply search filter
-        if (
-          search &&
-          !record.firstName.toLowerCase().includes(search) &&
-          !record.lastName.toLowerCase().includes(search) &&
-          !record.userId.toLowerCase().includes(search)
-        ) {
-          return false;
-        }
+      .sort((a, b) =>
+      `${a.firstName}${a.lastName}`.localeCompare(`${b.firstName}${b.lastName}`)
+    );
 
-        // Apply status filter
-        if (status && status !== "all" && record.status !== status) {
-          return false;
-        }
-
-        return true;
-      })
-      .sort((a, b) => `${a.firstName}${a.lastName}`.localeCompare(`${b.firstName}${b.lastName}`));
-
-    // Calculate summary stats
     const summary = {
-      totalEmployees: users.length,
-      checkedIn: attendanceRecords.filter((r) => r.status === "checked-in")
-        .length,
-      checkedOut: attendanceRecords.filter((r) => r.status === "checked-out")
-        .length,
-      onBreak: attendanceRecords.filter((r) => r.status === "on-break").length,
-      notCheckedIn: attendanceRecords.filter(
-        (r) => r.status === "not-checked-in"
-      ).length
+      totalEmployees: allRecords.length,
+      checkedIn: allRecords.filter((r) => r.status === "checked-in").length,
+      checkedOut: allRecords.filter((r) => r.status === "checked-out").length,
+      onBreak: allRecords.filter((r) => r.status === "on-break").length,
+      notCheckedIn: allRecords.filter((r) => r.status === "not-checked-in").length
     };
 
+    const filteredRecords = allRecords.filter((record) => {
+      if (
+        search &&
+        !record.firstName.toLowerCase().includes(search) &&
+        !record.lastName.toLowerCase().includes(search) &&
+        !record.userId.toLowerCase().includes(search)
+      ) {
+        return false;
+      }
+      if (status && status !== "all" && record.status !== status) {
+        return false;
+      }
+      return true;
+    });
+
     return NextResponse.json({
-      data: attendanceRecords,
+      data: filteredRecords,
       summary,
-      date: formatISO(selectedDate)
+      date: formatISO(new Date(dateStr + "T00:00:00Z"))
     });
   } catch (error) {
     console.error("Attendance API error:", error);

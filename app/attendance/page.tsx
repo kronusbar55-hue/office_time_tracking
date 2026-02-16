@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { format } from "date-fns";
 import { AttendanceSummaryCards } from "@/components/attendance/AttendanceSummaryCards";
 import { AttendanceFilters } from "@/components/attendance/AttendanceFilters";
@@ -10,6 +10,7 @@ import type { AttendanceRecord } from "@/app/api/attendance/route";
 export default function AttendancePage() {
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDate, setSelectedDate] = useState(
     format(new Date(), "yyyy-MM-dd")
@@ -27,32 +28,74 @@ export default function AttendancePage() {
     onBreak: 0,
     notCheckedIn: 0
   });
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const lastFetchTimeRef = useRef<number>(0);
 
   // Fetch attendance data
-  useEffect(() => {
-    const fetchAttendance = async () => {
+  const fetchAttendance = async (suppressLoading = false) => {
+    if (!suppressLoading) {
       setIsLoading(true);
-      try {
-        const params = new URLSearchParams({
-          date: new Date(selectedDate).toISOString(),
-          technology: selectedTechnology,
-          search: searchQuery
-        });
+    } else {
+      setIsRefreshing(true);
+    }
+    
+    try {
+      const params = new URLSearchParams({
+        date: selectedDate,
+        technology: selectedTechnology,
+        search: searchQuery
+      });
 
-        const response = await fetch(`/api/attendance?${params}`);
-        const data = await response.json();
+      const response = await fetch(`/api/attendance?${params}`, {
+        cache: 'no-store'
+      });
+      const data = await response.json();
 
-        setRecords(data.data || []);
-        setSummary(data.summary);
-      } catch (error) {
-        console.error("Failed to fetch attendance:", error);
-      } finally {
+      setRecords(data.data || []);
+      setSummary(data.summary);
+      lastFetchTimeRef.current = Date.now();
+    } catch (error) {
+      console.error("Failed to fetch attendance:", error);
+    } finally {
+      if (!suppressLoading) {
         setIsLoading(false);
+      } else {
+        setIsRefreshing(false);
       }
-    };
+    }
+  };
 
+  // Initial fetch and filter change fetch
+  useEffect(() => {
     fetchAttendance();
   }, [selectedDate, selectedTechnology, searchQuery]);
+
+  // Auto-refresh polling - only for today's data
+  useEffect(() => {
+    const isToday = selectedDate === format(new Date(), "yyyy-MM-dd");
+    
+    if (isToday) {
+      // Initial fetch is already done above
+      
+      // Set up polling interval (every 5 seconds)
+      pollingIntervalRef.current = setInterval(() => {
+        fetchAttendance(true); // suppress loading indicator
+      }, 5000);
+
+      return () => {
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+          pollingIntervalRef.current = null;
+        }
+      };
+    } else {
+      // Stop polling for non-today dates
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
+    }
+  }, [selectedDate]);
 
   async function loadTechnologies() {
     setTechsLoading(true);
@@ -142,9 +185,16 @@ export default function AttendancePage() {
         <div>
           <h1 className="text-3xl font-bold text-slate-50">Attendance</h1>
           <p className="mt-1 text-sm text-slate-400">
-            Calendar and daily attendance status generated from time entries.
+            Calendar and daily attendance status generated from time entries. Auto-refreshes every 5 seconds for today.
           </p>
         </div>
+        <button
+          onClick={() => fetchAttendance(true)}
+          disabled={isRefreshing}
+          className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+        >
+          {isRefreshing ? "Refreshing..." : "Refresh Now"}
+        </button>
       </div>
 
       {/* Summary Cards */}
