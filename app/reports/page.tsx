@@ -379,7 +379,7 @@ export default function ReportsPage() {
                         border: "1px solid #334155",
                         borderRadius: "8px"
                       }}
-                      formatter={(v: number | undefined, name: string) =>
+                      formatter={(v: number | undefined, name: string | undefined) =>
                         [typeof v === "number" ? `${v.toFixed(2)}h` : v, name]
                       }
                     />

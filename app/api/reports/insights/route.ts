@@ -54,7 +54,7 @@ export async function GET(request: Request) {
     let userIds = users.map((u: { _id: unknown }) => u._id);
 
     if (employeeId && employeeId !== "all") {
-      userIds = userIds.filter((id: unknown) => (id as any).toString() === employeeId);
+      userIds = userIds.filter((id: unknown) => (id as any)?.toString?.() === employeeId);
       if (userIds.length === 0) {
         return NextResponse.json({
           stats: { totalWorkHours: 0, totalBreakHours: 0, presentDays: 0, avgDailyHours: 0 },

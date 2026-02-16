@@ -6,6 +6,7 @@ export interface ITimeSessionBreak {
   breakStart: Date;
   breakEnd?: Date | null;
   durationMinutes?: number;
+  reason?: string;
 }
 
 const TimeSessionBreakSchema = new Schema<ITimeSessionBreak>(
@@ -13,7 +14,8 @@ const TimeSessionBreakSchema = new Schema<ITimeSessionBreak>(
     timeSession: { type: Schema.Types.ObjectId, ref: "TimeSession", required: true, index: true },
     breakStart: { type: Date, required: true },
     breakEnd: { type: Date, default: null },
-    durationMinutes: { type: Number, default: 0 }
+    durationMinutes: { type: Number, default: 0 },
+    reason: { type: String, default: "Unspecified" }
   },
   { timestamps: true }
 );
