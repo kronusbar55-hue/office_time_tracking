@@ -83,7 +83,7 @@ export async function POST(request: Request) {
       successResp("Break started", {
         id: breakRecord._id.toString(),
         breakStart: breakRecord.breakStart,
-        reason: breakRecord.durationMinutes
+        reason: breakRecord.reason
       }),
       { status: 201 }
     );
