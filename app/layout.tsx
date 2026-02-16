@@ -15,6 +15,10 @@ export const metadata: Metadata = {
   title: "Office Time Tracking",
   description: "Internal office time tracking & attendance"
 };
+// Ensure favicon is served from public/favicon.ico — copy the file to public/
+metadata.icons = {
+  icon: "/favicon.ico"
+};
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
