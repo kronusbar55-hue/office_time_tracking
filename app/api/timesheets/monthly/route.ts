@@ -147,6 +147,7 @@ export async function GET(request: Request) {
         totalTrackedMinutes: number;
         totalBreakMinutes: number;
         totalPayrollMinutes: number;
+        totalOvertimeMinutes: number;
       };
     } = {};
 

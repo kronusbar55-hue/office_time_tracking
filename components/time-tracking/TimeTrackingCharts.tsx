@@ -160,7 +160,7 @@ export default function TimeTrackingCharts({ refreshKey }: { refreshKey?: number
                     border: "1px solid #334155",
                     borderRadius: "8px",
                   }}
-                  formatter={(v: number, name: string) => [
+                  formatter={(v: number | undefined, name: string | undefined) => [
                     `${Number(v).toFixed(2)}h`,
                     name === "work" ? "Work" : "Break",
                   ]}
@@ -191,7 +191,7 @@ export default function TimeTrackingCharts({ refreshKey }: { refreshKey?: number
                     border: "1px solid #334155",
                     borderRadius: "8px",
                   }}
-                  formatter={(v: number) => [`${Number(v).toFixed(2)}h`, "Worked"]}
+                  formatter={(v: number | undefined) => [`${Number(v).toFixed(2)}h`, "Worked"]}
                 />
                 <Line
                   type="monotone"
@@ -233,7 +233,7 @@ export default function TimeTrackingCharts({ refreshKey }: { refreshKey?: number
                     border: "1px solid #334155",
                     borderRadius: "8px",
                   }}
-                  formatter={(v: number, name: string) => [
+                  formatter={(v: number | undefined, name: string | undefined) => [
                     typeof v === "number" ? `${v.toFixed(2)}h` : String(v),
                     name,
                   ]}

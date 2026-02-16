@@ -82,7 +82,7 @@ export function TimeTrackingProvider({ children, shiftHoursTarget = 8 }: { child
           clockIn: activeData.clockIn || "",
           breaks
         });
-        const hasOngoing = breaks.some((b) => b.endTime === null);
+        const hasOngoing = breaks.some((b: { startTime: string; endTime: string | null }) => b.endTime === null);
         setOngoingBreak(!!hasOngoing);
       } else {
         setSessionData(null);

@@ -56,7 +56,7 @@ export async function connectDB() {
 
   if (!cached.promise) {
     cached.promise = mongoose
-      .connect(MONGODB_URI, {
+      .connect(MONGODB_URI!, {
         dbName: process.env.MONGODB_DB_NAME || "office_time_tracking",
         serverSelectionTimeoutMS: 15000,
         connectTimeoutMS: 15000,
