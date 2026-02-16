@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { format } from "date-fns";
 import { AttendanceSummaryCards } from "@/components/attendance/AttendanceSummaryCards";
 import { AttendanceFilters } from "@/components/attendance/AttendanceFilters";
@@ -28,12 +28,10 @@ export default function AttendancePage() {
     onBreak: 0,
     notCheckedIn: 0
   });
-  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const lastFetchTimeRef = useRef<number>(0);
 
   // Fetch attendance data
-  const fetchAttendance = async (suppressLoading = false) => {
-    if (!suppressLoading) {
+  const fetchAttendance = async (manualRefresh = false) => {
+    if (!manualRefresh) {
       setIsLoading(true);
     } else {
       setIsRefreshing(true);
@@ -53,11 +51,10 @@ export default function AttendancePage() {
 
       setRecords(data.data || []);
       setSummary(data.summary);
-      lastFetchTimeRef.current = Date.now();
     } catch (error) {
       console.error("Failed to fetch attendance:", error);
     } finally {
-      if (!suppressLoading) {
+      if (!manualRefresh) {
         setIsLoading(false);
       } else {
         setIsRefreshing(false);
@@ -65,37 +62,10 @@ export default function AttendancePage() {
     }
   };
 
-  // Initial fetch and filter change fetch
+  // Fetch on initial load and when filters change
   useEffect(() => {
     fetchAttendance();
   }, [selectedDate, selectedTechnology, searchQuery]);
-
-  // Auto-refresh polling - only for today's data
-  useEffect(() => {
-    const isToday = selectedDate === format(new Date(), "yyyy-MM-dd");
-    
-    if (isToday) {
-      // Initial fetch is already done above
-      
-      // Set up polling interval (every 5 seconds)
-      pollingIntervalRef.current = setInterval(() => {
-        fetchAttendance(true); // suppress loading indicator
-      }, 5000);
-
-      return () => {
-        if (pollingIntervalRef.current) {
-          clearInterval(pollingIntervalRef.current);
-          pollingIntervalRef.current = null;
-        }
-      };
-    } else {
-      // Stop polling for non-today dates
-      if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current);
-        pollingIntervalRef.current = null;
-      }
-    }
-  }, [selectedDate]);
 
   async function loadTechnologies() {
     setTechsLoading(true);
@@ -185,7 +155,7 @@ export default function AttendancePage() {
         <div>
           <h1 className="text-3xl font-bold text-slate-50">Attendance</h1>
           <p className="mt-1 text-sm text-slate-400">
-            Calendar and daily attendance status generated from time entries. Auto-refreshes every 5 seconds for today.
+            Calendar and daily attendance status generated from time entries.
           </p>
         </div>
         <button
