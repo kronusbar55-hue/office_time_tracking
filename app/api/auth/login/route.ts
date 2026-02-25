@@ -4,6 +4,8 @@ import { User } from "@/models/User";
 import bcrypt from "bcryptjs";
 import { signAuthToken } from "@/lib/auth";
 import { successResp, errorResp } from "@/lib/apiResponse";
+import { AuditLog } from "@/models/AuditLog";
+import mongoose from "mongoose";
 
 export async function POST(request: Request) {
   await connectDB();
@@ -17,7 +19,10 @@ export async function POST(request: Request) {
     return NextResponse.json(errorResp("Email and password are required"), { status: 400 });
   }
 
-  const user = await User.findOne({
+  // Robust User model retrieval
+  const UserModel = User || (mongoose.models && mongoose.models.User) || mongoose.model("User");
+
+  const user = await UserModel.findOne({
     email: email.toLowerCase(),
     isDeleted: false
   });
@@ -45,6 +50,20 @@ export async function POST(request: Request) {
       role: user.role
     }
   }));
+
+  // Log successful login
+  try {
+    await AuditLog.create({
+      action: "login",
+      user: user._id,
+      entity: "User",
+      entityId: user._id,
+      ipAddress: request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "",
+      userAgent: request.headers.get("user-agent") || ""
+    });
+  } catch (e) {
+    console.error("Failed to log login:", e);
+  }
 
   res.cookies.set("auth_token", token, {
     httpOnly: true,

@@ -42,18 +42,18 @@ export function Sidebar() {
   if (!isAuthenticated) return null;
 
   return (
-    <aside className="hidden w-64 flex-col border-r border-slate-800 bg-sidebar/95 px-4 pb-4 pt-6 shadow-2xl shadow-black/60 md:flex">
+    <aside className="sticky top-0 h-screen hidden w-64 flex-col border-r border-slate-800 bg-sidebar/95 px-4 pb-4 pt-6 shadow-2xl shadow-black/60 md:flex">
       <div className="mb-8 flex items-center gap-2 px-2">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-slate-950">
           <Clock3 className="h-5 w-5" />
         </div>
         <div>
-          <p className="text-sm font-semibold tracking-tight">Office Time Tracking</p>
-          <p className="text-[11px] text-slate-400">Internal Portal</p>
+          <p className="text-sm font-semibold tracking-tight">Technotoil WorkPortal</p>
+          <p className="text-[11px] text-slate-400">Work Portal</p>
         </div>
       </div>
 
-      <nav className="flex-1 space-y-1 text-sm">
+      <nav className="flex-1 space-y-1 text-sm overflow-y-auto pr-2 custom-scrollbar">
         {navItems.map((item) => {
           const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
 
@@ -68,8 +68,22 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="mt-4 space-y-3">
-
+      <div className="mt-4 border-t border-slate-800 pt-4 space-y-3">
+        {user && (
+          <div className="flex items-center gap-3 px-2 py-1 mb-2">
+            <div className="h-9 w-9 rounded-full bg-accent/20 border border-accent/20 flex items-center justify-center text-accent text-xs font-bold uppercase">
+              {user.firstName?.charAt(0)}{user.lastName?.charAt(0)}
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <p className="text-[11px] font-semibold text-slate-100 truncate">
+                {user.firstName} {user.lastName}
+              </p>
+              <p className="text-[10px] text-slate-400 capitalize truncate">
+                {user.role}
+              </p>
+            </div>
+          </div>
+        )}
 
         <button
           onClick={logout}

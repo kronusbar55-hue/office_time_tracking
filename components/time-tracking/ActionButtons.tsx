@@ -3,7 +3,11 @@
 import { Clock, LogOut, Coffee, Square } from "lucide-react";
 import { useTimeTracking } from "./TimeTrackingProvider";
 
-export default function ActionButtons() {
+type Props = {
+  onClockOutRequested?: () => void;
+};
+
+export default function ActionButtons({ onClockOutRequested }: Props) {
   const { active, ongoingBreak, busy, clockIn, clockOut, startBreak, endBreak } = useTimeTracking();
 
   const baseClass =
@@ -24,7 +28,7 @@ export default function ActionButtons() {
         <>
           <button
             disabled={busy}
-            onClick={clockOut}
+            onClick={onClockOutRequested ?? clockOut}
             className={`${baseClass} bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg shadow-red-500/25 hover:shadow-red-500/40`}
           >
             <LogOut className="h-5 w-5" />

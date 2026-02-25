@@ -4,6 +4,7 @@ import { verifyAuthToken } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { TimeSession } from "@/models/TimeSession";
 import { TimeSessionBreak } from "@/models/TimeSessionBreak";
+import { AttendanceLog } from "@/models/AttendanceLog";
 import { AuditLog } from "@/models/AuditLog";
 import { successResp, errorResp } from "@/lib/apiResponse";
 
@@ -64,6 +65,18 @@ export async function POST(request: Request) {
     activeBreak.durationMinutes = breakDurationMinutes;
 
     await activeBreak.save();
+
+    // Update Live Attendance Log
+    await AttendanceLog.findOneAndUpdate(
+      { userId: payload.sub, date: dateStr, "breaks.breakEnd": null },
+      {
+        $set: {
+          status: "IN",
+          lastActivityAt: now,
+          "breaks.$.breakEnd": now
+        }
+      }
+    );
 
     // Update session total break minutes
     const allBreaks = await TimeSessionBreak.find({ timeSession: session._id }).lean();

@@ -208,7 +208,7 @@ export default function TimeTrackingCharts({ refreshKey }: { refreshKey?: number
       </div>
 
       {/* Graph 3: Work Distribution (Pie) */}
-      <div className="rounded-xl border border-white/10 bg-slate-900/40 p-6 backdrop-blur-sm">
+      {/* <div className="rounded-xl border border-white/10 bg-slate-900/40 p-6 backdrop-blur-sm">
         <h3 className="mb-4 text-lg font-semibold text-slate-100">Work Distribution (This Week)</h3>
         <div className="flex flex-col items-center gap-4 md:flex-row md:justify-center">
           <div className="h-56 w-56">
@@ -256,7 +256,7 @@ export default function TimeTrackingCharts({ refreshKey }: { refreshKey?: number
             </span>
           </div>
         )}
-      </div>
+      </div> */}
     </div>
   );
 }

@@ -4,9 +4,28 @@ import { LeaveRequest } from "@/models/LeaveRequest";
 import { TimeSession } from "@/models/TimeSession";
 import { LeaveBalance } from "@/models/LeaveBalance";
 import { formatDistanceToNow } from "date-fns";
+import {
+  Users,
+  Clock,
+  Calendar,
+  CheckCircle2,
+  XCircle,
+  Clock4,
+  UserPlus,
+  Briefcase,
+  ChevronRight,
+  UserCheck
+} from "lucide-react";
+import Link from "next/link";
+import WelcomeHeader from "./shared/WelcomeHeader";
+import StatsCard from "./shared/StatsCard";
+import DashboardCard from "./shared/DashboardCard";
 
 export default async function HRDashboard() {
   await connectDB();
+
+  // Simulated HR User details
+  const hrUser = { firstName: "HR", lastName: "Specialist" };
 
   // Get today's date
   const today = new Date();
@@ -24,7 +43,6 @@ export default async function HRDashboard() {
   // Leave metrics
   const pendingLeaves = await LeaveRequest.countDocuments({ status: "pending" });
   const approvedLeaves = await LeaveRequest.countDocuments({ status: "approved" });
-  const rejectedLeaves = await LeaveRequest.countDocuments({ status: "rejected" });
 
   // Pending leave requests with employee details
   const pendingLeaveRequests = await LeaveRequest.find({ status: "pending" })
@@ -32,7 +50,7 @@ export default async function HRDashboard() {
     .populate("leaveType", "name")
     .populate("manager", "firstName lastName")
     .sort({ appliedAt: -1 })
-    .limit(10)
+    .limit(5)
     .lean();
 
   // Recent approvals
@@ -43,160 +61,184 @@ export default async function HRDashboard() {
     .limit(5)
     .lean();
 
-  // Leave trends (this month)
-  const currentMonth = new Date().getMonth() + 1;
-  const currentYear = new Date().getFullYear();
-  const leavesByType = await LeaveBalance.aggregate([
-    {
-      $group: {
-        _id: "$leaveType",
-        totalUsed: { $sum: "$used" },
-        totalAllocated: { $sum: "$totalAllocated" }
-      }
-    },
-    { $limit: 5 }
-  ]);
-
   return (
-    <div className="space-y-6">
-      {/* Top KPI Cards */}
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <KpiCard label="Total Employees" value={totalEmployees} />
-        <KpiCard label="Active Employees" value={activeEmployees} />
-        <KpiCard label="Checked In Today" value={checkedInToday} subtext={`${attendanceRate}% rate`} />
-        <KpiCard label="Pending Leaves" value={pendingLeaves} highlight={pendingLeaves > 0} />
+    <div className="mx-auto max-w-7xl space-y-8 p-4 md:p-8">
+      {/* Row 1: Welcome */}
+      <WelcomeHeader
+        firstName={hrUser.firstName}
+        lastName={hrUser.lastName}
+        progress={attendanceRate}
+      />
+
+      {/* Row 2: HR Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatsCard
+          label="Total Employees"
+          value={totalEmployees}
+          subtext={`${activeEmployees} Active`}
+          icon={<Users className="h-6 w-6" />}
+          color="blue"
+          delay={0.1}
+        />
+        <StatsCard
+          label="Checked In Today"
+          value={checkedInToday}
+          subtext={`${attendanceRate}% Compliance`}
+          icon={<UserCheck className="h-6 w-6" />}
+          color="green"
+          delay={0.2}
+          trend={{ value: 4, isPositive: true }}
+        />
+        <StatsCard
+          label="Pending Leaves"
+          value={pendingLeaves}
+          subtext="Needs Approval"
+          icon={<Calendar className="h-6 w-6" />}
+          color="yellow"
+          delay={0.3}
+          trend={{ value: 12, isPositive: false }}
+        />
+        <StatsCard
+          label="New Joiners"
+          value={2}
+          subtext="This Month"
+          icon={<UserPlus className="h-6 w-6" />}
+          color="purple"
+          delay={0.4}
+        />
       </div>
 
-      {/* Leave Statistics */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-lg border border-slate-700 p-6">
-          <h3 className="mb-4 text-lg font-semibold">Leave Requests (All Time)</h3>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Pending</span>
-              <span className={`font-bold text-lg ${pendingLeaves > 0 ? "text-yellow-400" : ""}`}>{pendingLeaves}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Approved</span>
-              <span className="font-bold text-lg text-green-400">{approvedLeaves}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Rejected</span>
-              <span className="font-bold text-lg text-red-400">{rejectedLeaves}</span>
-            </div>
+      {/* Row 3: Main HR Content */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Pending Requests */}
+        <DashboardCard className="lg:col-span-2" delay={0.5}>
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-bold text-white flex items-center gap-2">
+              <Clock4 className="h-5 w-5 text-yellow-400" />
+              Pending Leave Requests
+            </h3>
+            <Link href="/leaves" className="text-sm font-medium text-slate-400 hover:text-white transition-colors">
+              View All
+            </Link>
           </div>
-        </div>
 
-        <div className="rounded-lg border border-slate-700 p-6">
-          <h3 className="mb-4 text-lg font-semibold">Attendance (Today)</h3>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Checked In</span>
-              <span className="font-bold text-lg">{checkedInToday}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Not Checked In</span>
-              <span className="font-bold text-lg">{activeEmployees - checkedInToday}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Compliance Rate</span>
-              <span className="font-bold text-lg text-blue-400">{attendanceRate}%</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-lg border border-slate-700 p-6">
-          <h3 className="mb-4 text-lg font-semibold">Employee Status</h3>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Active</span>
-              <span className="font-bold text-lg text-green-400">{activeEmployees}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Inactive</span>
-              <span className="font-bold text-lg text-slate-400">{inactiveEmployees}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Total</span>
-              <span className="font-bold text-lg">{totalEmployees}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Pending Leave Requests - Requires Action */}
-      <div className="rounded-lg border border-slate-700 p-6">
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-semibold">Pending Leave Requests</h3>
-          <span className="rounded-full bg-red-900/30 px-3 py-1 text-xs font-semibold text-red-400">{pendingLeaves} Pending</span>
-        </div>
-        {pendingLeaveRequests.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="border-b border-slate-700">
-                <tr>
-                  <th className="text-left py-2">Employee</th>
-                  <th className="text-left py-2">Leave Type</th>
-                  <th className="text-left py-2">Duration</th>
-                  <th className="text-left py-2">Reason</th>
-                  <th className="text-left py-2">Applied</th>
-                  <th className="text-left py-2">Manager</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-700">
-                {pendingLeaveRequests.map((req: any) => (
-                  <tr key={req._id} className="hover:bg-slate-900/30">
-                    <td className="py-3 font-medium">{req.user?.firstName} {req.user?.lastName}</td>
-                    <td className="py-3">{req.leaveType?.name}</td>
-                    <td className="py-3 text-xs">
-                      {req.startDate} to {req.endDate}
-                      <br />
-                      <span className="text-slate-400">{req.duration.replace("-", " ")}</span>
-                    </td>
-                    <td className="py-3 text-xs text-slate-300">{req.reason?.substring(0, 40)}...</td>
-                    <td className="py-3 text-xs">{req.appliedAt ? formatDistanceToNow(new Date(req.appliedAt), { addSuffix: true }) : '-'}</td>
-                    <td className="py-3 text-xs">{req.manager?.firstName || '-'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="rounded bg-green-900/20 p-4 text-center text-sm text-green-200 border border-green-700">
-            ✓ No pending leave requests
-          </div>
-        )}
-      </div>
-
-      {/* Recent Approvals */}
-      <div className="rounded-lg border border-slate-700 p-6">
-        <h3 className="mb-4 text-lg font-semibold">Recent Approvals</h3>
-        {recentApprovals.length > 0 ? (
-          <div className="space-y-2">
-            {recentApprovals.map((req: any) => (
-              <div key={req._id} className="flex items-center justify-between rounded bg-slate-900/30 p-3">
-                <div>
-                  <p className="text-sm font-medium">{req.user?.firstName} {req.user?.lastName}</p>
-                  <p className="text-xs text-slate-400">{req.leaveType?.name} • {req.startDate} to {req.endDate}</p>
+          <div className="space-y-4">
+            {pendingLeaveRequests.length > 0 ? (
+              pendingLeaveRequests.map((req: any) => (
+                <div key={req._id} className="group flex items-center justify-between p-4 rounded-2xl bg-slate-800/30 border border-white/5 hover:bg-slate-800/50 hover:border-blue-500/30 transition-all">
+                  <div className="flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-full border border-slate-700 bg-slate-800 flex items-center justify-center text-blue-400 font-bold">
+                      {req.user?.firstName?.[0]}{req.user?.lastName?.[0]}
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-white group-hover:text-blue-400 transition-colors">
+                        {req.user?.firstName} {req.user?.lastName}
+                      </h4>
+                      <p className="text-xs text-slate-500">
+                        {req.leaveType?.name} • {req.duration.replace("-", " ")}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-6">
+                    <div className="hidden md:block text-right">
+                      <p className="text-xs text-slate-400">Status</p>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-yellow-500">Pending</p>
+                    </div>
+                    <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <ChevronRight className="h-5 w-5" />
+                    </div>
+                  </div>
                 </div>
-                <span className="text-xs text-green-400">✓ Approved</span>
+              ))
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12 text-slate-500">
+                <CheckCircle2 className="h-12 w-12 mb-4 text-green-500/20" />
+                <p>All clear! No pending requests.</p>
               </div>
-            ))}
+            )}
           </div>
-        ) : (
-          <p className="text-sm text-slate-400">No recent approvals</p>
-        )}
+        </DashboardCard>
+
+        {/* Recent Activity/Approvals */}
+        <DashboardCard delay={0.6}>
+          <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+            <CheckCircle2 className="h-5 w-5 text-green-400" />
+            Recent Approvals
+          </h3>
+          <div className="space-y-6">
+            {recentApprovals.length > 0 ? (
+              recentApprovals.map((req: any) => (
+                <div key={req._id} className="flex gap-4">
+                  <div className="h-2 w-2 rounded-full bg-green-500 mt-2 shrink-0" />
+                  <div>
+                    <h4 className="text-sm font-bold text-white">{req.user?.firstName} {req.user?.lastName}</h4>
+                    <p className="text-xs text-slate-400 mb-1">{req.leaveType?.name}</p>
+                    <p className="text-[10px] text-slate-500">
+                      {formatDistanceToNow(new Date(req.updatedAt), { addSuffix: true })}
+                    </p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-slate-500 text-sm">No recent approvals found.</p>
+            )}
+          </div>
+          <Link href="/employees" className="w-full mt-8 block text-center py-3 rounded-xl bg-slate-800 border border-slate-700 text-white font-bold text-sm hover:bg-slate-700 transition-colors">
+            Manage Employees
+          </Link>
+        </DashboardCard>
       </div>
+
+      {/* Employee Quick View */}
+      <DashboardCard delay={0.7}>
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-xl font-bold text-white flex items-center gap-2">
+            <Users className="h-5 w-5 text-blue-400" />
+            Employee Overview
+          </h3>
+          <div className="flex gap-2">
+            <div className="px-3 py-1 rounded-full bg-green-500/10 border border-green-500/20 text-[10px] font-bold text-green-500 uppercase">
+              {activeEmployees} Active
+            </div>
+            <div className="px-3 py-1 rounded-full bg-slate-500/10 border border-slate-500/20 text-[10px] font-bold text-slate-500 uppercase">
+              {inactiveEmployees} Inactive
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="p-4 rounded-2xl bg-slate-800/30 border border-white/5 space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-xs text-slate-500 uppercase font-bold">Attendance Today</span>
+              <span className="text-xs font-bold text-blue-400">{attendanceRate}%</span>
+            </div>
+            <div className="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden">
+              <div className="h-full bg-blue-500" style={{ width: `${attendanceRate}%` }} />
+            </div>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-slate-800/30 border border-white/5 space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-xs text-slate-500 uppercase font-bold">Leave Requests Rate</span>
+              <span className="text-xs font-bold text-yellow-400">14%</span>
+            </div>
+            <div className="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden">
+              <div className="h-full bg-yellow-500" style={{ width: '14%' }} />
+            </div>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-slate-800/30 border border-white/5 space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-xs text-slate-500 uppercase font-bold">Hiring Progress</span>
+              <span className="text-xs font-bold text-purple-400">65%</span>
+            </div>
+            <div className="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden">
+              <div className="h-full bg-purple-500" style={{ width: '65%' }} />
+            </div>
+          </div>
+        </div>
+      </DashboardCard>
     </div>
   );
 }
 
-function KpiCard({ label, value, subtext, highlight }: any) {
-  return (
-    <div className={`rounded-lg border p-4 ${highlight ? "border-red-700 bg-red-900/10" : "border-slate-700"}`}>
-      <p className="text-xs uppercase tracking-wide text-slate-400">{label}</p>
-      <p className={`text-2xl font-bold ${highlight ? "text-red-400" : ""}`}>{value}</p>
-      {subtext && <p className="text-xs text-slate-500">{subtext}</p>}
-    </div>
-  );
-}

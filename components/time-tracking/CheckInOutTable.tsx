@@ -65,8 +65,8 @@ export default function CheckInOutTable({
       const data = await response.json();
 
       if (data.success) {
-        setRecords(data.data || []);
-        setTotalPages(data.pagination?.pages || 1);
+        setRecords(data.data.data || []);
+        setTotalPages(data.data.pagination?.pages || 1);
       } else {
         setError(data.message || "Failed to fetch records");
       }
@@ -230,13 +230,12 @@ export default function CheckInOutTable({
                   </td>
                   <td className="px-4 py-3 text-center">
                     <span
-                      className={`text-sm font-medium ${
-                        record.attendancePercentage >= 100
+                      className={`text-sm font-medium ${record.attendancePercentage >= 100
                           ? "text-green-400"
                           : record.attendancePercentage >= 80
-                          ? "text-yellow-400"
-                          : "text-red-400"
-                      }`}
+                            ? "text-yellow-400"
+                            : "text-red-400"
+                        }`}
                     >
                       {Number(record.attendancePercentage || 0)}%
                     </span>

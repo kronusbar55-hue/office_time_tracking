@@ -4,11 +4,31 @@ import { LeaveRequest } from "@/models/LeaveRequest";
 import { TimeSession } from "@/models/TimeSession";
 import { Task } from "@/models/Task";
 import { Project } from "@/models/Project";
+import {
+  Users,
+  Clock,
+  Calendar,
+  Activity,
+  Briefcase,
+  Layers,
+  CheckSquare,
+  ChevronRight,
+  TrendingUp,
+  UserCheck
+} from "lucide-react";
+import Link from "next/link";
+import WelcomeHeader from "./shared/WelcomeHeader";
+import StatsCard from "./shared/StatsCard";
+import DashboardCard from "./shared/DashboardCard";
+import TaskDonutChart from "./shared/TaskDonutChart";
 
 type Props = { userId: string };
 
 export default async function ManagerDashboard({ userId }: Props) {
   await connectDB();
+
+  // Get current user for greeting
+  const manager = await User.findById(userId).select("firstName lastName").lean();
 
   // Get today's date
   const today = new Date();
@@ -22,24 +42,19 @@ export default async function ManagerDashboard({ userId }: Props) {
 
   // KPI Data
   const teamSize = team.length;
-  const teamCheckedInToday = await TimeSession.countDocuments({ 
-    user: { $in: teamIds }, 
-    date: dateStr 
-  });
-  const teamOnBreak = await TimeSession.countDocuments({
+  const teamCheckedInToday = await TimeSession.countDocuments({
     user: { $in: teamIds },
-    date: dateStr,
-    $expr: { $gt: ["$totalBreakMinutes", 0] }
+    date: dateStr
   });
 
   // Pending approvals
-  const pendingLeaves = await LeaveRequest.countDocuments({ 
-    user: { $in: teamIds }, 
-    status: "pending" 
+  const pendingLeaves = await LeaveRequest.countDocuments({
+    user: { $in: teamIds },
+    status: "pending"
   });
 
   // Active projects by manager
-  const activeProjects = await Project.countDocuments({ 
+  const activeProjects = await Project.countDocuments({
     members: { $in: [userId] },
     status: "active"
   });
@@ -52,7 +67,7 @@ export default async function ManagerDashboard({ userId }: Props) {
     .populate("user", "firstName lastName")
     .lean();
 
-  // Create attendance map for team
+  // Attendance map
   const attendanceMap: { [key: string]: any } = {};
   team.forEach((member: any) => {
     attendanceMap[member._id.toString()] = {
@@ -67,51 +82,26 @@ export default async function ManagerDashboard({ userId }: Props) {
     if (attendanceMap[userId]) {
       attendanceMap[userId].status = session.clockOut ? "checked-out" : "active";
       attendanceMap[userId].clockIn = session.clockIn;
-      attendanceMap[userId].userName = (session as any).user?.firstName + " " + (session as any).user?.lastName;
     }
   });
 
-  // Project-wise task progress
-  const projects = await Project.find({
-    members: { $in: [userId] }
-  })
-    .select("name _id status")
-    .lean();
+  // Project task stats for chart
+  const teamTasksByStatus = await Task.aggregate([
+    { $match: { assignee: { $in: teamIds }, isDeleted: false } },
+    { $group: { _id: "$status", count: { $sum: 1 } } }
+  ]);
 
-  const projectTaskStats = await Promise.all(
-    projects.map(async (project: any) => {
-      const tasks = await Task.aggregate([
-        { $match: { project: project._id, isDeleted: false } },
-        { $group: { _id: "$status", count: { $sum: 1 } } }
-      ]);
+  const stats = {
+    backlog: teamTasksByStatus.find((t: any) => t._id === "backlog")?.count || 0,
+    todo: teamTasksByStatus.find((t: any) => t._id === "todo")?.count || 0,
+    inProgress: teamTasksByStatus.find((t: any) => t._id === "in_progress")?.count || 0,
+    inReview: teamTasksByStatus.find((t: any) => t._id === "in_review")?.count || 0,
+    done: teamTasksByStatus.find((t: any) => t._id === "done")?.count || 0
+  };
 
-      return {
-        projectId: project._id,
-        projectName: project.name,
-        stats: {
-          backlog: tasks.find((t: any) => t._id === "backlog")?.count || 0,
-          todo: tasks.find((t: any) => t._id === "todo")?.count || 0,
-          inProgress: tasks.find((t: any) => t._id === "in_progress")?.count || 0,
-          inReview: tasks.find((t: any) => t._id === "in_review")?.count || 0,
-          done: tasks.find((t: any) => t._id === "done")?.count || 0
-        }
-      };
-    })
-  );
+  const teamAttendanceRate = teamSize > 0 ? Math.round((teamCheckedInToday / teamSize) * 100) : 0;
 
-  // Tasks assigned to team members
-  const teamTasks = await Task.find({
-    assignee: { $in: teamIds },
-    isDeleted: false,
-    status: { $ne: "done" }
-  })
-    .populate("assignee", "firstName lastName")
-    .populate("project", "name")
-    .sort({ dueDate: 1 })
-    .limit(10)
-    .lean();
-
-  // Pending leave requests to approve/reject
+  // Pending leave requests
   const pendingLeaveRequests = await LeaveRequest.find({
     user: { $in: teamIds },
     status: "pending"
@@ -119,200 +109,173 @@ export default async function ManagerDashboard({ userId }: Props) {
     .populate("user", "firstName lastName email")
     .populate("leaveType", "name")
     .sort({ appliedAt: -1 })
-    .limit(5)
+    .limit(3)
     .lean();
 
   return (
-    <div className="space-y-6">
-      {/* Top KPI Cards */}
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
-        <KpiCard label="Team Members" value={teamSize} />
-        <KpiCard label="Checked In Today" value={teamCheckedInToday} subtext={`of ${teamSize}`} />
-        <KpiCard label="On Break" value={teamOnBreak} />
-        <KpiCard label="Pending Approvals" value={pendingLeaves} highlight={pendingLeaves > 0} />
-        <KpiCard label="Active Projects" value={activeProjects} />
+    <div className="mx-auto max-w-7xl space-y-8 p-4 md:p-8">
+      {/* Row 1: Welcome */}
+      <WelcomeHeader
+        firstName={manager?.firstName}
+        lastName={manager?.lastName}
+        progress={teamAttendanceRate}
+      />
+
+      {/* Row 2: Manager Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatsCard
+          label="Team Size"
+          value={teamSize}
+          subtext="Active members"
+          icon={<Users className="h-6 w-6" />}
+          color="blue"
+          delay={0.1}
+        />
+        <StatsCard
+          label="Team Present"
+          value={teamCheckedInToday}
+          subtext={`${teamAttendanceRate}% Today`}
+          icon={<UserCheck className="h-6 w-6" />}
+          color="green"
+          delay={0.2}
+          trend={{ value: 5, isPositive: true }}
+        />
+        <StatsCard
+          label="Pending Approvals"
+          value={pendingLeaves}
+          subtext="Leave requests"
+          icon={<Calendar className="h-6 w-6" />}
+          color="yellow"
+          delay={0.3}
+          trend={{ value: 2, isPositive: false }}
+        />
+        <StatsCard
+          label="Active Projects"
+          value={activeProjects}
+          subtext="Managed by you"
+          icon={<Briefcase className="h-6 w-6" />}
+          color="purple"
+          delay={0.4}
+        />
       </div>
 
-      {/* Team Attendance Status */}
-      <div className="rounded-lg border border-slate-700 p-6">
-        <h3 className="mb-4 text-lg font-semibold">Team Attendance (Today)</h3>
-        {team.length > 0 ? (
-          <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
-            {team.map((member: any) => {
-              const attendance = attendanceMap[member._id.toString()];
-              return (
-                <div
-                  key={member._id}
-                  className={`rounded border p-3 ${
-                    attendance.status === "active"
-                      ? "border-green-700 bg-green-900/10"
-                      : attendance.status === "checked-out"
-                      ? "border-blue-700 bg-blue-900/10"
-                      : "border-red-700 bg-red-900/10"
-                  }`}
-                >
-                  <p className="font-medium text-sm">{member.firstName} {member.lastName}</p>
-                  <div className="mt-2 flex items-center justify-between text-xs">
-                    <span className={`px-2 py-1 rounded ${
-                      attendance.status === "active"
-                        ? "bg-green-900/30 text-green-300"
-                        : attendance.status === "checked-out"
-                        ? "bg-blue-900/30 text-blue-300"
-                        : "bg-red-900/30 text-red-300"
-                    }`}>
-                      {attendance.status === "active" ? "✓ Active" : attendance.status === "checked-out" ? "Checked Out" : "Absent"}
-                    </span>
-                    {attendance.clockIn && (
-                      <span className="text-slate-400">
-                        {new Date(attendance.clockIn).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+      {/* Row 3: Visual Team Insights */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <DashboardCard className="lg:col-span-2" delay={0.5}>
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-bold text-white flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-indigo-400" />
+              Team Task Distribution
+            </h3>
           </div>
-        ) : (
-          <p className="text-slate-400 text-sm">No team members assigned</p>
-        )}
-      </div>
+          <div className="flex flex-col md:flex-row items-center gap-8">
+            <div className="w-full md:w-1/2">
+              <TaskDonutChart data={stats} />
+            </div>
+            <div className="w-full md:w-1/2 space-y-4">
+              {Object.entries(stats).map(([key, value]) => (
+                <div key={key} className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className={`h-2.5 w-2.5 rounded-full ${key === 'backlog' ? 'bg-blue-400' :
+                      key === 'todo' ? 'bg-slate-400' :
+                        key === 'inProgress' ? 'bg-yellow-400' :
+                          key === 'inReview' ? 'bg-orange-400' : 'bg-green-400'
+                      }`} />
+                    <span className="text-sm font-medium text-slate-400 capitalize">{key.replace(/([A-Z])/g, ' $1')}</span>
+                  </div>
+                  <span className="text-sm font-bold text-white">{value as number}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </DashboardCard>
 
-      {/* Project-wise Task Progress */}
-      <div className="rounded-lg border border-slate-700 p-6">
-        <h3 className="mb-4 text-lg font-semibold">Project-wise Task Progress</h3>
-        {projectTaskStats.length > 0 ? (
+        <DashboardCard delay={0.6}>
+          <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+            <UserCheck className="h-5 w-5 text-green-400" />
+            Live Team Activity
+          </h3>
           <div className="space-y-4">
-            {projectTaskStats.map((proj: any) => {
-              const totalTasks =
-                proj.stats.backlog + proj.stats.todo + proj.stats.inProgress + proj.stats.inReview + proj.stats.done;
-              const completionRate = totalTasks > 0 ? Math.round((proj.stats.done / totalTasks) * 100) : 0;
-
-              return (
-                <div key={proj.projectId} className="rounded border border-slate-700 p-4">
-                  <div className="mb-3 flex items-center justify-between">
-                    <p className="font-medium">{proj.projectName}</p>
-                    <span className="text-xs text-blue-400">{completionRate}% Complete</span>
+            {team.length > 0 ? (
+              team.slice(0, 5).map((member: any) => {
+                const attendance = attendanceMap[member._id.toString()];
+                return (
+                  <div key={member._id} className="flex items-center justify-between p-3 rounded-xl bg-slate-800/30 border border-white/5">
+                    <div className="flex items-center gap-3">
+                      <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold border ${attendance.status === 'active' ? 'bg-green-500/10 border-green-500/20 text-green-400' :
+                        attendance.status === 'checked-out' ? 'bg-blue-500/10 border-blue-500/20 text-blue-400' :
+                          'bg-slate-500/10 border-slate-500/20 text-slate-500'
+                        }`}>
+                        {member.firstName[0]}{member.lastName[0]}
+                      </div>
+                      <span className="text-sm font-medium text-slate-200">{member.firstName}</span>
+                    </div>
+                    <span className={`text-[10px] font-bold uppercase tracking-wider ${attendance.status === 'active' ? 'text-green-500' :
+                      attendance.status === 'checked-out' ? 'text-blue-500' : 'text-slate-500'
+                      }`}>
+                      {attendance.status}
+                    </span>
                   </div>
-                  <div className="flex gap-2 text-xs">
-                    <div className="flex-1">
-                      <span className="text-slate-400">Backlog</span>
-                      <p className="font-bold text-blue-400">{proj.stats.backlog}</p>
-                    </div>
-                    <div className="flex-1">
-                      <span className="text-slate-400">Todo</span>
-                      <p className="font-bold text-slate-300">{proj.stats.todo}</p>
-                    </div>
-                    <div className="flex-1">
-                      <span className="text-slate-400">In Progress</span>
-                      <p className="font-bold text-yellow-400">{proj.stats.inProgress}</p>
-                    </div>
-                    <div className="flex-1">
-                      <span className="text-slate-400">In Review</span>
-                      <p className="font-bold text-orange-400">{proj.stats.inReview}</p>
-                    </div>
-                    <div className="flex-1">
-                      <span className="text-slate-400">Done</span>
-                      <p className="font-bold text-green-400">{proj.stats.done}</p>
-                    </div>
+                );
+              })
+            ) : (
+              <p className="text-slate-500 text-sm">No team members assigned.</p>
+            )}
+          </div>
+          <Link href="/attendance" className="w-full mt-6 block text-center py-2 text-xs font-bold text-blue-400 hover:text-white transition-colors">
+            View All Team Activity
+          </Link>
+        </DashboardCard>
+      </div>
+
+      {/* Row 4: Pending Approvals */}
+      <DashboardCard delay={0.7}>
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-xl font-bold text-white flex items-center gap-2">
+            <Calendar className="h-5 w-5 text-yellow-400" />
+            Pending Team Approvals
+          </h3>
+          <Link href="/leaves" className="text-sm font-medium text-slate-400 hover:text-white transition-colors">
+            View All
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {pendingLeaveRequests.length > 0 ? (
+            pendingLeaveRequests.map((req: any) => (
+              <div key={req._id} className="flex flex-col p-5 rounded-2xl bg-slate-800/30 border border-white/5 hover:border-yellow-500/30 transition-all">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="h-10 w-10 rounded-full bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center text-yellow-500 font-bold">
+                    {req.user?.firstName?.[0]}{req.user?.lastName?.[0]}
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-white">{req.user?.firstName} {req.user?.lastName}</h4>
+                    <p className="text-[10px] text-slate-500 uppercase tracking-widest">{req.leaveType?.name}</p>
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        ) : (
-          <p className="text-slate-400 text-sm">No projects assigned</p>
-        )}
-      </div>
-
-      {/* Team Tasks This Week */}
-      <div className="rounded-lg border border-slate-700 p-6">
-        <h3 className="mb-4 text-lg font-semibold">Assigned Tasks (Not Done)</h3>
-        {teamTasks.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="border-b border-slate-700">
-                <tr>
-                  <th className="text-left py-2">Task</th>
-                  <th className="text-left py-2">Assigned To</th>
-                  <th className="text-left py-2">Project</th>
-                  <th className="text-left py-2">Status</th>
-                  <th className="text-left py-2">Due Date</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-700">
-                {teamTasks.map((task: any) => (
-                  <tr key={task._id} className="hover:bg-slate-900/30">
-                    <td className="py-3 max-w-xs truncate">{task.title}</td>
-                    <td className="py-3">{(task as any).assignee?.firstName}</td>
-                    <td className="py-3">{(task as any).project?.name}</td>
-                    <td className="py-3">
-                      <span className={`px-2 py-1 rounded text-xs ${
-                        task.status === "in_progress" ? "bg-yellow-900/30 text-yellow-400" :
-                        task.status === "in_review" ? "bg-orange-900/30 text-orange-400" :
-                        "bg-slate-900/30 text-slate-300"
-                      }`}>
-                        {task.status.replace("_", " ")}
-                      </span>
-                    </td>
-                    <td className="py-3 text-xs">{task.dueDate ? new Date(task.dueDate).toLocaleDateString() : "-"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <p className="text-slate-400 text-sm">No pending tasks</p>
-        )}
-      </div>
-
-      {/* Pending Leave Requests */}
-      <div className="rounded-lg border border-slate-700 p-6">
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-semibold">Pending Leave Approvals</h3>
-          {pendingLeaves > 0 && (
-            <span className="rounded-full bg-yellow-900/30 px-3 py-1 text-xs font-semibold text-yellow-400">{pendingLeaves} Pending</span>
-          )}
-        </div>
-        {pendingLeaveRequests.length > 0 ? (
-          <div className="space-y-2">
-            {pendingLeaveRequests.map((req: any) => (
-              <div key={req._id} className="rounded bg-slate-900/30 p-4 border border-slate-700">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">{req.user?.firstName} {req.user?.lastName}</p>
-                    <p className="text-xs text-slate-400">
-                      {req.leaveType?.name} • {req.startDate} to {req.endDate} • {req.duration.replace("-", " ")}
-                    </p>
-                    <p className="text-xs text-slate-500 mt-1">{req.reason}</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button className="rounded bg-green-900/30 px-3 py-1 text-xs text-green-400 hover:bg-green-900/50">
-                      Approve
-                    </button>
-                    <button className="rounded bg-red-900/30 px-3 py-1 text-xs text-red-400 hover:bg-red-900/50">
-                      Reject
-                    </button>
-                  </div>
+                <div className="space-y-2 mb-4">
+                  <p className="text-xs text-slate-300 line-clamp-2">{req.reason}</p>
+                  <p className="text-[10px] text-slate-500">{req.startDate} to {req.endDate}</p>
+                </div>
+                <div className="flex gap-2 mt-auto">
+                  <button className="flex-1 py-2 rounded-xl bg-green-500/10 text-green-500 border border-green-500/20 text-xs font-bold hover:bg-green-500 hover:text-white transition-all">
+                    Approve
+                  </button>
+                  <button className="flex-1 py-2 rounded-xl bg-red-500/10 text-red-500 border border-red-500/20 text-xs font-bold hover:bg-red-500 hover:text-white transition-all">
+                    Reject
+                  </button>
                 </div>
               </div>
-            ))}
-          </div>
-        ) : (
-          <div className="rounded bg-green-900/20 p-4 text-center text-sm text-green-200 border border-green-700">
-            ✓ No pending leave requests
-          </div>
-        )}
-      </div>
+            ))
+          ) : (
+            <div className="col-span-full py-12 flex flex-col items-center justify-center text-slate-500">
+              <CheckSquare className="h-12 w-12 mb-4 opacity-10" />
+              <p>No pending approvals. Your team is all caught up!</p>
+            </div>
+          )}
+        </div>
+      </DashboardCard>
     </div>
   );
 }
 
-function KpiCard({ label, value, subtext, highlight }: any) {
-  return (
-    <div className={`rounded-lg border p-4 ${highlight ? "border-yellow-700 bg-yellow-900/10" : "border-slate-700"}`}>
-      <p className="text-xs uppercase tracking-wide text-slate-400">{label}</p>
-      <p className={`text-2xl font-bold ${highlight ? "text-yellow-400" : ""}`}>{value}</p>
-      {subtext && <p className="text-xs text-slate-500">{subtext}</p>}
-    </div>
-  );
-}

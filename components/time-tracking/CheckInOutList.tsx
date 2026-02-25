@@ -55,7 +55,7 @@ export default function CheckInOutList({ role, period = "today", limit = 50 }: C
         const data = await response.json();
 
         if (data.success) {
-          setRecords(data.data || []);
+          setRecords(data.data.data || []);
         } else {
           setError(data.message || "Failed to fetch records");
         }
@@ -159,59 +159,59 @@ export default function CheckInOutList({ role, period = "today", limit = 50 }: C
             key={record._id}
             className="rounded-lg border border-slate-700 bg-slate-800/50 p-4 transition-colors hover:bg-slate-800"
           >
-          <div className="flex items-center justify-between gap-4">
-            {/* User Info */}
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="h-10 w-10 rounded-full bg-slate-700 flex-shrink-0">
-                {record.user.avatarUrl && (
-                  <img src={record.user.avatarUrl} alt={record.user.firstName} className="w-full h-full rounded-full" />
-                )}
+            <div className="flex items-center justify-between gap-4">
+              {/* User Info */}
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="h-10 w-10 rounded-full bg-slate-700 flex-shrink-0">
+                  {record.user.avatarUrl && (
+                    <img src={record.user.avatarUrl} alt={record.user.firstName} className="w-full h-full rounded-full" />
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <p className="font-medium text-slate-100 truncate">
+                    {record.user.firstName} {record.user.lastName}
+                  </p>
+                  <p className="text-xs text-slate-400 truncate">{record.user.email}</p>
+                </div>
               </div>
-              <div className="min-w-0">
-                <p className="font-medium text-slate-100 truncate">
-                  {record.user.firstName} {record.user.lastName}
-                </p>
-                <p className="text-xs text-slate-400 truncate">{record.user.email}</p>
-              </div>
+
+              {/* Status */}
+              <div className="flex-shrink-0">{statusChip(record)}</div>
             </div>
 
-            {/* Status */}
-            <div className="flex-shrink-0">{statusChip(record)}</div>
-          </div>
-
-          {/* Details */}
-          <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
-            <div>
-              <p className="text-slate-400">Clock In</p>
-              <p className="text-slate-100">
-                {new Date(record.clockIn).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-              </p>
-            </div>
-            {record.clockOut && (
+            {/* Details */}
+            <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
               <div>
-                <p className="text-slate-400">Clock Out</p>
+                <p className="text-slate-400">Clock In</p>
                 <p className="text-slate-100">
-                  {new Date(record.clockOut).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  {new Date(record.clockIn).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                 </p>
               </div>
-            )}
-            <div>
-              <p className="text-slate-400">Work Hours</p>
-              <p className="text-slate-100">{(record.workMinutes / 60).toFixed(2)}h</p>
+              {record.clockOut && (
+                <div>
+                  <p className="text-slate-400">Clock Out</p>
+                  <p className="text-slate-100">
+                    {new Date(record.clockOut).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  </p>
+                </div>
+              )}
+              <div>
+                <p className="text-slate-400">Work Hours</p>
+                <p className="text-slate-100">{(record.workMinutes / 60).toFixed(2)}h</p>
+              </div>
+              <div>
+                <p className="text-slate-400">Attendance %</p>
+                <p className={record.attendancePercentage >= 100 ? "text-green-400" : "text-yellow-400"}>
+                  {record.attendancePercentage}%
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="text-slate-400">Attendance %</p>
-              <p className={record.attendancePercentage >= 100 ? "text-green-400" : "text-yellow-400"}>
-                {record.attendancePercentage}%
-              </p>
-            </div>
-          </div>
 
-          {/* Issues */}
-          {(record.isLateCheckIn || record.isEarlyCheckOut || record.isOvertime) && (
-            <div className="mt-3 pt-3 border-t border-slate-700">{issueIndicators(record)}</div>
-          )}
-        </div>
+            {/* Issues */}
+            {(record.isLateCheckIn || record.isEarlyCheckOut || record.isOvertime) && (
+              <div className="mt-3 pt-3 border-t border-slate-700">{issueIndicators(record)}</div>
+            )}
+          </div>
         ))
       ) : (
         <div className="rounded-lg border border-yellow-700/50 bg-yellow-500/5 p-4 text-sm text-yellow-300">

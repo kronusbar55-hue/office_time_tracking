@@ -5,8 +5,15 @@ import { cookies } from "next/headers";
 import { TimeSession } from "@/models/TimeSession";
 import { CheckInOut } from "@/models/CheckInOut";
 import { User } from "@/models/User";
+import { EmployeeShift } from "@/models/EmployeeShift";
+import { Shift, type IShift } from "@/models/Shift";
 import { successResp, errorResp } from "@/lib/apiResponse";
 
+/**
+ * POST /api/checkin-checkout/save
+ * Save completed check-in/check-out sessions to historical records
+ * This is called whenever someone clocks out
+ */
 /**
  * POST /api/checkin-checkout/save
  * Save completed check-in/check-out sessions to historical records
@@ -53,91 +60,161 @@ export async function POST(request: Request) {
       return NextResponse.json(errorResp("Session not found"), { status: 404 });
     }
 
-    // Calculate metrics
+    // Get User's Shift (Default to General if not found)
+    let shift: IShift | null = null;
+
+    // We need to fetch EmployeeShift and populate the 'shift' field.
+    // Since we are using top-level imports, we can use the models directly.
+    const empShift = await EmployeeShift.findOne({
+      user: payload.sub,
+      isActive: true
+    }).populate("shift").lean();
+
+    if (empShift && empShift.shift) {
+      // The populated field might be an object or ID depending on mongoose setup/types.
+      // Assuming straightforward population:
+      shift = empShift.shift as unknown as IShift;
+    } else {
+      shift = await Shift.findOne({ isDefault: true, isActive: true }).lean() as IShift | null;
+    }
+
+    // Fallback values if no shift configured
+    const shiftStartHour = shift ? parseInt(shift.startTime.split(':')[0]) : 9;
+    const shiftStartMin = shift ? parseInt(shift.startTime.split(':')[1]) : 0;
+
+    // Calculate total expected work minutes from Shift
+    let shiftDurationMinutes = 540; // Default 9 hours
+    if (shift) {
+      const start = parseInt(shift.startTime.split(':')[0]) * 60 + parseInt(shift.startTime.split(':')[1]);
+      const end = parseInt(shift.endTime.split(':')[0]) * 60 + parseInt(shift.endTime.split(':')[1]);
+      // Handle overnight shifts if needed (end < start) -> add 24hrs
+      let duration = end - start;
+      if (duration < 0) duration += 1440;
+      shiftDurationMinutes = duration;
+    }
+
+    // Calculate Session Metrics
     const clockIn = new Date(session.clockIn);
     const clockOut = session.clockOut ? new Date(session.clockOut) : new Date();
-    const workMinutes = session.totalWorkMinutes || Math.floor((clockOut.getTime() - clockIn.getTime()) / (1000 * 60));
-    const breakMinutes = session.totalBreakMinutes || 0;
-    const netWorkMinutes = workMinutes - breakMinutes;
+    // Gross session duration
+    const sessionDuration = Math.floor((clockOut.getTime() - clockIn.getTime()) / (1000 * 60));
+    const sessionBreak = session.totalBreakMinutes || 0;
+    // Net work for this session
+    const sessionWork = sessionDuration - sessionBreak;
 
-    // Determine if late check-in (after 9 AM)
-    const isLateCheckIn = clockIn.getHours() > 9 || (clockIn.getHours() === 9 && clockIn.getMinutes() > 0);
+    // --- DAILY AGGREGATION LOGIC ---
 
-    // Determine if early check-out (before 5 PM or less than 8 hours)
-    const isEarlyCheckOut = netWorkMinutes < 480; // 8 hours = 480 minutes
-
-    // Determine if overtime (more than 9 hours)
-    const isOvertime = netWorkMinutes > 540; // 9 hours = 540 minutes
-    const overtimeMinutes = isOvertime ? netWorkMinutes - 540 : 0;
-
-    // Calculate attendance percentage (0-100)
-    const attendancePercentage = Math.min(100, Math.round((netWorkMinutes / 480) * 100)); // Based on 8 hour standard
-
-    // Check if record already exists
-    const existing = await CheckInOut.findOne({
+    // Find today's CheckInOut Record
+    let record = await CheckInOut.findOne({
       user: payload.sub,
-      date: session.date,
-      clockIn: session.clockIn
+      date: session.date
     });
 
-    let record;
-
-    if (existing) {
-      // Update existing record
-      record = await CheckInOut.findByIdAndUpdate(
-        existing._id,
-        {
-          clockOut,
-          workMinutes: netWorkMinutes,
-          breakMinutes,
-          isOvertime,
-          isLateCheckIn,
-          isEarlyCheckOut,
-          overtimeMinutes,
-          attendancePercentage,
-          userRole: user.role,
-          ...((session as any).location && { location: (session as any).location }),
-          ...((session as any).deviceType && { deviceType: (session as any).deviceType }),
-          ...((session as any).notes && { notes: (session as any).notes })
-        },
-        { new: true }
-      );
-    } else {
-      // Create new record
-      record = await CheckInOut.create({
+    if (!record) {
+      // Create new Daily Record
+      record = new CheckInOut({
         user: payload.sub,
         userRole: user.role,
         date: session.date,
-        clockIn,
-        clockOut,
-        workMinutes: netWorkMinutes,
-        breakMinutes,
-        location: (session as any).location,
-        deviceType: (session as any).deviceType || "web",
-        notes: (session as any).notes,
-        isOvertime,
-        isLateCheckIn,
-        isEarlyCheckOut,
-        attendancePercentage,
-        overtimeMinutes
+        shift: shift ? shift._id : undefined,
+        sessions: [],
+        workMinutes: 0,
+        breakMinutes: 0,
+        status: "Present",
+        attendancePercentage: 0
       });
     }
 
-    if (!record) {
-      return NextResponse.json(
-        errorResp("Failed to save check-in/out record"),
-        { status: 500 }
-      );
+    // Add this session
+    record.sessions.push({
+      clockIn,
+      clockOut,
+      duration: sessionWork, // Net work
+      location: (session as any).location,
+      deviceType: (session as any).deviceType || "web",
+      notes: (session as any).notes
+    });
+
+    // Recalculate Daily Totals
+    // Break Minutes: Existing daily breaks + CURRENT session breaks
+    // Note: The previous logic relied on `record.breakMinutes` which is 0 for new record.
+    // If it's an existing record, we add the new session's break.
+    record.breakMinutes = (record.breakMinutes || 0) + sessionBreak;
+
+    // Total Work: Sum of (Net Work of all sessions)
+    // Alternatively: Sum(Gross) - Total Breaks
+
+    let totalNetWork = 0;
+    record.sessions.forEach(s => {
+      totalNetWork += s.duration; // s.duration is Net work per above push
+    });
+
+    record.workMinutes = totalNetWork;
+
+    // --- SHIFT VALIDATION ---
+
+    // 1. Late Check-In (Based on FIRST session)
+    if (record.sessions.length > 0) {
+      const firstClockIn = new Date(record.sessions[0].clockIn); // Ascending order mostly
+      // Sort just in case? Usually pushed in order.
+
+      const lateThreshold = new Date(firstClockIn);
+      // Reset to Day start, then set hours
+      // Note: parsing clock in date to get YYYY-MM-DD could be safer if overnight
+      // But assuming check-in is "Today"
+      lateThreshold.setHours(shiftStartHour, shiftStartMin + (shift ? shift.gracePeriod : 15), 0, 0);
+
+      // If clockIn is different day than lateThreshold (overnight shift edge case), logic needs update.
+      // For now standard day shift:
+      if (firstClockIn > lateThreshold) {
+        record.isLateCheckIn = true;
+      }
     }
+
+    // 2. Early Check-Out 
+    // Logic: If Total Work < Expected Work - Leeway
+    // Expected Work usually = Shift Duration - Default Break (e.g. 9hrs - 1hr = 8hrs work)
+    const expectedWork = shiftDurationMinutes - (shift ? shift.breakDuration : 60);
+
+    // Allow 15 mins leeway? Or strict? User said < 8 hours.
+    // Let's use expectedWork.
+    if (record.workMinutes < expectedWork) {
+      record.isEarlyCheckOut = true;
+    } else {
+      record.isEarlyCheckOut = false;
+    }
+
+    // 3. Overtime
+    // Logic: If Net Work > Shift Duration (9hrs) 
+    // OR Net Work > Expected Work (8hrs)? 
+    // Usually Overtime is > Shift End. 
+    // User requirement: Overtime = Worked - Shift Hours (likely Expected Work)
+    // But `isOvertime` usually implies significantly extra.
+    // Let's stick to: if work > Shift Duration (9hrs total presence equivalent)
+    if (record.workMinutes > shiftDurationMinutes) {
+      record.isOvertime = true;
+      record.overtimeMinutes = record.workMinutes - shiftDurationMinutes;
+    } else {
+      record.isOvertime = false;
+      record.overtimeMinutes = 0;
+    }
+
+    // 4. Attendance %
+    record.attendancePercentage = Math.min(100, Math.round((record.workMinutes / expectedWork) * 100));
+
+    // 5. Status
+    if (record.attendancePercentage >= 90) record.status = "Present";
+    else if (record.attendancePercentage >= 45) record.status = "Half-Day";
+    else record.status = "Absent"; // Or leave as is
+
+    await record.save();
 
     return NextResponse.json(
       successResp("Check-in/out record saved successfully", {
         id: record._id,
-        workMinutes: netWorkMinutes,
-        breakMinutes,
-        isOvertime,
-        overtimeMinutes,
-        attendancePercentage
+        workMinutes: record.workMinutes,
+        isOvertime: record.isOvertime,
+        attendancePercentage: record.attendancePercentage
       }),
       { status: 201 }
     );

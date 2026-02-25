@@ -39,7 +39,7 @@ export default function AttendancePage() {
     } else {
       setIsRefreshing(true);
     }
-    
+
     try {
       const params = new URLSearchParams({
         date: selectedDate,
@@ -337,11 +337,11 @@ export default function AttendancePage() {
       )}
 
       {/* Calendar Placeholder */}
-      {viewMode === "calendar" && (
+      {/* {viewMode === "calendar" && (
         <div className="rounded-xl border border-slate-800 bg-card/70 p-12 text-center">
           <p className="text-slate-400">Calendar view coming soon</p>
         </div>
-      )}
+      )} */}
     </div>
   );
 }

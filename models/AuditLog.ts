@@ -14,7 +14,8 @@ export type AuditLogAction =
   | "leave_approve"
   | "leave_reject"
   | "leave_cancel"
-  | "leave_edit";
+  | "leave_edit"
+  | "login";
 
 export interface IAuditLog {
   _id: Types.ObjectId;
@@ -51,7 +52,8 @@ const AuditLogSchema = new Schema<IAuditLog>(
         "leave_approve",
         "leave_reject",
         "leave_cancel",
-        "leave_edit"
+        "leave_edit",
+        "login"
       ]
     },
     user: {

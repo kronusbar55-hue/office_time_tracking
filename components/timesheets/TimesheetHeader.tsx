@@ -18,28 +18,7 @@ export function TimesheetHeader({
         <LiveTimerDisplay />
       </div>
 
-      <div className="flex gap-8 text-sm">
-        <button
-          onClick={() => onTabChange("timesheets")}
-          className={`pb-4 font-medium transition-colors ${
-            activeTab === "timesheets"
-              ? "border-b-2 border-orange-500 text-orange-600"
-              : "text-slate-500 hover:text-slate-700"
-          }`}
-        >
-          Timesheets
-        </button>
-        <button
-          onClick={() => onTabChange("approvals")}
-          className={`pb-4 font-medium transition-colors ${
-            activeTab === "approvals"
-              ? "border-b-2 border-orange-500 text-orange-600"
-              : "text-slate-500 hover:text-slate-700"
-          }`}
-        >
-          Approvals
-        </button>
-      </div>
+
     </div>
   );
 }

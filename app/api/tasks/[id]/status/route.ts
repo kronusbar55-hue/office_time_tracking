@@ -22,23 +22,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     const prev = await Task.findById(id).lean();
     if (!prev) return NextResponse.json({ error: "Task not found" }, { status: 404 });
 
-    // workflow matrix for employees
-    const allowedForEmployee: Record<string, string[]> = {
-      backlog: ["todo", "in_progress"],
-      todo: ["in_progress"],
-      in_progress: ["in_review", "done"],
-      in_review: ["done"],
-      done: []
-    };
-
-    if (payload.role === "employee") {
-      const from = prev.status;
-      const allowed = allowedForEmployee[from] || [];
-      if (!allowed.includes(status)) {
-        return NextResponse.json({ error: "Employees are not authorized to perform this status transition." }, { status: 403 });
-      }
-    }
-
+    // All roles can update status to any valid state
     const updated = await Task.findByIdAndUpdate(id, { $set: { status } }, { new: true })
       .populate({ path: "project", select: "name" })
       .populate({ path: "assignee", select: "firstName lastName email" })
@@ -50,9 +34,13 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       await TaskActivityLog.create({
         task: id as any,
         user: payload.sub || null,
-        action: "STATUS_CHANGED",
-        from: prev.status,
-        to: status
+        eventType: "STATUS_CHANGED",
+        fieldChanges: [{
+          fieldName: "status",
+          oldValue: prev.status,
+          newValue: status
+        }],
+        description: `Status changed from ${prev.status} to ${status}`
       });
     } catch (e) {
       console.error("Failed to create activity log", e);

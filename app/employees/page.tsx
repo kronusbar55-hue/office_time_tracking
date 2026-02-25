@@ -15,7 +15,7 @@ type TeamUser = {
   firstName: string;
   lastName: string;
   email: string;
-  role: "admin" | "manager" | "employee";
+  role: "admin" | "manager" | "employee" | "hr";
   technology?: { id: string; name: string } | null;
   joinDate?: string;
   avatarUrl?: string;
@@ -224,13 +224,13 @@ export default function EmployeesPage() {
             Manage employees, roles, and technology assignments.
           </p>
         </div>
-        <button
+        {/* <button
           type="button"
           onClick={resetForm}
           className="rounded-md border border-slate-700 bg-slate-900 px-3 py-1.5 text-[11px] font-medium text-slate-100 hover:border-accent hover:text-accent"
         >
           New member
-        </button>
+        </button> */}
       </div>
 
       <div className="grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1.3fr)]">
@@ -292,81 +292,80 @@ export default function EmployeesPage() {
                   </tr>
                 ) : (
                   users.map((user) => (
-                  <tr
-                    key={user.id}
-                    className="border-t border-slate-800/70 text-slate-200"
-                  >
-                    <td className="px-3 py-2">
-                      <div className="flex items-center gap-2">
-                        <div className="h-7 w-7 overflow-hidden rounded-full bg-slate-800">
-                          {user.avatarUrl ? (
-                            <img
-                              src={user.avatarUrl}
-                              alt={`${user.firstName} ${user.lastName}`}
-                              className="h-full w-full object-cover"
-                            />
-                          ) : (
-                            <div className="flex h-full w-full items-center justify-center text-[10px] text-slate-400">
-                              {user.firstName.charAt(0)}
-                              {user.lastName.charAt(0)}
-                            </div>
-                          )}
+                    <tr
+                      key={user.id}
+                      className="border-t border-slate-800/70 text-slate-200"
+                    >
+                      <td className="px-3 py-2">
+                        <div className="flex items-center gap-2">
+                          <div className="h-7 w-7 overflow-hidden rounded-full bg-slate-800">
+                            {user.avatarUrl ? (
+                              <img
+                                src={user.avatarUrl}
+                                alt={`${user.firstName} ${user.lastName}`}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <div className="flex h-full w-full items-center justify-center text-[10px] text-slate-400">
+                                {user.firstName.charAt(0)}
+                                {user.lastName.charAt(0)}
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="font-medium text-slate-100">
+                              {user.firstName} {user.lastName}
+                            </span>
+                            <span className="text-[10px] text-slate-400">
+                              {user.email}
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex flex-col">
-                          <span className="font-medium text-slate-100">
-                            {user.firstName} {user.lastName}
-                          </span>
-                          <span className="text-[10px] text-slate-400">
-                            {user.email}
-                          </span>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-3 py-2 capitalize text-slate-300">
-                      {user.role}
-                    </td>
-                    <td className="px-3 py-2 text-slate-300">
-                      {user.technology?.name || "—"}
-                    </td>
-                    <td className="px-3 py-2 text-slate-300">
-                      {user.joinDate
-                        ? new Date(user.joinDate).toLocaleDateString()
-                        : "—"}
-                    </td>
-                    <td className="px-3 py-2">
-                      <button
-                        type="button"
-                        onClick={() => void toggleActive(user)}
-                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-medium ${
-                          user.isActive
+                      </td>
+                      <td className="px-3 py-2 capitalize text-slate-300">
+                        {user.role}
+                      </td>
+                      <td className="px-3 py-2 text-slate-300">
+                        {user.technology?.name || "—"}
+                      </td>
+                      <td className="px-3 py-2 text-slate-300">
+                        {user.joinDate
+                          ? new Date(user.joinDate).toLocaleDateString()
+                          : "—"}
+                      </td>
+                      <td className="px-3 py-2">
+                        <button
+                          type="button"
+                          onClick={() => void toggleActive(user)}
+                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-medium ${user.isActive
                             ? "bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-500/40"
                             : "bg-slate-800 text-slate-400 ring-1 ring-slate-600"
-                        }`}
-                      >
-                        {user.isActive ? "Active" : "Inactive"}
-                      </button>
-                    </td>
-                    <td className="px-3 py-2 text-right">
-                      <div className="inline-flex items-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => startEdit(user)}
-                          className="rounded-md border border-slate-700 px-2 py-0.5 text-[10px] text-slate-200 hover:border-accent hover:text-accent"
+                            }`}
                         >
-                          Edit
+                          {user.isActive ? "Active" : "Inactive"}
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => void handleDelete(user.id)}
-                          className="rounded-md border border-rose-700/70 px-2 py-0.5 text-[10px] text-rose-300 hover:border-rose-400 hover:text-rose-200"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
+                      </td>
+                      <td className="px-3 py-2 text-right">
+                        <div className="inline-flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => startEdit(user)}
+                            className="rounded-md border border-slate-700 px-2 py-0.5 text-[10px] text-slate-200 hover:border-accent hover:text-accent"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => void handleDelete(user.id)}
+                            className="rounded-md border border-rose-700/70 px-2 py-0.5 text-[10px] text-rose-300 hover:border-rose-400 hover:text-rose-200"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -435,6 +434,7 @@ export default function EmployeesPage() {
                 >
                   <option value="admin">Admin</option>
                   <option value="manager">Manager</option>
+                  <option value="hr">HR</option>
                   <option value="employee">Employee</option>
                 </select>
               </div>
@@ -448,9 +448,8 @@ export default function EmployeesPage() {
                     value={form.technology}
                     onChange={handleChange}
                     disabled={technologies.length === 0}
-                    className={`h-8 w-full rounded-md border border-slate-700 bg-slate-950/60 px-2 text-[11px] text-slate-100 outline-none focus:border-accent focus:ring-1 focus:ring-accent/40 ${
-                      technologies.length === 0 ? "opacity-60 cursor-not-allowed" : ""
-                    }`}
+                    className={`h-8 w-full rounded-md border border-slate-700 bg-slate-950/60 px-2 text-[11px] text-slate-100 outline-none focus:border-accent focus:ring-1 focus:ring-accent/40 ${technologies.length === 0 ? "opacity-60 cursor-not-allowed" : ""
+                      }`}
                   >
                     <option value="">Select technology</option>
                     {technologies.map((tech) => (
@@ -521,8 +520,8 @@ export default function EmployeesPage() {
                     ? "Saving..."
                     : "Creating..."
                   : editingId
-                  ? "Save changes"
-                  : "Add member"}
+                    ? "Save changes"
+                    : "Add member"}
               </button>
             </div>
           </form>

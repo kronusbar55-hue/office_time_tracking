@@ -12,8 +12,8 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 export const metadata: Metadata = {
-  title: "Office Time Tracking",
-  description: "Internal office time tracking & attendance"
+  title: "Technotoil WorkPortal",
+  description: "Internal work portal"
 };
 // Ensure favicon is served from public/favicon.ico — copy the file to public/
 metadata.icons = {

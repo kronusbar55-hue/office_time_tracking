@@ -1,515 +1,533 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Legend
-} from "recharts";
-import { Download, RefreshCw, FileSpreadsheet } from "lucide-react";
+  ChevronLeft,
+  ChevronRight,
+  Calendar,
+  Download,
+  Info,
+  Search,
+  Filter,
+  Plus,
+  ArrowRight,
+  User as UserIcon,
+  Clock,
+  Coffee,
+  Umbrella,
+  Moon,
+  Palmtree,
+  Settings,
+  Grid
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, parseISO, startOfWeek, endOfWeek, addDays, getDaysInMonth } from "date-fns";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/components/auth/AuthProvider";
 
-type ReportStats = {
-  totalWorkHours: number;
-  totalBreakHours: number;
-  presentDays: number;
-  avgDailyHours: number;
-};
-
-type ByDay = {
-  date: string;
-  label: string;
-  workHours: number;
-  breakHours: number;
-};
-
-type EmployeeRow = {
-  id: string;
+// --- Types ---
+type MemberRecord = {
+  userId: string;
   name: string;
   email: string;
-  technology: string;
-  workHours: number;
-  breakHours: number;
-  presentDays: number;
-  attendance: number;
-  productivity: number;
+  avatar?: string;
+  department: string;
+  shiftHours: number;
+  totalWorkMs: number;
+  totalOvertimeMs: number;
+  totalBreakMs: number;
+  payrollHours: string;
+  dailyRecords: DailyRecord[];
 };
 
-type ReportData = {
-  stats: ReportStats;
-  byDay: ByDay[];
-  employees: EmployeeRow[];
-  range: { start: string; end: string };
+type DailyRecord = {
+  date: string;
+  workMs: number;
+  breakMs: number;
+  overtimeMs: number;
+  intensity: number;
+  isRestDay: boolean;
+  isHoliday: boolean;
+  isTimeOff: boolean;
+  checkInTime?: string;
+  checkOutTime?: string;
 };
 
-const CHART_COLORS = { work: "#3b82f6", break: "#64748b" };
+type ViewType = "day" | "week" | "month" | "custom";
 
-function getInitials(name: string) {
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-}
+// --- Constants ---
+const INTENSITY_COLORS: Record<number, string> = {
+  0: "bg-slate-800/40 border-slate-700/50", // 0 hrs
+  1: "bg-yellow-500/30 border-yellow-500/50", // 0-2 hrs
+  2: "bg-orange-500/40 border-orange-500/60", // 2-4 hrs
+  3: "bg-emerald-500/30 border-emerald-500/50", // 4-6 hrs
+  4: "bg-emerald-600/60 border-emerald-500/80", // 6-8 hrs
+  5: "bg-pink-500/40 border-pink-500/60", // 8-10 hrs
+  6: "bg-red-600/50 border-red-500/70", // 10+ hrs
+};
 
 export default function ReportsPage() {
-  const [data, setData] = useState<ReportData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [employees, setEmployees] = useState<Array<{ id: string; firstName: string; lastName: string }>>([]);
-  const [technologies, setTechnologies] = useState<Array<{ id: string; name: string }>>([]);
-  const [employeeId, setEmployeeId] = useState("all");
-  const [technologyId, setTechnologyId] = useState("all");
-  const [startDate, setStartDate] = useState(() => {
-    const d = new Date();
-    d.setDate(d.getDate() - 6);
-    return d.toISOString().slice(0, 10);
-  });
-  const [endDate, setEndDate] = useState(() => new Date().toISOString().slice(0, 10));
-  const [searchQuery, setSearchQuery] = useState("");
-  const [exportOpen, setExportOpen] = useState(false);
+  const { user } = useAuth();
+  const router = useRouter();
 
-  const fetchReport = useCallback(async () => {
+  // State
+  const [viewType, setViewType] = useState<ViewType>("month");
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [reportData, setReportData] = useState<{ members: MemberRecord[], summary: any } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [department, setDepartment] = useState("all");
+  const [showLegend, setShowLegend] = useState(false);
+  const [showExport, setShowExport] = useState(false);
+  const [hoveredDay, setHoveredDay] = useState<{ memberId: string, date: string } | null>(null);
+
+  // Derive date range based on viewType
+  const getRange = useCallback(() => {
+    let start, end;
+    if (viewType === "month") {
+      start = startOfMonth(currentDate);
+      end = endOfMonth(currentDate);
+    } else if (viewType === "week") {
+      start = startOfWeek(currentDate, { weekStartsOn: 1 });
+      end = endOfWeek(currentDate, { weekStartsOn: 1 });
+    } else {
+      start = currentDate;
+      end = currentDate;
+    }
+    return { start, end };
+  }, [viewType, currentDate]);
+
+  const fetchReports = useCallback(async () => {
     setLoading(true);
-    setError(null);
     try {
+      const { start, end } = getRange();
       const params = new URLSearchParams({
-        startDate,
-        endDate,
-        employeeId,
-        technology: technologyId
+        startDate: format(start, "yyyy-MM-dd"),
+        endDate: format(end, "yyyy-MM-dd"),
+        department,
+        search: searchQuery
       });
-      const res = await fetch(`/api/reports/insights?${params}`);
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || "Failed to load report");
-      }
+      const res = await fetch(`/api/reports?${params}`);
       const json = await res.json();
-      setData(json);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not load report");
-      setData(null);
+      if (json.success) {
+        setReportData(json.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch reports:", error);
     } finally {
       setLoading(false);
     }
-  }, [startDate, endDate, employeeId, technologyId]);
+  }, [getRange, department, searchQuery]);
 
   useEffect(() => {
-    fetchReport();
-  }, [fetchReport]);
+    fetchReports();
+  }, [fetchReports]);
 
-  useEffect(() => {
-    async function loadOptions() {
-      try {
-        const [usersRes, techRes] = await Promise.all([
-          fetch("/api/users"),
-          fetch("/api/technologies")
-        ]);
-        if (usersRes.ok) {
-          const users = await usersRes.json();
-          setEmployees(
-            (users || []).map((u: { id: string; firstName: string; lastName: string }) => ({
-              id: u.id,
-              firstName: u.firstName,
-              lastName: u.lastName
-            }))
-          );
-        }
-        if (techRes.ok) {
-          const techs = await techRes.json();
-          setTechnologies((techs || []).map((t: { id: string; name: string }) => ({ id: t.id, name: t.name })));
-        }
-      } catch {
-        // ignore
-      }
+  // Navigate dates
+  const navigate = (direction: 'prev' | 'next') => {
+    if (viewType === "month") {
+      setCurrentDate(prev => direction === 'prev' ? subMonths(prev, 1) : addMonths(prev, 1));
+    } else if (viewType === "week") {
+      setCurrentDate(prev => direction === 'prev' ? addDays(prev, -7) : addDays(prev, 7));
+    } else {
+      setCurrentDate(prev => direction === 'prev' ? addDays(prev, -1) : addDays(prev, 1));
     }
-    void loadOptions();
-  }, []);
-
-  const filteredEmployees = (data?.employees || []).filter(
-    (e) =>
-      !searchQuery ||
-      e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      e.email.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const handleExportCSV = () => {
-    if (!data?.employees?.length) return;
-    const headers = ["Employee", "Email", "Department", "Work Hours", "Break Hours", "Present Days", "Attendance %", "Productivity %"];
-    const rows = data.employees.map((e) =>
-      [e.name, e.email, e.technology, e.workHours, e.breakHours, e.presentDays, e.attendance, e.productivity].join(",")
-    );
-    const csv = [headers.join(","), ...rows].join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `report-${data.range.start}-${data.range.end}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-    setExportOpen(false);
   };
 
-  const pieData =
-    data
-      ? (() => {
-          const arr = [
-            { name: "Work", value: data.stats.totalWorkHours, color: CHART_COLORS.work },
-            { name: "Break", value: data.stats.totalBreakHours, color: CHART_COLORS.break }
-          ].filter((d) => d.value > 0);
-          if (arr.length === 0) {
-            return [{ name: "No data", value: 1, color: "#64748b" }];
-          }
-          return arr;
-        })()
-      : [];
+  const { start, end } = getRange();
+  const daysInRange = eachDayOfInterval({ start, end });
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-50">Weekly Insights</h1>
-          <p className="mt-1 text-sm text-slate-400">
-            Detailed analysis of productivity over the selected period, based on tracked sessions.
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => fetchReport()}
-            disabled={loading}
-            className="inline-flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-900/60 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-slate-800 hover:text-slate-100 disabled:opacity-50"
-          >
-            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-            Refresh
-          </button>
-          <button
-            onClick={() => setExportOpen(true)}
-            className="inline-flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-900/60 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-slate-800 hover:text-slate-100"
-          >
-            <Download className="h-4 w-4" />
-            Export
-          </button>
-        </div>
-      </div>
+    <div className="min-h-screen bg-[#0f172a] text-slate-200">
+      {/* Header */}
+      <header className="border-b border-slate-800 bg-[#0f172a]/80 backdrop-blur-md sticky top-0 z-30">
+        <div className="max-w-[1600px] mx-auto px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-8">
+            <h1 className="text-xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
+              Timesheets
+            </h1>
+            <nav className="flex gap-1">
+              <button className="px-4 py-1.5 rounded-full bg-blue-500/10 text-blue-400 text-sm font-medium border border-blue-500/20">
+                Timesheets
+              </button>
+              {/* <button className="px-4 py-1.5 rounded-full hover:bg-slate-800 text-slate-400 text-sm font-medium transition-colors">
+                Approvals
+              </button> */}
+            </nav>
+          </div>
 
-      {error && (
-        <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-red-400">
-          {error}
-        </div>
-      )}
-
-      <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-4">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="filter-group">
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Employee
-            </label>
-            <select
-              value={employeeId}
-              onChange={(e) => setEmployeeId(e.target.value)}
-              className="w-full rounded-lg border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-200 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/40"
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowLegend(true)}
+              className="p-2 rounded-lg hover:bg-slate-800 text-slate-400 transition-colors"
+              title="Legend"
             >
-              <option value="all">All Employees</option>
-              {employees.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.firstName} {u.lastName}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Start Date
-            </label>
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="w-full rounded-lg border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-200 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/40"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-500">
-              End Date
-            </label>
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="w-full rounded-lg border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-200 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/40"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Department
-            </label>
-            <select
-              value={technologyId}
-              onChange={(e) => setTechnologyId(e.target.value)}
-              className="w-full rounded-lg border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-200 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/40"
+              <Info className="h-5 w-5" />
+            </button>
+            <button
+              onClick={() => setShowExport(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition-all shadow-lg shadow-blue-500/20"
             >
-              <option value="all">All Departments</option>
-              {technologies.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name}
-                </option>
+              <Download className="h-4 w-4" />
+              Export
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-[1600px] mx-auto p-6 space-y-6">
+        {/* Controls Row */}
+        <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-slate-900/40 p-4 rounded-2xl border border-slate-800">
+          <div className="flex items-center gap-4">
+            <div className="flex bg-slate-950 p-1 rounded-xl border border-slate-800">
+              {(['day', 'week', 'month'] as ViewType[]).map((v) => (
+                <button
+                  key={v}
+                  onClick={() => setViewType(v)}
+                  className={`px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${viewType === v ? "bg-slate-800 text-white shadow-sm" : "text-slate-500 hover:text-slate-300"
+                    }`}
+                >
+                  {v}
+                </button>
               ))}
-            </select>
-          </div>
-        </div>
-      </div>
+            </div>
 
-      {loading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-32 animate-pulse rounded-xl border border-slate-800 bg-slate-900/40" />
-          ))}
-        </div>
-      ) : data ? (
-        <>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-5 transition hover:border-accent/30">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Work Hours</p>
-                  <p className="mt-2 text-2xl font-bold text-slate-50">{data.stats.totalWorkHours}h</p>
-                  <p className="mt-1 text-xs text-slate-500">Across selected period</p>
-                </div>
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/20 text-lg">⏱️</div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => navigate('prev')}
+                className="p-2 rounded-xl border border-slate-800 hover:bg-slate-800 transition-colors"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <div className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-800 bg-slate-950 font-medium min-w-[160px] justify-center">
+                <Calendar className="h-4 w-4 text-blue-400" />
+                <span className="text-sm">
+                  {viewType === "month" ? format(currentDate, "MMMM yyyy") :
+                    viewType === "week" ? `${format(start, "MMM dd")} - ${format(end, "MMM dd")}` :
+                      format(currentDate, "MMM dd, yyyy")}
+                </span>
               </div>
-            </div>
-            <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-5 transition hover:border-accent/30">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Break Time</p>
-                  <p className="mt-2 text-2xl font-bold text-slate-50">{data.stats.totalBreakHours}h</p>
-                  <p className="mt-1 text-xs text-slate-500">Sum of all breaks</p>
-                </div>
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/20 text-lg">☕</div>
-              </div>
-            </div>
-            <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-5 transition hover:border-accent/30">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Present Days</p>
-                  <p className="mt-2 text-2xl font-bold text-slate-50">{data.stats.presentDays}</p>
-                  <p className="mt-1 text-xs text-slate-500">Days with activity</p>
-                </div>
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/20 text-lg">📅</div>
-              </div>
-            </div>
-            <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-5 transition hover:border-accent/30">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Avg Daily Hours</p>
-                  <p className="mt-2 text-2xl font-bold text-slate-50">{data.stats.avgDailyHours}h</p>
-                  <p className="mt-1 text-xs text-slate-500">Per day average</p>
-                </div>
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/20 text-lg">📊</div>
-              </div>
+              <button
+                onClick={() => navigate('next')}
+                className="p-2 rounded-xl border border-slate-800 hover:bg-slate-800 transition-colors"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
             </div>
           </div>
 
-          <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
-            <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-5">
-              <h3 className="text-base font-semibold text-slate-100">Hours Tracked</h3>
-              <p className="text-xs text-slate-500">Daily work hours for the selected period</p>
-              <div className="mt-4 h-64">
-                {data.byDay.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={data.byDay}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                      <XAxis dataKey="label" stroke="#94a3b8" fontSize={12} />
-                      <YAxis stroke="#94a3b8" fontSize={12} tickFormatter={(v) => `${v}h`} />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "#1e293b",
-                          border: "1px solid #334155",
-                          borderRadius: "8px"
-                        }}
-                        formatter={(v: number | undefined) => [`${Number(v).toFixed(2)}h`, "Work"]}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="workHours"
-                        stroke={CHART_COLORS.work}
-                        strokeWidth={2}
-                        dot={{ fill: CHART_COLORS.work }}
-                        name="Work Hours"
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="flex h-full items-center justify-center text-slate-500">
-                    No data for selected period
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-5">
-              <h3 className="text-base font-semibold text-slate-100">Time Distribution</h3>
-              <p className="text-xs text-slate-500">Work vs Break time</p>
-              <div className="mt-4 h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={pieData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={50}
-                      outerRadius={80}
-                      paddingAngle={2}
-                      dataKey="value"
-                    >
-                      {pieData.map((entry, i) => (
-                        <Cell key={i} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "#1e293b",
-                        border: "1px solid #334155",
-                        borderRadius: "8px"
-                      }}
-                      formatter={(v: number | undefined, name: string | undefined) =>
-                        [typeof v === "number" ? `${v.toFixed(2)}h` : v, name]
-                      }
-                    />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-xl border border-slate-800 bg-slate-900/40">
-            <div className="flex flex-col gap-4 border-b border-slate-800 p-4 sm:flex-row sm:items-center sm:justify-between">
-              <h3 className="text-base font-semibold text-slate-100">Employee Performance</h3>
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            <div className="relative flex-1 md:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
               <input
                 type="text"
-                placeholder="Search employees..."
+                placeholder="Search member..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="max-w-xs rounded-lg border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-200 placeholder-slate-500 focus:border-accent focus:outline-none"
+                className="w-full pl-10 pr-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm focus:outline-none focus:border-blue-500"
               />
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-slate-800 bg-slate-900/60">
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                      Employee
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                      Hours This Week
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                      Attendance
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                      Productivity
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800/50">
-                  {filteredEmployees.length === 0 ? (
-                    <tr>
-                      <td colSpan={4} className="px-4 py-12 text-center text-slate-500">
-                        No employees match your filters
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredEmployees.map((emp) => (
-                      <tr key={emp.id} className="transition hover:bg-slate-800/30">
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-3">
-                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-accent to-cyan-400 text-sm font-semibold text-slate-900">
-                              {getInitials(emp.name)}
-                            </div>
-                            <div>
-                              <p className="font-medium text-slate-100">{emp.name}</p>
-                              <p className="text-xs text-slate-500">{emp.email}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className="font-semibold text-slate-100">{emp.workHours}h</span>
-                          <span className="ml-1 text-xs text-slate-500">/ {emp.breakHours}h break</span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2">
-                            <span className="text-slate-200">{emp.attendance}%</span>
-                            <div className="h-1.5 w-20 overflow-hidden rounded-full bg-slate-800">
-                              <div
-                                className="h-full rounded-full bg-emerald-500"
-                                style={{ width: `${Math.min(emp.attendance, 100)}%` }}
-                              />
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2">
-                            <span className="text-slate-200">{emp.productivity}%</span>
-                            <div className="h-1.5 w-20 overflow-hidden rounded-full bg-slate-800">
-                              <div
-                                className="h-full rounded-full bg-accent"
-                                style={{ width: `${Math.min(emp.productivity, 100)}%` }}
-                              />
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </>
-      ) : null}
-
-      {exportOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <div className="w-full max-w-md rounded-xl border border-slate-800 bg-slate-950 p-6 shadow-xl">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-slate-100">Export Report</h3>
-              <button
-                onClick={() => setExportOpen(false)}
-                className="rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-slate-200"
-              >
-                ×
-              </button>
-            </div>
-            <p className="mt-2 text-sm text-slate-500">
-              Download the employee performance data as CSV.
-            </p>
-            <div className="mt-6 flex gap-3">
-              <button
-                onClick={handleExportCSV}
-                disabled={!data?.employees?.length}
-                className="inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-slate-900 transition hover:brightness-110 disabled:opacity-50"
-              >
-                <FileSpreadsheet className="h-4 w-4" />
-                Download CSV
-              </button>
-              <button
-                onClick={() => setExportOpen(false)}
-                className="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800"
-              >
-                Cancel
-              </button>
-            </div>
+            {/* <select
+              value={department}
+              onChange={(e) => setDepartment(e.target.value)}
+              className="px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm focus:outline-none focus:border-blue-500 min-w-[140px]"
+            >
+              <option value="all">All Groups</option>
+              <option value="Engineering">Engineering</option>
+              <option value="Design">Design</option>
+              <option value="HR">HR</option>
+              <option value="Management">Management</option>
+            </select> */}
           </div>
         </div>
-      )}
+
+        {/* Timesheet Grid */}
+        <div className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/20 backdrop-blur-sm">
+          <div className="overflow-x-auto overflow-y-auto max-h-[70vh] custom-scrollbar">
+            <table className="w-full border-collapse">
+              <thead className="sticky top-0 z-20">
+                <tr className="bg-slate-950/80 backdrop-blur-md">
+                  <th className="sticky left-0 z-30 p-4 text-left border-r border-slate-800 min-w-[280px] bg-slate-950">
+                    <span className="text-xs font-bold uppercase tracking-widest text-slate-500">Employee</span>
+                  </th>
+                  {daysInRange.map((day) => (
+                    <th key={day.toISOString()} className="p-2 min-w-[44px] text-center border-r border-slate-800/50">
+                      <div className="flex flex-col items-center">
+                        <span className="text-[10px] text-slate-500 uppercase font-black">{format(day, "eee")}</span>
+                        <span className="text-sm font-bold text-slate-200">{format(day, "dd")}</span>
+                      </div>
+                    </th>
+                  ))}
+                  <th className="p-4 text-right min-w-[100px] border-l border-slate-800 bg-slate-950/80">
+                    <span className="text-xs font-bold uppercase tracking-widest text-slate-500">Total</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800/50">
+                {loading ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <tr key={i} className="animate-pulse">
+                      <td className="sticky left-0 p-4 bg-slate-900/40 border-r border-slate-800">
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-full bg-slate-800" />
+                          <div className="space-y-2">
+                            <div className="h-4 w-32 bg-slate-800 rounded" />
+                            <div className="h-3 w-20 bg-slate-800/50 rounded" />
+                          </div>
+                        </div>
+                      </td>
+                      {daysInRange.map((day) => (
+                        <td key={day.toISOString()} className="p-2">
+                          <div className="h-10 w-10 bg-slate-800/30 rounded-lg mx-auto" />
+                        </td>
+                      ))}
+                      <td className="p-4 bg-slate-900/40 border-l border-slate-800" />
+                    </tr>
+                  ))
+                ) : (
+                  reportData?.members.map((member) => (
+                    <tr key={member.userId} className="group hover:bg-slate-800/20 transition-colors">
+                      <td className="sticky left-0 p-4 border-r border-slate-800 bg-slate-900/90 group-hover:bg-slate-800/90 transition-colors z-10 shadow-xl">
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500/20 to-indigo-500/20 border border-slate-700 flex items-center justify-center text-blue-400 font-bold overflow-hidden">
+                            {member.avatar ? <img src={member.avatar} alt="" /> : member.name.charAt(0)}
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-bold text-slate-100">{member.name}</h4>
+                            <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">{member.department} • {member.shiftHours}h shift</p>
+                          </div>
+                        </div>
+                      </td>
+                      {daysInRange.map((day) => {
+                        const dStr = format(day, "yyyy-MM-dd");
+                        const record = member.dailyRecords.find(r => r.date === dStr);
+                        const isHovered = hoveredDay?.memberId === member.userId && hoveredDay?.date === dStr;
+
+                        return (
+                          <td
+                            key={dStr}
+                            className="p-1.5 border-r border-slate-800/30 relative"
+                            onMouseEnter={() => setHoveredDay({ memberId: member.userId, date: dStr })}
+                            onMouseLeave={() => setHoveredDay(null)}
+                          >
+                            <div className={`
+                              h-10 w-10 rounded-xl border flex flex-col items-center justify-center transition-all cursor-pointer
+                              ${record ? INTENSITY_COLORS[record.intensity] : "bg-slate-950/20 border-slate-800/40 text-slate-600"}
+                              ${isHovered ? "scale-110 shadow-lg z-10" : ""}
+                            `}>
+                              {record?.isTimeOff && <Umbrella className="h-3.5 w-3.5 text-blue-400" />}
+                              {record?.isRestDay && <Moon className="h-3.5 w-3.5 text-slate-500" />}
+                              {record?.isHoliday && <Palmtree className="h-3.5 w-3.5 text-orange-400" />}
+                              {!record?.isTimeOff && !record?.isRestDay && !record?.isHoliday && record?.intensity! > 0 && (
+                                <span className="text-[10px] font-bold">{(record.workMs / 3600000).toFixed(0)}</span>
+                              )}
+                            </div>
+
+                            {/* Hover Tooltip */}
+                            <AnimatePresence>
+                              {isHovered && record && record.intensity > 0 && (
+                                <motion.div
+                                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                                  className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 w-48 p-4 bg-slate-950 border border-slate-800 rounded-2xl shadow-2xl pointer-events-none"
+                                >
+                                  <div className="space-y-2">
+                                    <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest mb-2">{format(parseISO(record.date), "MMMM dd, yyyy")}</p>
+                                    <div className="flex justify-between text-xs">
+                                      <span className="text-slate-400">First In:</span>
+                                      <span className="text-white font-bold">{record.checkInTime ? format(new Date(record.checkInTime), "hh:mm a") : "---"}</span>
+                                    </div>
+                                    <div className="flex justify-between text-xs">
+                                      <span className="text-slate-400">Last Out:</span>
+                                      <span className="text-white font-bold">{record.checkOutTime ? format(new Date(record.checkOutTime), "hh:mm a") : "---"}</span>
+                                    </div>
+                                    <div className="h-px bg-slate-800 my-1" />
+                                    <div className="flex justify-between text-xs">
+                                      <span className="text-slate-400">Work:</span>
+                                      <span className="text-emerald-400 font-bold">{(record.workMs / 3600000).toFixed(1)}h</span>
+                                    </div>
+                                    <div className="flex justify-between text-xs">
+                                      <span className="text-slate-400">Break:</span>
+                                      <span className="text-slate-500 font-bold">{(record.breakMs / 60000).toFixed(0)}m</span>
+                                    </div>
+                                    {record.overtimeMs > 0 && (
+                                      <div className="flex justify-between text-xs">
+                                        <span className="text-slate-400">OT:</span>
+                                        <span className="text-pink-400 font-bold">{(record.overtimeMs / 3600000).toFixed(1)}h</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </td>
+                        );
+                      })}
+                      <td className="p-4 bg-slate-900/90 border-l border-slate-800 text-right group-hover:bg-slate-800/90 transition-colors">
+                        <span className="text-sm font-black text-white">{member.payrollHours}h</span>
+                        <div className="h-1 w-12 bg-emerald-500/20 rounded-full mt-1 ml-auto overflow-hidden">
+                          <div className="h-full bg-emerald-500" style={{ width: '80%' }} />
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </main>
+
+      {/* Legend Modal */}
+      <AnimatePresence>
+        {showLegend && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setShowLegend(false)}
+              className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+              className="relative w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl"
+            >
+              <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                <Grid className="h-6 w-6 text-blue-400" />
+                Color Legend
+              </h3>
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Hours Intensity</p>
+                  <div className="flex items-center gap-3">
+                    <div className="h-6 w-6 rounded-lg bg-slate-800 border border-slate-700" />
+                    <span className="text-sm text-slate-300">0 hours</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="h-6 w-6 rounded-lg bg-yellow-500/30 border border-yellow-500/50" />
+                    <span className="text-sm text-slate-300">0 - 2 hours</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="h-6 w-6 rounded-lg bg-orange-500/40 border border-orange-500/60" />
+                    <span className="text-sm text-slate-300">2 - 4 hours</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="h-6 w-6 rounded-lg bg-emerald-500/30 border border-emerald-500/50" />
+                    <span className="text-sm text-slate-300">4 - 6 hours</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="h-6 w-6 rounded-lg bg-emerald-600/60 border border-emerald-500/80" />
+                    <span className="text-sm text-slate-300">6 - 8 hours</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="h-6 w-6 rounded-lg bg-pink-500/40 border-pink-500/60" />
+                    <span className="text-sm text-slate-300">8 - 10 hours</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="h-6 w-6 rounded-lg bg-red-600/50 border-red-500/70" />
+                    <span className="text-sm text-slate-300">10+ hours</span>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Statuses</p>
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-slate-950/20 border-slate-800/40">
+                      <Palmtree className="h-4 w-4 text-orange-400" />
+                    </div>
+                    <span className="text-sm text-slate-300">Public Holiday</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-slate-950/20 border-slate-800/40">
+                      <Moon className="h-4 w-4 text-slate-500" />
+                    </div>
+                    <span className="text-sm text-slate-300">Rest Day</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-slate-950/20 border-slate-800/40">
+                      <Umbrella className="h-4 w-4 text-blue-400" />
+                    </div>
+                    <span className="text-sm text-slate-300">Time Off</span>
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowLegend(false)}
+                className="w-full mt-8 py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-bold transition-colors"
+              >
+                Got it
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Export Modal */}
+      <AnimatePresence>
+        {showExport && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setShowExport(false)}
+              className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+              className="relative w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl"
+            >
+              <h3 className="text-2xl font-bold mb-6">Export Report</h3>
+
+              <div className="space-y-6">
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block">File Format</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button className="flex items-center justify-center gap-2 p-4 rounded-2xl bg-slate-950 border-2 border-blue-500/50 text-white">
+                      <span className="font-bold">XLSX</span>
+                    </button>
+                    <button className="flex items-center justify-center gap-2 p-4 rounded-2xl bg-slate-950 border border-slate-800 text-slate-400">
+                      <span className="font-bold">CSV</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block">Duration Format</label>
+                  <select className="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-sm focus:outline-none focus:border-blue-500">
+                    <option value="hhmm">HH:mm (e.g. 08:30)</option>
+                    <option value="decimal">Decimal (e.g. 8.50)</option>
+                  </select>
+                </div>
+
+                <div className="pt-4">
+                  <a
+                    href={`/api/reports/export?startDate=${format(start, "yyyy-MM-dd")}&endDate=${format(end, "yyyy-MM-dd")}&department=${department}&format=xls`}
+                    download
+                    className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-bold transition-all shadow-lg shadow-blue-500/20"
+                  >
+                    <Download className="h-5 w-5" />
+                    Download Report
+                  </a>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <style jsx global>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 8px;
+          height: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #0f172a;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #1e293b;
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #334155;
+        }
+      `}</style>
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { User } from "@/models/User";
 import { cookies } from "next/headers";
 import { verifyAuthToken } from "@/lib/auth";
 import { captureAuditLogs } from "@/lib/taskAudit";
+import { TaskActivityLog } from "@/models/TaskActivityLog";
 
 async function getUserFromRequest() {
   const cookieStore = cookies();
@@ -75,8 +76,45 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     }
 
     const updated = await Task.findByIdAndUpdate(params.id, update, { new: true }).lean();
+    if (!updated) return NextResponse.json({ error: "Failed to update" }, { status: 500 });
+
     // capture audit logs
     await captureAuditLogs(existing as any, updated as any, { id: user.sub, role: user.role }, { ip: request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "", ua: request.headers.get("user-agent") || "" });
+
+    // Create activity log
+    try {
+      const fieldChanges = [];
+      const obsOld = existing as any;
+      const obsNew = updated as any;
+      for (const k of Object.keys(update)) {
+        if (JSON.stringify(obsOld[k]) !== JSON.stringify(obsNew[k])) {
+          fieldChanges.push({
+            fieldName: k,
+            oldValue: obsOld[k],
+            newValue: obsNew[k]
+          });
+        }
+      }
+
+      if (fieldChanges.length > 0) {
+        let eventType: any = "FIELD_CHANGED";
+        if (fieldChanges.some(f => f.fieldName === "status")) eventType = "STATUS_CHANGED";
+        else if (fieldChanges.some(f => f.fieldName === "assignee")) eventType = "ASSIGNEE_CHANGED";
+        else if (fieldChanges.some(f => f.fieldName === "priority")) eventType = "PRIORITY_CHANGED";
+        else if (fieldChanges.some(f => f.fieldName === "description")) eventType = "DESCRIPTION_EDITED";
+        else if (fieldChanges.some(f => f.fieldName === "dueDate")) eventType = "DUEDATE_CHANGED";
+
+        await TaskActivityLog.create({
+          task: params.id as any,
+          user: user.sub,
+          eventType,
+          fieldChanges,
+          description: `Updated ${fieldChanges.length} field(s): ${fieldChanges.map(f => f.fieldName).join(", ")}`
+        });
+      }
+    } catch (e) {
+      console.error("Failed to create activity log:", e);
+    }
 
     return NextResponse.json({ data: updated });
   } catch (e) {

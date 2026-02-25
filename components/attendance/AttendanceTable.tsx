@@ -134,8 +134,8 @@ export function AttendanceTable({
                 <td className="px-4 py-3 text-slate-100">
                   {record.checkIn ? (
                     <div>
-                      <p className="font-medium">
-                        {format(new Date(record.checkIn), "HH:mm")} <span className="text-xs text-slate-400">AM</span>
+                      <p className="font-medium whitespace-nowrap">
+                        {format(new Date(record.checkIn), "hh:mm")} <span className="text-[10px] uppercase text-slate-400">{format(new Date(record.checkIn), "a")}</span>
                       </p>
                     </div>
                   ) : (
@@ -147,8 +147,8 @@ export function AttendanceTable({
                 <td className="px-4 py-3 text-slate-100">
                   {record.checkOut ? (
                     <div>
-                      <p className="font-medium">
-                        {format(new Date(record.checkOut), "HH:mm")} <span className="text-xs text-slate-400">PM</span>
+                      <p className="font-medium whitespace-nowrap">
+                        {format(new Date(record.checkOut), "hh:mm")} <span className="text-[10px] uppercase text-slate-400">{format(new Date(record.checkOut), "a")}</span>
                       </p>
                     </div>
                   ) : (
@@ -217,11 +217,10 @@ export function AttendanceTable({
               <button
                 key={i + 1}
                 onClick={() => onPageChange?.(i + 1)}
-                className={`rounded px-2 py-1 text-xs font-medium ${
-                  currentPage === i + 1
+                className={`rounded px-2 py-1 text-xs font-medium ${currentPage === i + 1
                     ? "bg-accent text-slate-950"
                     : "border border-slate-700 bg-slate-900/50 text-slate-400 hover:bg-slate-800"
-                }`}
+                  }`}
               >
                 {i + 1}
               </button>

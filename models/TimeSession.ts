@@ -1,4 +1,4 @@
-import { Schema, model, models, type Model, type Types } from "mongoose";
+import mongoose, { Schema, model, models, type Model, type Types } from "mongoose";
 
 export type TimeSessionStatus = "active" | "completed";
 
@@ -43,7 +43,5 @@ const TimeSessionSchema = new Schema<ITimeSession>(
 TimeSessionSchema.index({ user: 1, date: 1 });
 TimeSessionSchema.index({ user: 1, clockIn: 1 });
 
-export const TimeSession: Model<ITimeSession> =
-  (models.TimeSession as Model<ITimeSession>) || model<ITimeSession>("TimeSession", TimeSessionSchema);
-
+export const TimeSession = (models && models.TimeSession) || model<ITimeSession>("TimeSession", TimeSessionSchema);
 export default TimeSession;

@@ -2,8 +2,9 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { verifyAuthToken } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
+import { errorResp, successResp } from "@/lib/apiResponse";
 import { IssueComment } from "@/models/IssueCollaboration";
-import { successResp, errorResp } from "@/lib/apiResponse";
+import { TaskActivityLog } from "@/models/TaskActivityLog";
 import { Types } from "mongoose";
 
 export async function POST(request: Request) {
@@ -45,6 +46,21 @@ export async function POST(request: Request) {
       likes: [],
       isEdited: false
     });
+
+    // Create activity log
+    try {
+      await TaskActivityLog.create({
+        task: body.issueId as any,
+        user: payload.sub,
+        eventType: "COMMENT_ADDED",
+        description: `Added a comment: "${body.content.slice(0, 50)}${body.content.length > 50 ? "..." : ""}"`,
+        metadata: {
+          commentId: comment._id
+        }
+      });
+    } catch (e) {
+      console.error("Failed to create activity log for comment:", e);
+    }
 
     return NextResponse.json(
       successResp("Comment created", {

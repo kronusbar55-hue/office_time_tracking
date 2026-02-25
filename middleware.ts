@@ -7,11 +7,13 @@ import type { NextRequest } from 'next/server';
 
 const ROLE_PATHS: Array<{ prefix: string; allowed: string[] }> = [
   { prefix: '/admin', allowed: ['admin'] },
+  { prefix: '/live-attendance', allowed: ['admin'] },
   { prefix: '/employees', allowed: ['admin', 'hr'] },
   { prefix: '/reports', allowed: ['admin', 'hr'] },
   { prefix: '/projects', allowed: ['admin', 'manager', 'employee'] },
   { prefix: '/tasks', allowed: ['admin', 'manager', 'employee'] },
-  { prefix: '/leaves', allowed: ['admin', 'hr', 'manager', 'employee'] }
+  { prefix: '/leaves', allowed: ['admin', 'hr', 'manager', 'employee'] },
+  { prefix: '/check-in-out', allowed: ['hr', 'manager'] }
 ];
 
 function parseJwtPayload(token?: string) {
@@ -49,10 +51,12 @@ export function middleware(req: NextRequest) {
 export const config = {
   matcher: [
     '/admin/:path*',
+    '/live-attendance/:path*',
     '/employees/:path*',
     '/reports/:path*',
     '/projects/:path*',
     '/tasks/:path*',
-    '/leaves/:path*'
+    '/leaves/:path*',
+    '/check-in-out/:path*'
   ]
 };

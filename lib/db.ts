@@ -27,6 +27,8 @@ import "@/models/IssueDependency";
 import "@/models/IssueLink";
 import "@/models/SubTaskTemplate";
 import "@/models/IssueHierarchy";
+import "@/models/Announcement";
+
 
 const MONGODB_URI = process.env.MONGODB_URI;
 

@@ -73,12 +73,12 @@ export function AttendanceFilters({
             </select>
           )}
 
-          <button
+          {/* <button
             onClick={() => setShowMoreFilters(!showMoreFilters)}
             className="rounded-lg border border-slate-700 bg-slate-900/50 px-3 py-2 text-sm text-slate-400 transition-colors hover:bg-slate-800 hover:text-slate-100"
           >
             More Filters
-          </button>
+          </button> */}
 
           <button
             onClick={onExport}
@@ -93,26 +93,7 @@ export function AttendanceFilters({
       {/* View Toggle */}
       <div className="flex justify-between items-center">
         <div className="flex gap-2">
-          <button
-            onClick={() => onViewModeChange("list")}
-            className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-              viewMode === "list"
-                ? "bg-accent text-slate-950"
-                : "border border-slate-700 bg-slate-900/50 text-slate-400 hover:bg-slate-800"
-            }`}
-          >
-            List View
-          </button>
-          <button
-            onClick={() => onViewModeChange("calendar")}
-            className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-              viewMode === "calendar"
-                ? "bg-accent text-slate-950"
-                : "border border-slate-700 bg-slate-900/50 text-slate-400 hover:bg-slate-800"
-            }`}
-          >
-            Calendar
-          </button>
+
         </div>
       </div>
     </div>
