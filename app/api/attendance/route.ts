@@ -100,7 +100,7 @@ export async function GET(request: Request) {
       .map((user: any) => {
         const uid = user._id.toString();
         const session = sessions.find(
-          (s: { user: { toString: () => string } }) => s.user.toString() === uid
+          (s: any) => s.user.toString() === uid
         );
 
         let attendanceStatus: AttendanceRecord["status"] = "not-checked-in";
@@ -111,9 +111,10 @@ export async function GET(request: Request) {
         const breaksList: Array<{ startTime: Date; endTime?: Date | null; reason?: string }> = [];
 
         if (session) {
-          checkIn = session.clockIn;
-          checkOut = session.clockOut ?? null;
-          const sid = session._id.toString();
+          const s = session as any;
+          checkIn = s.clockIn;
+          checkOut = s.clockOut ?? null;
+          const sid = s._id.toString();
           const sessionBreaks = sessionBreaksMap.get(sid) || [];
           const hasOngoingBreak = hasOngoingBreakBySession.get(sid) ?? false;
 
@@ -125,13 +126,13 @@ export async function GET(request: Request) {
             });
           });
 
-          breakDuration = (session.totalBreakMinutes || 0) / 60;
+          breakDuration = (s.totalBreakMinutes || 0) / 60;
 
-          if (session.status === "completed") {
-            workingHours = (session.totalWorkMinutes || 0) / 60;
+          if (s.status === "completed") {
+            workingHours = (s.totalWorkMinutes || 0) / 60;
             attendanceStatus = "checked-out";
           } else {
-            const clockInMs = new Date(session.clockIn).getTime();
+            const clockInMs = new Date(s.clockIn).getTime();
             const endMs = checkOut ? new Date(checkOut).getTime() : now.getTime();
             let totalBreakMs = 0;
             sessionBreaks.forEach((b) => {
@@ -157,9 +158,9 @@ export async function GET(request: Request) {
           role: user.role,
           technology: user.technology && typeof user.technology === "object" && "name" in user.technology
             ? {
-                id: String((user.technology as { _id?: unknown })._id ?? user.technology),
-                name: (user.technology as { name: string }).name
-              }
+              id: String((user.technology as { _id?: unknown })._id ?? user.technology),
+              name: (user.technology as { name: string }).name
+            }
             : null,
           avatar: user.avatarUrl,
           checkIn,
@@ -172,8 +173,8 @@ export async function GET(request: Request) {
         };
       })
       .sort((a, b) =>
-      `${a.firstName}${a.lastName}`.localeCompare(`${b.firstName}${b.lastName}`)
-    );
+        `${a.firstName}${a.lastName}`.localeCompare(`${b.firstName}${b.lastName}`)
+      );
 
     const summary = {
       totalEmployees: allRecords.length,

@@ -116,8 +116,8 @@ export default async function ManagerDashboard({ userId }: Props) {
     <div className="mx-auto max-w-7xl space-y-8 p-4 md:p-8">
       {/* Row 1: Welcome */}
       <WelcomeHeader
-        firstName={manager?.firstName}
-        lastName={manager?.lastName}
+        firstName={(manager as any)?.firstName}
+        lastName={(manager as any)?.lastName}
         progress={teamAttendanceRate}
       />
 

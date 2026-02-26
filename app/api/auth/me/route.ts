@@ -27,13 +27,14 @@ export async function GET() {
     return NextResponse.json({ user: null }, { status: 401 });
   }
 
+  const u = user as any;
   return NextResponse.json({
     user: {
-      id: user._id.toString(),
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email,
-      role: user.role
+      id: u._id.toString(),
+      firstName: u.firstName,
+      lastName: u.lastName,
+      email: u.email,
+      role: u.role
     }
   });
 }

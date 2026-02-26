@@ -49,7 +49,7 @@ export async function GET(request: Request) {
       return {
         id: session._id.toString(),
         user: {
-          id: (session as any).user?._id?.toString(),
+          id: (session as any).user?._id?.toString() || (session as any).user?.toString(),
           firstName: (session as any).user?.firstName,
           lastName: (session as any).user?.lastName,
           email: (session as any).user?.email,

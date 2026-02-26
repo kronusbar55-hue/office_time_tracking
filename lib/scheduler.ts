@@ -53,7 +53,7 @@ export async function aggregateSessionIntoDailyRecord(session: any) {
         typeof session.totalWorkMinutes === "number"
             ? session.totalWorkMinutes
             : Math.floor((clockOut.getTime() - clockIn.getTime()) / 60000) -
-              (session.totalBreakMinutes || 0);
+            (session.totalBreakMinutes || 0);
     const sessionBreak = session.totalBreakMinutes || 0;
 
     let record = await CheckInOut.findOne({
@@ -64,7 +64,7 @@ export async function aggregateSessionIntoDailyRecord(session: any) {
     if (!record) {
         record = new CheckInOut({
             user: session.user,
-            userRole: user.role,
+            userRole: (user as any).role,
             date: session.date,
             shift: shift ? shift._id : undefined,
             sessions: [],
@@ -126,9 +126,9 @@ export async function aggregateSessionIntoDailyRecord(session: any) {
     record.attendancePercentage =
         expectedWork > 0
             ? Math.min(
-                  100,
-                  Math.round((record.workMinutes / expectedWork) * 100)
-              )
+                100,
+                Math.round((record.workMinutes / expectedWork) * 100)
+            )
             : 0;
 
     if (record.attendancePercentage >= 90) record.status = "Present";

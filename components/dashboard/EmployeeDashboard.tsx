@@ -80,13 +80,14 @@ export default async function EmployeeDashboard({ userId }: Props) {
   let elapsedSeconds = 0;
 
   if (todaySession) {
-    if (todaySession.clockOut) {
-      hoursWorked = Math.round((todaySession.totalWorkMinutes || 0) / 60 * 10) / 10;
-    } else if (todaySession.clockIn) {
+    const s = todaySession as any;
+    if (s.clockOut) {
+      hoursWorked = Math.round((s.totalWorkMinutes || 0) / 60 * 10) / 10;
+    } else if (s.clockIn) {
       isActive = true;
-      const elapsedMins = Math.floor((Date.now() - new Date(todaySession.clockIn).getTime()) / 60000);
-      elapsedSeconds = Math.floor((Date.now() - new Date(todaySession.clockIn).getTime()) / 1000);
-      hoursWorked = Math.round((elapsedMins - (todaySession.totalBreakMinutes || 0)) / 60 * 10) / 10;
+      const elapsedMins = Math.floor((Date.now() - new Date(s.clockIn).getTime()) / 60000);
+      elapsedSeconds = Math.floor((Date.now() - new Date(s.clockIn).getTime()) / 1000);
+      hoursWorked = Math.round((elapsedMins - (s.totalBreakMinutes || 0)) / 60 * 10) / 10;
     }
   }
 
@@ -103,8 +104,8 @@ export default async function EmployeeDashboard({ userId }: Props) {
       <div className="flex flex-col lg:flex-row gap-6 items-stretch">
         <div className="flex-grow">
           <WelcomeHeader
-            firstName={user?.firstName}
-            lastName={user?.lastName}
+            firstName={(user as any)?.firstName}
+            lastName={(user as any)?.lastName}
             progress={85}
           />
         </div>

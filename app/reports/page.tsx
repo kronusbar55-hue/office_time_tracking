@@ -319,7 +319,7 @@ export default function ReportsPage() {
                               {record?.isRestDay && <Moon className="h-3.5 w-3.5 text-slate-500" />}
                               {record?.isHoliday && <Palmtree className="h-3.5 w-3.5 text-orange-400" />}
                               {!record?.isTimeOff && !record?.isRestDay && !record?.isHoliday && record?.intensity! > 0 && (
-                                <span className="text-[10px] font-bold">{(record.workMs / 3600000).toFixed(0)}</span>
+                                <span className="text-[10px] font-bold">{((record?.workMs || 0) / 3600000).toFixed(0)}</span>
                               )}
                             </div>
 

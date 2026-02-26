@@ -18,16 +18,17 @@ export async function GET(_request: Request, { params }: Params) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
+  const u = user as any;
   return NextResponse.json({
-    id: user._id.toString(),
-    firstName: user.firstName,
-    lastName: user.lastName,
-    email: user.email,
-    role: user.role,
-    technology: user.technology ? { id: String(user.technology._id || user.technology), name: (user as any).technology.name } : null,
-    joinDate: user.joinDate,
-    avatarUrl: user.avatarUrl,
-    isActive: user.isActive
+    id: u._id.toString(),
+    firstName: u.firstName,
+    lastName: u.lastName,
+    email: u.email,
+    role: u.role,
+    technology: u.technology ? { id: String(u.technology._id || u.technology), name: u.technology.name } : null,
+    joinDate: u.joinDate,
+    avatarUrl: u.avatarUrl,
+    isActive: u.isActive
   });
 }
 
@@ -117,7 +118,7 @@ export async function PUT(request: Request, { params }: Params) {
   }
 
   // populate technology for response
-  const populated = await User.findById(updated._id).populate({ path: "technology", select: "name" }).lean();
+  const populated = (await User.findById((updated as any)._id).populate({ path: "technology", select: "name" }).lean()) as any;
 
   return NextResponse.json({
     id: populated!._id.toString(),
@@ -125,7 +126,7 @@ export async function PUT(request: Request, { params }: Params) {
     lastName: populated!.lastName,
     email: populated!.email,
     role: populated!.role,
-    technology: populated!.technology ? { id: String((populated! as any).technology._id || (populated! as any).technology), name: (populated! as any).technology.name } : null,
+    technology: populated!.technology ? { id: String(populated!.technology._id || populated!.technology), name: populated!.technology.name } : null,
     joinDate: populated!.joinDate,
     avatarUrl: populated!.avatarUrl,
     isActive: populated!.isActive

@@ -35,7 +35,7 @@ export async function GET(request: Request) {
     const skip = (page - 1) * limit;
 
     // Get current user
-    const currentUser = await User.findById(payload.sub).lean();
+    const currentUser = (await User.findById(payload.sub).lean()) as any;
     if (!currentUser) {
       return NextResponse.json(errorResp("User not found"), { status: 404 });
     }
@@ -49,7 +49,7 @@ export async function GET(request: Request) {
     } else if (currentUser.role === "manager") {
       // Managers can see their team's records
       const teamMembers = await User.find({ manager: payload.sub }).select("_id");
-      const teamIds = teamMembers.map((m) => m._id);
+      const teamIds = teamMembers.map((m) => (m as any)._id);
       query.$or = [{ user: payload.sub }, { user: { $in: teamIds } }];
     } else if ((currentUser.role as string) === "hr" || (currentUser.role as string) === "admin") {
       // HR and admin can see all records

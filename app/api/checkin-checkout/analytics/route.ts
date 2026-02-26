@@ -52,8 +52,7 @@ export async function GET(request: Request) {
       }
     };
 
-    const currentUser = await User.findById(payload.sub).lean();
-
+    const currentUser = (await User.findById(payload.sub).lean()) as any;
     if (currentUser?.role === "employee" || userId) {
       query.user = userId || payload.sub;
     } else if (role) {
@@ -118,8 +117,8 @@ export async function GET(request: Request) {
 
     const avgAttendance = Array.from(attendanceRates.values()).length > 0
       ? (Array.from(attendanceRates.values()).reduce((a, b) => a + b, 0) /
-          (Array.from(attendanceRates.values()).length * DAYS_IN_PERIOD * 60)) *
-        100
+        (Array.from(attendanceRates.values()).length * DAYS_IN_PERIOD * 60)) *
+      100
       : 0;
 
     // Summary

@@ -30,18 +30,16 @@ export default function LiveTimer({ initialSeconds = 0, isActive = false }: Live
         return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
     };
 
-    // return (
-    // <div className="flex items-center gap-4 rounded-2xl bg-slate-900/50 border border-slate-700/50 p-4 backdrop-blur-md">
-
-
-    {/* <div className="relative"> */ }
-    {/* <motion.button
+    return (
+        <div className="flex items-center gap-4 rounded-2xl bg-slate-900/50 border border-slate-700/50 p-4 backdrop-blur-md">
+            <div className="relative">
+                <motion.button
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
                     className={`flex h-10 w-10 items-center justify-center rounded-full ${isActive ? "bg-red-500/20 text-red-400 border-red-500/30" : "bg-blue-500/20 text-blue-400 border-blue-500/30"
-                        } border`} */}
-    {/* > */ }
-    {/* <AnimatePresence mode="wait">
+                        } border`}
+                >
+                    <AnimatePresence mode="wait">
                         {isActive ? (
                             <motion.div
                                 key="pause"
@@ -61,9 +59,9 @@ export default function LiveTimer({ initialSeconds = 0, isActive = false }: Live
                                 <Play className="h-5 w-5 fill-current ml-1" />
                             </motion.div>
                         )}
-                    </AnimatePresence> */}
-    {/* </motion.button> */ }
-    {/* {isActive && (
+                    </AnimatePresence>
+                </motion.button>
+                {isActive && (
                     <motion.div
                         initial={{ scale: 0.8, opacity: 0 }}
                         animate={{ scale: 1.2, opacity: 0.2 }}
@@ -71,7 +69,13 @@ export default function LiveTimer({ initialSeconds = 0, isActive = false }: Live
                         className="absolute inset-0 rounded-full bg-blue-500 z-[-1]"
                     />
                 )}
-            </div> */}
-    // </div>
-    // );
+            </div>
+            <div className="flex flex-col">
+                <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Active Time</span>
+                <span className="text-2xl font-mono font-bold text-white leading-tight">
+                    {formatTime(seconds)}
+                </span>
+            </div>
+        </div>
+    );
 }

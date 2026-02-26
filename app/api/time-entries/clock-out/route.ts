@@ -97,7 +97,7 @@ export async function POST(request: Request) {
         }
 
         // Get user role
-        const user = await User.findById(payload.sub).select("role").lean();
+        const user = (await User.findById(payload.sub).select("role").lean()) as any;
 
         // Calculate metrics
         const netWorkMinutes = Math.max(0, workMinutes);

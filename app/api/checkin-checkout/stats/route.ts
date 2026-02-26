@@ -59,7 +59,7 @@ export async function GET(request: Request) {
     };
 
     // Role-based filtering
-    const currentUser = await User.findById(payload.sub).lean();
+    const currentUser = (await User.findById(payload.sub).lean()) as any;
     if (currentUser?.role === "employee") {
       query.user = payload.sub;
     } else if (role) {

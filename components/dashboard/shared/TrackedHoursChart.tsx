@@ -13,46 +13,69 @@ import {
     Legend
 } from "recharts";
 import { motion, AnimatePresence } from "framer-motion";
+import { RefreshCcw, AlertCircle } from "lucide-react";
+import { format, parseISO } from "date-fns";
 
-const DAY_DATA = [
-    { name: "08:00", worked: 0, break: 0, overtime: 0 },
-    { name: "10:00", worked: 1.5, break: 0.2, overtime: 0 },
-    { name: "12:00", worked: 3.5, break: 0.5, overtime: 0 },
-    { name: "14:00", worked: 5.0, break: 0.8, overtime: 0 },
-    { name: "16:00", worked: 6.5, break: 1.0, overtime: 0 },
-    { name: "18:00", worked: 8.0, break: 1.0, overtime: 0.5 },
-    { name: "20:00", worked: 8.5, break: 1.0, overtime: 1.2 },
-];
-
-const WEEK_DATA = [
-    { name: "Mon", worked: 7.5, break: 1.0, overtime: 0.5 },
-    { name: "Tue", worked: 8.0, break: 0.5, overtime: 1.0 },
-    { name: "Wed", worked: 6.5, break: 1.5, overtime: 0 },
-    { name: "Thu", worked: 8.5, break: 0.8, overtime: 1.5 },
-    { name: "Fri", worked: 7.0, break: 1.0, overtime: 0.2 },
-    { name: "Sat", worked: 0, break: 0, overtime: 0 },
-    { name: "Sun", worked: 0, break: 0, overtime: 0 },
-];
-
-const MONTH_DATA = [
-    { name: "Week 1", worked: 38, break: 5, overtime: 3 },
-    { name: "Week 2", worked: 40, break: 4, overtime: 5 },
-    { name: "Week 3", worked: 36, break: 6, overtime: 2 },
-    { name: "Week 4", worked: 42, break: 5, overtime: 6 },
-];
+// Data structure for chart
+interface ChartDataPoint {
+    name: string;
+    worked: number;
+    break: number;
+    overtime: number;
+    rawDate: string;
+}
 
 export default function TrackedHoursChart() {
     const [filter, setFilter] = useState<"Day" | "Week" | "Month">("Week");
+    const [data, setData] = useState<ChartDataPoint[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
-    const getData = () => {
-        switch (filter) {
-            case "Day": return DAY_DATA;
-            case "Month": return MONTH_DATA;
-            default: return WEEK_DATA;
+    const fetchData = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            // Map Day/Week/Month to API expected values
+            const period = filter.toLowerCase();
+            const res = await fetch(`/api/time-entries/stats?period=${period}`);
+            if (!res.ok) throw new Error("Failed to fetch statistics");
+            const result = await res.json();
+
+            const mappedData: ChartDataPoint[] = result.stats.map((s: any) => {
+                const dateObj = parseISO(s.date);
+                let name = "";
+
+                if (filter === "Day") {
+                    name = format(dateObj, "EEE");
+                } else if (filter === "Week") {
+                    name = format(dateObj, "MMM dd");
+                } else {
+                    name = format(dateObj, "dd");
+                }
+
+                return {
+                    name,
+                    worked: Math.round((s.workedMinutes / 60) * 10) / 10,
+                    break: Math.round((s.breakMinutes / 60) * 10) / 10,
+                    overtime: Math.round((s.overtimeMinutes / 60) * 10) / 10,
+                    rawDate: s.date
+                };
+            });
+
+            setData(mappedData);
+        } catch (err: any) {
+            console.error(err);
+            setError(err.message);
+        } finally {
+            setLoading(false);
         }
     };
 
-    const currentData = getData();
+    React.useEffect(() => {
+        fetchData();
+    }, [filter]);
+
+    const currentData = data;
 
     const CustomTooltip = ({ active, payload, label }: any) => {
         if (active && payload && payload.length) {
@@ -88,8 +111,8 @@ export default function TrackedHoursChart() {
                             key={tab}
                             onClick={() => setFilter(tab as any)}
                             className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${filter === tab
-                                    ? "bg-blue-500 text-white shadow-lg"
-                                    : "text-slate-400 hover:text-slate-200"
+                                ? "bg-blue-500 text-white shadow-lg"
+                                : "text-slate-400 hover:text-slate-200"
                                 }`}
                         >
                             {tab}
@@ -99,61 +122,108 @@ export default function TrackedHoursChart() {
             </div>
 
             {/* Chart Container */}
-            <div className="flex-grow min-h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                        data={currentData}
-                        margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-                        barGap={8}
-                    >
-                        <CartesianGrid
-                            strokeDasharray="3 3"
-                            vertical={false}
-                            stroke="#334155"
-                            opacity={0.3}
-                        />
-                        <XAxis
-                            dataKey="name"
-                            axisLine={false}
-                            tickLine={false}
-                            tick={{ fill: "#64748b", fontSize: 12, fontWeight: 500 }}
-                            dy={10}
-                        />
-                        <YAxis
-                            axisLine={false}
-                            tickLine={false}
-                            tick={{ fill: "#64748b", fontSize: 12, fontWeight: 500 }}
-                        />
-                        <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.05)", radius: 10 }} />
-                        <Legend
-                            verticalAlign="top"
-                            align="right"
-                            iconType="circle"
-                            wrapperStyle={{ paddingTop: 0, paddingBottom: 20, fontSize: '10px', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}
-                        />
-                        <Bar
-                            dataKey="worked"
-                            name="Worked Hours"
-                            fill="#4ADE80"
-                            radius={[4, 4, 0, 0]}
-                            animationDuration={1500}
-                        />
-                        <Bar
-                            dataKey="break"
-                            name="Break Hours"
-                            fill="#FACC15"
-                            radius={[4, 4, 0, 0]}
-                            animationDuration={1500}
-                        />
-                        <Bar
-                            dataKey="overtime"
-                            name="Overtime Hours"
-                            fill="#F87171"
-                            radius={[4, 4, 0, 0]}
-                            animationDuration={1500}
-                        />
-                    </BarChart>
-                </ResponsiveContainer>
+            <div className="flex-grow min-h-[300px] relative">
+                <AnimatePresence mode="wait">
+                    {loading ? (
+                        <motion.div
+                            key="loading"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 flex items-center justify-center bg-slate-900/10 backdrop-blur-[2px] z-10"
+                        >
+                            <RefreshCcw className="h-8 w-8 text-blue-500 animate-spin" />
+                        </motion.div>
+                    ) : error ? (
+                        <motion.div
+                            key="error"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="absolute inset-0 flex flex-col items-center justify-center text-slate-500 gap-2"
+                        >
+                            <AlertCircle className="h-8 w-8 text-red-500/50" />
+                            <p className="text-sm">{error}</p>
+                            <button
+                                onClick={fetchData}
+                                className="mt-2 text-xs font-bold text-blue-400 hover:underline"
+                            >
+                                Try Again
+                            </button>
+                        </motion.div>
+                    ) : data.length === 0 ? (
+                        <motion.div
+                            key="empty"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="absolute inset-0 flex flex-col items-center justify-center text-slate-500"
+                        >
+                            <p className="text-sm font-medium">No tracked hours found for this period</p>
+                        </motion.div>
+                    ) : (
+                        <motion.div
+                            key="content"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="w-full h-full"
+                        >
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart
+                                    data={currentData}
+                                    margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                                    barGap={8}
+                                >
+                                    <CartesianGrid
+                                        strokeDasharray="3 3"
+                                        vertical={false}
+                                        stroke="#334155"
+                                        opacity={0.3}
+                                    />
+                                    <XAxis
+                                        dataKey="name"
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tick={{ fill: "#64748b", fontSize: 10, fontWeight: 500 }}
+                                        dy={10}
+                                        interval={filter === "Week" ? 4 : 0}
+                                    />
+                                    <YAxis
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tick={{ fill: "#64748b", fontSize: 12, fontWeight: 500 }}
+                                    />
+                                    <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.05)", radius: 10 }} />
+                                    <Legend
+                                        verticalAlign="top"
+                                        align="right"
+                                        iconType="circle"
+                                        wrapperStyle={{ paddingTop: 0, paddingBottom: 20, fontSize: '10px', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}
+                                    />
+                                    <Bar
+                                        dataKey="worked"
+                                        name="Worked Hours"
+                                        fill="#4ADE80"
+                                        radius={[4, 4, 0, 0]}
+                                        animationDuration={1500}
+                                    />
+                                    <Bar
+                                        dataKey="break"
+                                        name="Break Hours"
+                                        fill="#FACC15"
+                                        radius={[4, 4, 0, 0]}
+                                        animationDuration={1500}
+                                    />
+                                    <Bar
+                                        dataKey="overtime"
+                                        name="Overtime Hours"
+                                        fill="#F87171"
+                                        radius={[4, 4, 0, 0]}
+                                        animationDuration={1500}
+                                    />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
         </div>
     );

@@ -7,7 +7,7 @@ import { User } from "@/models/User";
 import { parseISO, eachDayOfInterval, format } from "date-fns";
 import ExcelJS from "exceljs";
 
-// @ts-ignore - json2csv doesn't have official types in some versions
+// @ts-expect-error - json2csv doesn't have official types in some versions
 import { Parser } from "json2csv";
 
 export async function GET(request: Request) {

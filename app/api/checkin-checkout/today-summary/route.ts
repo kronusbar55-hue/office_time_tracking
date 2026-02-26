@@ -26,7 +26,7 @@ export async function GET(request: Request) {
     const today = format(new Date(), "yyyy-MM-dd");
 
     // Get current user
-    const currentUser = await User.findById(payload.sub).lean();
+    const currentUser = (await User.findById(payload.sub).lean()) as any;
 
     // Get today's record for current user or all if HR/Admin
     let query: any = { date: today };
@@ -36,7 +36,7 @@ export async function GET(request: Request) {
     } else if (currentUser?.role === "manager") {
       // Managers can see their team
       const teamMembers = await User.find({ manager: payload.sub }).select("_id");
-      const teamIds = teamMembers.map((m) => m._id);
+      const teamIds = teamMembers.map((m) => (m as any)._id);
       query.$or = [{ user: payload.sub }, { user: { $in: teamIds } }];
     }
     // Admin and HR can see all

@@ -165,7 +165,7 @@ export async function POST(request: Request) {
     joinDate: joinDate ? new Date(joinDate) : undefined
   });
   // populate technology for response
-  const populated = await User.findById(created._id).populate({ path: "technology", select: "name" }).lean();
+  const populated = (await User.findById(created._id).populate({ path: "technology", select: "name" }).lean()) as any;
 
   return NextResponse.json(
     {
@@ -176,11 +176,11 @@ export async function POST(request: Request) {
       role: populated!.role,
       technology: populated!.technology
         ? {
-            id: String(
-              (populated!.technology as any)._id || populated!.technology
-            ),
-            name: (populated!.technology as any).name
-          }
+          id: String(
+            (populated!.technology as any)._id || populated!.technology
+          ),
+          name: (populated!.technology as any).name
+        }
         : null,
       joinDate: populated!.joinDate,
       avatarUrl: populated!.avatarUrl,

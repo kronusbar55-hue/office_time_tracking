@@ -31,7 +31,8 @@ export async function GET() {
       });
     }
 
-    const breaks = await TimeSessionBreak.find({ timeSession: session._id }).lean();
+    const s = session as any;
+    const breaks = await TimeSessionBreak.find({ timeSession: s._id }).lean();
     const now = Date.now();
     const clockInMs = new Date((session as any).clockIn).getTime();
     let totalBreakMs = 0;

@@ -31,27 +31,31 @@ export async function GET() {
     return NextResponse.json({ active: null });
   }
 
+  const s = session as any;
+
   // Get breaks for active session
   const breaks = await TimeSessionBreak.find({
-    timeSession: session._id
+    timeSession: s._id
   }).lean();
+
+  const bks = breaks as any[];
 
   // Calculate current work time
   const now = new Date();
-  const clockInTime = new Date(session.clockIn);
+  const clockInTime = new Date(s.clockIn);
   const elapsedMinutes = Math.round((now.getTime() - clockInTime.getTime()) / 60000);
-  const breakMinutes = session.totalBreakMinutes || 0;
+  const breakMinutes = s.totalBreakMinutes || 0;
   const workMinutes = Math.max(0, elapsedMinutes - breakMinutes);
 
   return NextResponse.json({
     active: {
-      id: session._id.toString(),
-      date: session.date,
-      clockIn: session.clockIn,
+      id: s._id.toString(),
+      date: s.date,
+      clockIn: s.clockIn,
       elapsedMinutes,
       workMinutes,
       breakMinutes,
-      breaks: breaks.map((b) => ({
+      breaks: bks.map((b) => ({
         id: b._id.toString(),
         breakStart: b.breakStart,
         breakEnd: b.breakEnd,

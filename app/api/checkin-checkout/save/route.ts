@@ -36,7 +36,7 @@ export async function POST(request: Request) {
     };
 
     // Get user info
-    const user = await User.findById(payload.sub).lean();
+    const user = (await User.findById(payload.sub).lean()) as any;
     if (!user) {
       return NextResponse.json(errorResp("User not found"), { status: 404 });
     }
@@ -59,6 +59,7 @@ export async function POST(request: Request) {
     if (!session) {
       return NextResponse.json(errorResp("Session not found"), { status: 404 });
     }
+    const s = session as any;
 
     // Get User's Shift (Default to General if not found)
     let shift: IShift | null = null;
@@ -94,11 +95,11 @@ export async function POST(request: Request) {
     }
 
     // Calculate Session Metrics
-    const clockIn = new Date(session.clockIn);
-    const clockOut = session.clockOut ? new Date(session.clockOut) : new Date();
+    const clockIn = new Date(s.clockIn);
+    const clockOut = s.clockOut ? new Date(s.clockOut) : new Date();
     // Gross session duration
     const sessionDuration = Math.floor((clockOut.getTime() - clockIn.getTime()) / (1000 * 60));
-    const sessionBreak = session.totalBreakMinutes || 0;
+    const sessionBreak = s.totalBreakMinutes || 0;
     // Net work for this session
     const sessionWork = sessionDuration - sessionBreak;
 
@@ -107,7 +108,7 @@ export async function POST(request: Request) {
     // Find today's CheckInOut Record
     let record = await CheckInOut.findOne({
       user: payload.sub,
-      date: session.date
+      date: s.date
     });
 
     if (!record) {
@@ -115,7 +116,7 @@ export async function POST(request: Request) {
       record = new CheckInOut({
         user: payload.sub,
         userRole: user.role,
-        date: session.date,
+        date: s.date,
         shift: shift ? shift._id : undefined,
         sessions: [],
         workMinutes: 0,
@@ -130,9 +131,9 @@ export async function POST(request: Request) {
       clockIn,
       clockOut,
       duration: sessionWork, // Net work
-      location: (session as any).location,
-      deviceType: (session as any).deviceType || "web",
-      notes: (session as any).notes
+      location: s.location,
+      deviceType: s.deviceType || "web",
+      notes: s.notes
     });
 
     // Recalculate Daily Totals
