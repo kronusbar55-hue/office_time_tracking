@@ -5,6 +5,13 @@ export interface IEmployeeMonitor extends Document {
     imageUrl: string;
     date: string; // Store as YYYY-MM-DD
     time: string; // Store as HH:mm:ss
+    intervalStart: string;
+    intervalEnd: string;
+    mouseClicks: number;
+    mouseMovements: number;
+    keyPresses: number;
+    activeSeconds: number;
+    idleSeconds: number;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -28,6 +35,34 @@ const EmployeeMonitorSchema = new Schema<IEmployeeMonitor>(
         time: {
             type: String,
             required: true
+        },
+        intervalStart: {
+            type: String,
+            required: false
+        },
+        intervalEnd: {
+            type: String,
+            required: false
+        },
+        mouseClicks: {
+            type: Number,
+            default: 0
+        },
+        mouseMovements: {
+            type: Number,
+            default: 0
+        },
+        keyPresses: {
+            type: Number,
+            default: 0
+        },
+        activeSeconds: {
+            type: Number,
+            default: 0
+        },
+        idleSeconds: {
+            type: Number,
+            default: 0
         }
     },
     {

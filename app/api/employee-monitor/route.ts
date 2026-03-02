@@ -6,7 +6,19 @@ export async function POST(req: Request) {
     try {
         await connectDB()
         const body = await req.json()
-        const { userId, imageUrl, date, time } = body
+        const {
+            userId,
+            imageUrl,
+            date,
+            time,
+            intervalStart,
+            intervalEnd,
+            mouseClicks,
+            mouseMovements,
+            keyPresses,
+            activeSeconds,
+            idleSeconds
+        } = body
 
         if (!userId || !imageUrl || !date || !time) {
             return NextResponse.json(
@@ -15,15 +27,18 @@ export async function POST(req: Request) {
             )
         }
 
-        // Connect to database
-        // Note: In Next.js routes, we usually need to ensure DB connection is established
-        // I will check the lib folder for the connection utility if this fails or I'll use a generic approach
-
         const newMonitorEntry = await EmployeeMonitor.create({
             userId,
             imageUrl,
             date,
-            time
+            time,
+            intervalStart,
+            intervalEnd,
+            mouseClicks,
+            mouseMovements,
+            keyPresses,
+            activeSeconds,
+            idleSeconds
         })
 
         return NextResponse.json(
