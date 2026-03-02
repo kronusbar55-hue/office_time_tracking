@@ -17,7 +17,8 @@ export async function POST(req: Request) {
             mouseMovements,
             keyPresses,
             activeSeconds,
-            idleSeconds
+            idleSeconds,
+            timezone
         } = body
 
         if (!userId || !imageUrl || !date || !time) {
@@ -38,7 +39,8 @@ export async function POST(req: Request) {
             mouseMovements,
             keyPresses,
             activeSeconds,
-            idleSeconds
+            idleSeconds,
+            timezone
         })
 
         return NextResponse.json(

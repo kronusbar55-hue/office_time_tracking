@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { Clock3, LayoutDashboard, CalendarCheck, FileSpreadsheet, BarChart3, Code, UserSquare2, ListChecks, Megaphone, Users, Settings, CalendarDays } from "lucide-react";
+import { Clock3, LayoutDashboard, CalendarCheck, FileSpreadsheet, BarChart3, Code, UserSquare2, ListChecks, Megaphone, Users, Settings, CalendarDays, Monitor } from "lucide-react";
 import { NAV_CONFIG, ROLES } from "@/lib/roles";
 import { LogOut } from "lucide-react";
 
@@ -16,6 +16,7 @@ type NavItem = {
 
 const ICON_MAP: Record<string, any> = {
   dashboard: <LayoutDashboard className="h-4 w-4" />,
+  monitor: <Monitor className="h-4 w-4" />,
   time: <Clock3 className="h-4 w-4" />,
   calendar: <CalendarDays className="h-4 w-4" />,
   timesheets: <FileSpreadsheet className="h-4 w-4" />,

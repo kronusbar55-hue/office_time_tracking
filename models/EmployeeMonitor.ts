@@ -12,6 +12,7 @@ export interface IEmployeeMonitor extends Document {
     keyPresses: number;
     activeSeconds: number;
     idleSeconds: number;
+    timezone?: string;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -63,6 +64,10 @@ const EmployeeMonitorSchema = new Schema<IEmployeeMonitor>(
         idleSeconds: {
             type: Number,
             default: 0
+        },
+        timezone: {
+            type: String,
+            required: false
         }
     },
     {
