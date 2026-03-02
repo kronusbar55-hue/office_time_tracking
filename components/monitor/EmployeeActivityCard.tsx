@@ -148,7 +148,7 @@ export default function EmployeeActivityCard({ employee, viewMode }: EmployeeAct
             </div>
 
             {/* Zoom Modal */}
-            {isZoomed && (
+            {isZoomed && activity && (
                 <div
                     className="fixed inset-0 z-[9999] bg-slate-950/95 backdrop-blur-xl flex items-center justify-center p-8 cursor-zoom-out animate-in fade-in zoom-in duration-300"
                     onClick={() => setIsZoomed(false)}

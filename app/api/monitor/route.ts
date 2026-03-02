@@ -23,14 +23,16 @@ export async function GET() {
             }
         ]);
 
-        // Merge employee info with monitor data
-        const results = employees.map(emp => {
-            const monitor = monitorData.find(m => m._id === emp._id.toString() || m._id === emp.userId);
-            return {
-                ...emp,
-                activity: monitor ? monitor.latestEntry : null
-            };
-        });
+        // Merge employee info with monitor data and filter out those with no activity
+        const results = employees
+            .map(emp => {
+                const monitor = monitorData.find(m => m._id === emp._id.toString() || m._id === emp.userId);
+                return {
+                    ...emp,
+                    activity: monitor ? monitor.latestEntry : null
+                };
+            })
+            .filter(emp => emp.activity !== null);
 
         return NextResponse.json({ success: true, data: results });
     } catch (error: any) {
