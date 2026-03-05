@@ -18,7 +18,11 @@ export async function POST(req: Request) {
             keyPresses,
             activeSeconds,
             idleSeconds,
-            timezone
+            timezone,
+            status,
+            sessionTime,
+            breakTime,
+            meetingTime
         } = body
 
         if (!userId || !imageUrl || !date || !time) {
@@ -40,7 +44,11 @@ export async function POST(req: Request) {
             keyPresses,
             activeSeconds,
             idleSeconds,
-            timezone
+            timezone,
+            status,
+            sessionTime,
+            breakTime,
+            meetingTime
         })
 
         return NextResponse.json(

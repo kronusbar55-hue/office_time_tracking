@@ -24,9 +24,9 @@ export async function GET() {
         ]);
 
         // Merge employee info with monitor data and filter out those with no activity
-        const results = employees
+        const results = (employees as any[])
             .map(emp => {
-                const monitor = monitorData.find(m => m._id === emp._id.toString() || m._id === emp.userId);
+                const monitor = monitorData.find(m => m._id.toString() === emp._id.toString());
                 return {
                     ...emp,
                     activity: monitor ? monitor.latestEntry : null

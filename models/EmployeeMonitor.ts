@@ -13,6 +13,10 @@ export interface IEmployeeMonitor extends Document {
     activeSeconds: number;
     idleSeconds: number;
     timezone?: string;
+    status?: string;
+    sessionTime?: string;
+    breakTime?: string;
+    meetingTime?: string;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -66,6 +70,22 @@ const EmployeeMonitorSchema = new Schema<IEmployeeMonitor>(
             default: 0
         },
         timezone: {
+            type: String,
+            required: false
+        },
+        status: {
+            type: String,
+            required: false
+        },
+        sessionTime: {
+            type: String,
+            required: false
+        },
+        breakTime: {
+            type: String,
+            required: false
+        },
+        meetingTime: {
             type: String,
             required: false
         }

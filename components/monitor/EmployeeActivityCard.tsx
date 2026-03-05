@@ -26,8 +26,18 @@ export default function EmployeeActivityCard({ employee, viewMode }: EmployeeAct
 
     // Status color logic (simulated idle)
     const isActive = activity ? (activity.activeSeconds > activity.idleSeconds) : false;
-    const statusColor = activity ? (isActive ? "text-green-400 bg-green-400/10" : "text-yellow-400 bg-yellow-400/10") : "text-slate-500 bg-slate-500/10";
-    const statusLabel = activity ? (isActive ? "Active" : "Idle") : "Offline";
+    const statusLabel = activity?.status || (activity ? (isActive ? "Active" : "Idle") : "Offline");
+
+    const getStatusColor = (label: string) => {
+        const l = label.toLowerCase();
+        if (l === 'active' || l === 'online') return "text-green-400 bg-green-400/10";
+        if (l === 'break') return "text-orange-400 bg-orange-400/10";
+        if (l === 'meeting') return "text-purple-400 bg-purple-400/10";
+        if (l === 'offline') return "text-slate-500 bg-slate-500/10";
+        return "text-yellow-400 bg-yellow-400/10";
+    };
+
+    const statusColor = getStatusColor(statusLabel);
 
     if (viewMode === "list") {
         return (
@@ -53,6 +63,9 @@ export default function EmployeeActivityCard({ employee, viewMode }: EmployeeAct
                             <Stat icon={<MousePointer2 />} label="Clicks" value={activity.mouseClicks} />
                             <Stat icon={<Move />} label="Moves" value={activity.mouseMovements} />
                             <Stat icon={<Type />} label="Keys" value={activity.keyPresses} />
+                            <Stat icon={<Clock />} label="Session" value={activity.sessionTime || "00:00"} />
+                            <Stat icon={<Clock />} label="Break" value={activity.breakTime || "00:00"} />
+                            <Stat icon={<Clock />} label="Meeting" value={activity.meetingTime || "00:00"} />
                         </div>
 
                         <div className="flex flex-col items-end gap-1 px-8 border-l border-white/5">
@@ -87,7 +100,7 @@ export default function EmployeeActivityCard({ employee, viewMode }: EmployeeAct
                         <div>
                             <h3 className="text-sm font-bold text-white leading-none">{employee.firstName} {employee.lastName}</h3>
                             <div className="flex items-center gap-1.5 mt-1.5">
-                                <div className={`h-1.5 w-1.5 rounded-full ${isActive ? 'bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.5)]' : 'bg-yellow-400'}`} />
+                                <div className={`h-1.5 w-1.5 rounded-full ${statusColor.includes('green') ? 'bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.5)]' : statusColor.includes('orange') ? 'bg-orange-400' : statusColor.includes('purple') ? 'bg-purple-400' : 'bg-yellow-400'}`} />
                                 <span className={`text-[10px] font-bold uppercase tracking-wider ${statusColor.split(' ')[0]}`}>
                                     {statusLabel}
                                 </span>
@@ -132,6 +145,12 @@ export default function EmployeeActivityCard({ employee, viewMode }: EmployeeAct
                         <SmallStat icon={<MousePointer2 />} value={activity?.mouseClicks || 0} label="Clicks" />
                         <SmallStat icon={<Move />} value={activity?.mouseMovements || 0} label="Moves" />
                         <SmallStat icon={<Type />} value={activity?.keyPresses || 0} label="Keys" />
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-3 pt-4 border-t border-white/5">
+                        <SmallStat icon={<Clock />} value={activity?.sessionTime || "00:00"} label="Session" />
+                        <SmallStat icon={<Clock />} value={activity?.breakTime || "00:00"} label="Break" />
+                        <SmallStat icon={<Clock />} value={activity?.meetingTime || "00:00"} label="Meeting" />
                     </div>
 
                     <div className="pt-4 border-t border-white/5 flex items-center justify-between">
