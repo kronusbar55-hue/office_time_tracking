@@ -17,6 +17,7 @@ export interface IEmployeeMonitor extends Document {
     sessionTime?: string;
     breakTime?: string;
     meetingTime?: string;
+    appUsage?: Map<string, number> | Record<string, number>;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -88,6 +89,12 @@ const EmployeeMonitorSchema = new Schema<IEmployeeMonitor>(
         meetingTime: {
             type: String,
             required: false
+        },
+        appUsage: {
+            type: Map,
+            of: Number,
+            required: false,
+            default: {}
         }
     },
     {

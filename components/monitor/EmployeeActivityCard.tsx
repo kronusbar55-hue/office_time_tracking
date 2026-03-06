@@ -12,7 +12,8 @@ import {
     AlertCircle,
     CheckCircle2,
     Calendar,
-    Monitor
+    Monitor,
+    PieChart
 } from "lucide-react";
 
 interface EmployeeActivityCardProps {
@@ -152,6 +153,27 @@ export default function EmployeeActivityCard({ employee, viewMode }: EmployeeAct
                         <SmallStat icon={<Clock />} value={activity?.breakTime || "00:00"} label="Break" />
                         <SmallStat icon={<Clock />} value={activity?.meetingTime || "00:00"} label="Meeting" />
                     </div>
+
+                    {/* App Usage Display */}
+                    {activity?.appUsage && Object.keys(activity.appUsage).length > 0 && (
+                        <div className="pt-4 border-t border-white/5">
+                            <div className="flex items-center gap-2 mb-3">
+                                <PieChart className="h-4 w-4 text-accent" />
+                                <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400">App Usage (Mins)</span>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                                {Object.entries(activity.appUsage)
+                                    .sort(([, a], [, b]) => (b as number) - (a as number))
+                                    .slice(0, 4) // Show top 4 apps
+                                    .map(([appName, duration]) => (
+                                        <div key={appName} className="flex items-center gap-1.5 px-2 py-1 rounded bg-slate-950/50 border border-white/5 text-[10px]">
+                                            <span className="text-slate-300 truncate max-w-[80px]" title={appName}>{appName}</span>
+                                            <span className="font-bold text-accent">{Number(duration).toFixed(1)}m</span>
+                                        </div>
+                                    ))}
+                            </div>
+                        </div>
+                    )}
 
                     <div className="pt-4 border-t border-white/5 flex items-center justify-between">
                         <div className="flex items-center gap-2 text-[10px] text-slate-500 font-medium">

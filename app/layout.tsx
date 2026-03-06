@@ -23,7 +23,7 @@ metadata.icons = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={`${playfair.variable} ${dmSans.variable}`}>
-      <body className="min-h-screen bg-background font-sans text-slate-100 antialiased">
+      <body className="min-h-screen bg-background font-sans text-slate-100 antialiased" suppressHydrationWarning>
         <AuthProvider>
           <TimeTrackingProvider shiftHoursTarget={8}>
             <DashboardShell>{children}</DashboardShell>

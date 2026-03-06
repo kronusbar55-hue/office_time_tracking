@@ -209,7 +209,7 @@ export function TimeTrackingProvider({ children, shiftHoursTarget = 8 }: { child
     await postAndRefresh("/api/time-entries/break-end");
   }
 
-  const value: TimeTrackingState = {
+  const value: TimeTrackingState = React.useMemo(() => ({
     active,
     sessionData,
     ongoingBreak,
@@ -227,7 +227,10 @@ export function TimeTrackingProvider({ children, shiftHoursTarget = 8 }: { child
     clockOut,
     startBreak,
     endBreak,
-  };
+  }), [
+    active, sessionData, ongoingBreak, workedMs, breakMs, currentBreakMs,
+    overtimeMs, remainingMs, busy, error, shiftHoursTarget, refreshKey
+  ]);
 
   return <TimeTrackingContext.Provider value={value}>{children}</TimeTrackingContext.Provider>;
 }

@@ -10,12 +10,48 @@ export default function MonitorDashboard() {
     const [searchQuery, setSearchQuery] = useState("");
     const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
+    // New filter states
+    const [selectedDate, setSelectedDate] = useState("");
+    const [selectedUserId, setSelectedUserId] = useState("all");
+    const [allUsers, setAllUsers] = useState<any[]>([]);
+
+    // Pagination states
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalActiveRecords, setTotalActiveRecords] = useState(0);
+
+    useEffect(() => {
+        // Fetch all users for the dropdown filter
+        fetch("/api/users")
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    setAllUsers(data.data);
+                } else if (Array.isArray(data)) {
+                    // Some APIs return raw array
+                    setAllUsers(data);
+                }
+            })
+            .catch(console.error);
+    }, []);
+
     const fetchMonitorData = async () => {
         try {
-            const res = await fetch("/api/monitor");
+            setLoading(true);
+            const params = new URLSearchParams();
+            if (selectedDate) params.append("date", selectedDate);
+            if (selectedUserId && selectedUserId !== "all") params.append("userId", selectedUserId);
+            params.append("page", page.toString());
+            params.append("limit", "12");
+
+            const res = await fetch(`/api/monitor?${params.toString()}`);
             const data = await res.json();
             if (data.success) {
                 setEmployees(data.data);
+                if (data.pagination) {
+                    setTotalPages(data.pagination.totalPages);
+                    setTotalActiveRecords(data.pagination.totalActiveRecords);
+                }
             }
         } catch (error) {
             console.error("Failed to fetch monitor data", error);
@@ -25,10 +61,17 @@ export default function MonitorDashboard() {
     };
 
     useEffect(() => {
+        setPage(1); // Reset to page 1 when filters change
+    }, [selectedDate, selectedUserId]);
+
+    useEffect(() => {
         fetchMonitorData();
+    }, [selectedDate, selectedUserId, page]); // Refetch when filters or page change
+
+    useEffect(() => {
         const interval = setInterval(fetchMonitorData, 30000); // Refresh every 30s
         return () => clearInterval(interval);
-    }, []);
+    }, [selectedDate, selectedUserId, page]);
 
     const filteredEmployees = employees.filter(emp =>
         `${emp.firstName} ${emp.lastName}`.toLowerCase().includes(searchQuery.toLowerCase())
@@ -45,8 +88,34 @@ export default function MonitorDashboard() {
                     <p className="text-slate-400 text-sm mt-1">Real-time activity tracking for your team</p>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
+                    {/* User Dropdown */}
                     <div className="relative">
+                        <select
+                            value={selectedUserId}
+                            onChange={(e) => setSelectedUserId(e.target.value)}
+                            className="bg-slate-950/50 border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-accent/50 appearance-none min-w-[150px] transition-all"
+                        >
+                            <option value="all">All Employees</option>
+                            {allUsers.map((u: any) => (
+                                <option key={u._id || u.id} value={u._id || u.id}>
+                                    {u.firstName} {u.lastName}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Date Picker */}
+                    <div className="relative">
+                        <input
+                            type="date"
+                            className="bg-slate-950/50 border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-accent/50 transition-all [color-scheme:dark]"
+                            value={selectedDate}
+                            onChange={(e) => setSelectedDate(e.target.value)}
+                        />
+                    </div>
+
+                    <div className="relative hidden md:block">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
                         <input
                             type="text"
@@ -106,6 +175,32 @@ export default function MonitorDashboard() {
                             <p className="text-lg font-medium">No employees found matching your search</p>
                         </div>
                     )}
+                </div>
+            )}
+
+            {/* Pagination Controls */}
+            {!loading && totalPages > 1 && (
+                <div className="flex items-center justify-between bg-slate-900/40 p-4 rounded-2xl border border-white/5 backdrop-blur-sm mt-6">
+                    <div className="text-sm text-slate-400">
+                        Showing page <span className="font-bold text-white">{page}</span> of <span className="font-bold text-white">{totalPages}</span>
+                        <span className="ml-2 text-slate-500">({totalActiveRecords} total records)</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setPage(p => Math.max(1, p - 1))}
+                            disabled={page === 1}
+                            className="px-4 py-2 rounded-xl bg-slate-800 border border-white/10 text-slate-300 hover:bg-slate-700 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm font-medium"
+                        >
+                            Previous
+                        </button>
+                        <button
+                            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                            disabled={page === totalPages}
+                            className="px-4 py-2 rounded-xl bg-slate-800 border border-white/10 text-slate-300 hover:bg-slate-700 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm font-medium"
+                        >
+                            Next
+                        </button>
+                    </div>
                 </div>
             )}
         </div>
