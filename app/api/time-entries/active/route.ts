@@ -21,10 +21,10 @@ export async function GET() {
   const { getDayMonitorStats } = await import("@/lib/monitorUtils");
   const mStats = await getDayMonitorStats(payload.sub, dateStr);
 
-  const latestMonitor = await EmployeeMonitor.findOne({
+  const latestMonitor = (await EmployeeMonitor.findOne({
     userId: payload.sub,
     date: dateStr
-  }).sort({ createdAt: -1 }).lean();
+  }).sort({ createdAt: -1 }).lean()) as any;
 
   if (!latestMonitor) {
     return NextResponse.json({ active: null });
