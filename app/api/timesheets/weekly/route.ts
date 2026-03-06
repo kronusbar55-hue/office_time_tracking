@@ -92,58 +92,32 @@ export async function GET(request: Request) {
       }
     });
 
+    // Get monitor stats for the whole week
+    const { getMonitorStats } = await import("@/lib/monitorUtils");
+    const monitorStats = await getMonitorStats(userId, weekStart, weekEnd);
+
     // Build day summaries
     const days = Array.from({ length: 7 }).map((_, i) => {
       const day = addDays(weekStart, i);
       const dayStr = format(day, "yyyy-MM-dd");
       const entries = dayMap[dayStr];
+      const mStats = monitorStats.find(s => s.date === dayStr) || { workedMinutes: 0, breakMinutes: 0 };
 
       let firstClockIn: string | null = null;
       let lastClockOut: string | null = null;
-      let totalTrackedMinutes = 0;
-      let totalBreakMinutes = 0;
       let isOngoing = false;
 
       if (entries.length > 0) {
-        entries.forEach((entry: any) => {
-          const clockInTime = new Date(entry.clockIn);
-          const clockOutTime = entry.clockOut
-            ? new Date(entry.clockOut)
-            : null;
-
-          if (!firstClockIn) {
-            firstClockIn = clockInTime.toISOString();
-          }
-
-          if (clockOutTime) {
-            lastClockOut = clockOutTime.toISOString();
-          } else {
-            isOngoing = true;
-          }
-
-          let trackedMinutes = 0;
-          if (clockOutTime) {
-            trackedMinutes = differenceInMinutes(clockOutTime, clockInTime);
-          } else {
-            trackedMinutes = differenceInMinutes(new Date(), clockInTime);
-          }
-
-          let breakMinutes = 0;
-          (entry.breaks || []).forEach((breakItem: any) => {
-            if (breakItem.endTime) {
-              breakMinutes += differenceInMinutes(
-                new Date(breakItem.endTime),
-                new Date(breakItem.startTime)
-              );
-            }
-          });
-
-          totalTrackedMinutes += trackedMinutes;
-          totalBreakMinutes += breakMinutes;
-        });
+        firstClockIn = new Date(entries[0].clockIn).toISOString();
+        const lastEntry = entries[entries.length - 1];
+        if (lastEntry.clockOut) {
+          lastClockOut = new Date(lastEntry.clockOut).toISOString();
+        } else {
+          isOngoing = true;
+        }
       }
 
-      const payrollMinutes = totalTrackedMinutes - totalBreakMinutes;
+      const payrollMinutes = mStats.workedMinutes - mStats.breakMinutes;
       const overtimeMinutes = Math.max(0, payrollMinutes - SHIFT_MINUTES);
       return {
         date: dayStr,
@@ -151,11 +125,11 @@ export async function GET(request: Request) {
         dayNum: parseInt(format(day, "d")),
         firstClockIn,
         lastClockOut,
-        trackedMinutes: totalTrackedMinutes,
-        breakMinutes: totalBreakMinutes,
+        trackedMinutes: mStats.workedMinutes,
+        breakMinutes: mStats.breakMinutes,
         payrollMinutes,
         overtimeMinutes,
-        isRestDay: entries.length === 0,
+        isRestDay: entries.length === 0 && mStats.workedMinutes === 0,
         isOngoing
       };
     });

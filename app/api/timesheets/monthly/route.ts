@@ -151,14 +151,15 @@ export async function GET(request: Request) {
       };
     } = {};
 
+    // Get monitor stats for the whole month
+    const { getMonitorStats } = await import("@/lib/monitorUtils");
+    const monitorStats = await getMonitorStats(userId, monthStart, monthEnd);
+
     for (let i = 1; i <= daysInMonth; i++) {
-      const day = new Date(
-        selectedDate.getFullYear(),
-        selectedDate.getMonth(),
-        i
-      );
+      const day = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), i);
       const dayStr = format(day, "yyyy-MM-dd");
       const weekNum = Math.ceil(i / 7);
+      const mStats = monitorStats.find(s => s.date === dayStr) || { workedMinutes: 0, breakMinutes: 0 };
 
       if (!weeklyTotals[weekNum]) {
         weeklyTotals[weekNum] = {
@@ -170,65 +171,33 @@ export async function GET(request: Request) {
       }
 
       const entries = dayMap[dayStr];
-
-      let totalTrackedMinutes = 0;
-      let totalBreakMinutes = 0;
-
-      if (entries.length > 0) {
-        entries.forEach((entry: any) => {
-          const clockInTime = new Date(entry.clockIn);
-          const clockOutTime = entry.clockOut
-            ? new Date(entry.clockOut)
-            : null;
-
-          let trackedMinutes = 0;
-          if (clockOutTime) {
-            trackedMinutes = differenceInMinutes(clockOutTime, clockInTime);
-          } else {
-            trackedMinutes = differenceInMinutes(new Date(), clockInTime);
-          }
-
-          let breakMinutes = 0;
-          (entry.breaks || []).forEach((breakItem: any) => {
-            if (breakItem.endTime) {
-              breakMinutes += differenceInMinutes(
-                new Date(breakItem.endTime),
-                new Date(breakItem.startTime)
-              );
-            }
-          });
-
-          totalTrackedMinutes += trackedMinutes;
-          totalBreakMinutes += breakMinutes;
-        });
-      }
-
-      const payrollMinutes = totalTrackedMinutes - totalBreakMinutes;
-      const overtimeMinutes = Math.max(0, payrollMinutes - SHIFT_MINUTES);
       const isLeave = leaveDates.has(dayStr);
       const leaveRec = approvedLeaves.find((l: any) => {
         const start = parseISO(l.startDate);
         const end = parseISO(l.endDate);
-        const day = parseISO(dayStr);
-        return day >= start && day <= end;
+        const d = parseISO(dayStr);
+        return d >= start && d <= end;
       });
+
+      const payrollMinutes = mStats.workedMinutes - mStats.breakMinutes;
+      const overtimeMinutes = Math.max(0, payrollMinutes - SHIFT_MINUTES);
 
       days[dayStr] = {
         date: dayStr,
-        trackedMinutes: totalTrackedMinutes,
-        breakMinutes: totalBreakMinutes,
+        trackedMinutes: mStats.workedMinutes,
+        breakMinutes: mStats.breakMinutes,
         payrollMinutes,
         overtimeMinutes,
-        workedHours: formatHoursMinutes(totalTrackedMinutes),
-        breakHours: formatHoursMinutes(totalBreakMinutes),
+        workedHours: formatHoursMinutes(mStats.workedMinutes),
+        breakHours: formatHoursMinutes(mStats.breakMinutes),
         overtimeHours: formatHoursMinutes(overtimeMinutes),
-        isRestDay: entries.length === 0 && !isLeave,
+        isRestDay: entries.length === 0 && mStats.workedMinutes === 0 && !isLeave,
         isLeave,
         leaveType: leaveRec ? (leaveRec.leaveType as any)?.name : undefined
       };
 
-      weeklyTotals[weekNum].totalTrackedMinutes += totalTrackedMinutes;
-      weeklyTotals[weekNum].totalBreakMinutes += totalBreakMinutes;
+      weeklyTotals[weekNum].totalTrackedMinutes += mStats.workedMinutes;
+      weeklyTotals[weekNum].totalBreakMinutes += mStats.breakMinutes;
       weeklyTotals[weekNum].totalPayrollMinutes += payrollMinutes;
       weeklyTotals[weekNum].totalOvertimeMinutes += overtimeMinutes;
     }

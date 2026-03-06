@@ -96,7 +96,7 @@ export default function MonitorDashboard() {
                             onChange={(e) => setSelectedUserId(e.target.value)}
                             className="bg-slate-950/50 border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-accent/50 appearance-none min-w-[150px] transition-all"
                         >
-                            <option value="all">All Employees</option>
+                            <option value="all">Select Employees</option>
                             {allUsers.map((u: any) => (
                                 <option key={u._id || u.id} value={u._id || u.id}>
                                     {u.firstName} {u.lastName}
@@ -151,15 +151,15 @@ export default function MonitorDashboard() {
             </div>
 
             {loading && employees.length === 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
-                        <div key={i} className="h-[400px] rounded-2xl bg-white/5 animate-pulse border border-white/5" />
+                <div className="grid grid-cols-2 shadow-sm sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
+                    {[...Array(16)].map((_, i) => (
+                        <div key={i} className="h-32 rounded-xl bg-white/5 animate-pulse border border-white/5" />
                     ))}
                 </div>
             ) : (
                 <div className={viewMode === "grid"
-                    ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-                    : "space-y-4"
+                    ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-5 gap-4"
+                    : "space-y-3"
                 }>
                     {filteredEmployees.map(emp => (
                         <EmployeeActivityCard

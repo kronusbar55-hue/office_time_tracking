@@ -41,13 +41,24 @@ export async function POST(request: Request) {
     role: user.role
   });
 
+  // Fetch assigned projects
+  const { Project } = await import("@/models/Project");
+  const projects = await Project.find({
+    members: user._id,
+    status: { $ne: "archived" }
+  }, "name").lean();
+
   const res = NextResponse.json(successResp("Authenticated", {
     user: {
       id: user._id.toString(),
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
-      role: user.role
+      role: user.role,
+      assignedProjects: projects.map((p: any) => ({
+        id: p._id.toString(),
+        name: p.name
+      }))
     }
   }));
 

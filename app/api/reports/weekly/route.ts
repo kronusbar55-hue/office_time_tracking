@@ -35,72 +35,16 @@ export async function GET(request: Request) {
     employeeId
   );
 
-  const agg = await TimeEntry.aggregate([
-    {
-      $match: {
-        user: userObjectId,
-        clockIn: { $gte: start, $lte: end }
-      }
-    },
-    {
-      $addFields: {
-        durationMinutes: {
-          $cond: [
-            { $ifNull: ["$durationMinutes", false] },
-            "$durationMinutes",
-            {
-              $divide: [
-                {
-                  $cond: [
-                    { $ifNull: ["$clockOut", false] },
-                    { $subtract: ["$clockOut", "$clockIn"] },
-                    { $subtract: [new Date(), "$clockIn"] }
-                  ]
-                },
-                1000 * 60
-              ]
-            }
-          ]
-        },
-        breakMinutes: {
-          $sum: {
-            $map: {
-              input: { $ifNull: ["$breaks", []] },
-              as: "b",
-              in: {
-                $cond: [
-                  { $ifNull: ["$$b.endTime", false] },
-                  {
-                    $divide: [
-                      { $subtract: ["$$b.endTime", "$$b.startTime"] },
-                      1000 * 60
-                    ]
-                  },
-                  0
-                ]
-              }
-            }
-          }
-        }
-      }
-    },
-    {
-      $group: {
-        _id: { $dateToString: { format: "%Y-%m-%d", date: "$clockIn" } },
-        totalWorkMinutes: { $sum: { $subtract: ["$durationMinutes", "$breakMinutes"] } },
-        totalBreakMinutes: { $sum: "$breakMinutes" },
-        sessions: { $sum: 1 }
-      }
-    },
-    { $sort: { _id: 1 } }
-  ]).exec();
+  // Get monitor stats for the range
+  const { getMonitorStats } = await import("@/lib/monitorUtils");
+  const monitorStats = await getMonitorStats(employeeId, start, end);
 
-  const totals = agg.reduce(
+  const totals = monitorStats.reduce(
     (acc, e) => {
-      acc.totalWorkMinutes += e.totalWorkMinutes;
-      acc.totalBreakMinutes += e.totalBreakMinutes;
-      acc.sessions += e.sessions;
-      acc.presentDays += e.totalWorkMinutes > 0 ? 1 : 0;
+      acc.totalWorkMinutes += e.workedMinutes;
+      acc.totalBreakMinutes += e.breakMinutes;
+      acc.sessions += 1;
+      acc.presentDays += e.workedMinutes > 0 ? 1 : 0;
       return acc;
     },
     { totalWorkMinutes: 0, totalBreakMinutes: 0, sessions: 0, presentDays: 0 }
@@ -114,7 +58,11 @@ export async function GET(request: Request) {
       sessions: totals.sessions,
       presentDays: totals.presentDays
     },
-    byDay: agg.map((e) => ({ date: e._id as string, totalWorkMinutes: Math.round(e.totalWorkMinutes), totalBreakMinutes: Math.round(e.totalBreakMinutes) }))
+    byDay: monitorStats.map((e) => ({
+      date: e.date,
+      totalWorkMinutes: e.workedMinutes,
+      totalBreakMinutes: e.breakMinutes
+    }))
   });
 }
 

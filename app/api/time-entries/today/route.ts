@@ -18,30 +18,20 @@ export async function GET() {
   const now = new Date();
   const start = new Date(now);
   start.setHours(0, 0, 0, 0);
-  const end = new Date(now);
-  end.setHours(23, 59, 59, 999);
 
-  const entries = await TimeEntry.find({
-    user: payload.sub,
-    clockIn: { $gte: start, $lte: end }
-  })
-    .sort({ clockIn: 1 })
-    .lean();
+  const { getDayMonitorStats } = await import("@/lib/monitorUtils");
+  const mStats = await getDayMonitorStats(payload.sub, now.toISOString().split("T")[0]);
 
   return NextResponse.json({
-    sessions: entries.map((e) => ({
-      id: e._id.toString(),
-      clockIn: e.clockIn,
-      clockOut: e.clockOut,
-      // `TimeEntry` does not store `durationMinutes` directly; derive it here.
-      durationMinutes: e.clockOut
-        ? Math.round(
-            (new Date(e.clockOut).getTime() - new Date(e.clockIn).getTime()) /
-              1000 /
-              60
-          )
-        : null
-    }))
+    sessions: [
+      {
+        id: "monitor-total",
+        clockIn: start, // Today start
+        clockOut: null,
+        durationMinutes: mStats.workedMinutes,
+        breakMinutes: mStats.breakMinutes
+      }
+    ]
   });
 }
 

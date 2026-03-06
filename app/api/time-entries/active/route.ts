@@ -2,8 +2,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { verifyAuthToken } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
-import { TimeSession } from "@/models/TimeSession";
-import { TimeSessionBreak } from "@/models/TimeSessionBreak";
+import { EmployeeMonitor } from "@/models/EmployeeMonitor";
 
 export async function GET() {
   const cookieStore = cookies();
@@ -16,51 +15,31 @@ export async function GET() {
 
   await connectDB();
 
-  // Get today's date
-  const today = new Date();
-  const dateStr = today.toISOString().split("T")[0];
+  const dateStr = new Date().toISOString().split("T")[0];
 
-  // Find active session for today
-  const session = await TimeSession.findOne({
-    user: payload.sub,
-    date: dateStr,
-    status: "active"
-  }).lean();
+  // Get latest monitor record for real-time status
+  const { getDayMonitorStats } = await import("@/lib/monitorUtils");
+  const mStats = await getDayMonitorStats(payload.sub, dateStr);
 
-  if (!session) {
+  const latestMonitor = await EmployeeMonitor.findOne({
+    userId: payload.sub,
+    date: dateStr
+  }).sort({ createdAt: -1 }).lean();
+
+  if (!latestMonitor) {
     return NextResponse.json({ active: null });
   }
 
-  const s = session as any;
-
-  // Get breaks for active session
-  const breaks = await TimeSessionBreak.find({
-    timeSession: s._id
-  }).lean();
-
-  const bks = breaks as any[];
-
-  // Calculate current work time
-  const now = new Date();
-  const clockInTime = new Date(s.clockIn);
-  const elapsedMinutes = Math.round((now.getTime() - clockInTime.getTime()) / 60000);
-  const breakMinutes = s.totalBreakMinutes || 0;
-  const workMinutes = Math.max(0, elapsedMinutes - breakMinutes);
-
   return NextResponse.json({
     active: {
-      id: s._id.toString(),
-      date: s.date,
-      clockIn: s.clockIn,
-      elapsedMinutes,
-      workMinutes,
-      breakMinutes,
-      breaks: bks.map((b) => ({
-        id: b._id.toString(),
-        breakStart: b.breakStart,
-        breakEnd: b.breakEnd,
-        durationMinutes: b.durationMinutes || 0
-      }))
+      id: latestMonitor._id.toString(),
+      date: dateStr,
+      clockIn: latestMonitor.createdAt, // Approximate
+      elapsedMinutes: mStats.sessionMinutes,
+      workMinutes: mStats.workedMinutes,
+      breakMinutes: mStats.breakMinutes,
+      status: latestMonitor.status,
+      breaks: [] // Monitor doesn't explicitly list break intervals in this way
     }
   });
 }

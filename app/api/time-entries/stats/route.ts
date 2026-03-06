@@ -51,72 +51,14 @@ export async function GET(request: Request) {
       }
     }
 
-    // Get time sessions for the date range
-    const timeSessions = await TimeSession.find({
-      user: payload.sub,
-      clockIn: {
-        $gte: new Date(startDate.toISOString().split("T")[0]),
-        $lte: new Date(new Date().toISOString().split("T")[0])
-      }
-    }).lean();
-
-    // Group by date and calculate hours
-    const statsMap = new Map<string, { worked: number; breaks: number }>();
-
-    dateRange.forEach((date) => {
-      statsMap.set(date, { worked: 0, breaks: 0 });
-    });
-
-    timeSessions.forEach((session: any) => {
-      const clockInDate = new Date(session.clockIn);
-      const dateStr = clockInDate.toISOString().split("T")[0];
-      const current = statsMap.get(dateStr) || { worked: 0, breaks: 0 };
-
-      if (session.clockOut) {
-        const duration =
-          (new Date(session.clockOut).getTime() -
-            new Date(session.clockIn).getTime()) /
-          1000 /
-          60;
-        current.worked += duration;
-      }
-
-      statsMap.set(dateStr, current);
-    });
-
-    // Get breaks from TimeSessionBreak
-    const breaks = await TimeSessionBreak.find({
-      timeSession: { $in: timeSessions.map((s: any) => s._id) }
-    }).lean();
-
-    breaks.forEach((brk: any) => {
-      if (brk.timeSession) {
-        const session = timeSessions.find(
-          (s: any) => s._id.toString() === brk.timeSession.toString()
-        );
-        if (session) {
-          const clockInDate = new Date(session.clockIn);
-          const dateStr = clockInDate.toISOString().split("T")[0];
-          const current = statsMap.get(dateStr) || { worked: 0, breaks: 0 };
-
-          if (brk.breakStart && brk.breakEnd) {
-            const duration =
-              (new Date(brk.breakEnd).getTime() -
-                new Date(brk.breakStart).getTime()) /
-              1000 /
-              60;
-            current.breaks += duration;
-          }
-
-          statsMap.set(dateStr, current);
-        }
-      }
-    });
+    // Get time stats from EmployeeMonitor for the date range
+    const { getMonitorStats } = await import("@/lib/monitorUtils");
+    const monitorStats = await getMonitorStats(payload.sub, startDate, new Date());
 
     const stats = dateRange.map((date) => {
-      const data = statsMap.get(date) || { worked: 0, breaks: 0 };
-      const workedMinutes = Math.round(data.worked);
-      const breakMinutes = Math.round(data.breaks);
+      const dayData = monitorStats.find(s => s.date === date) || { workedMinutes: 0, breakMinutes: 0 };
+      const workedMinutes = dayData.workedMinutes;
+      const breakMinutes = dayData.breakMinutes;
       const overtimeMinutes = Math.max(0, workedMinutes - 8 * 60); // 8 hours per day
 
       return {

@@ -152,12 +152,16 @@ export async function GET(request: Request) {
       };
     });
 
+    // Get stats from monitor instead of TimeEntry records
+    const { getDayMonitorStats } = await import("@/lib/monitorUtils");
+    const mStats = await getDayMonitorStats(userId, dateStr);
+
     const summary = {
       firstClockIn,
       lastClockOut,
-      totalTrackedMinutes,
-      totalBreakMinutes,
-      totalPayrollMinutes: totalTrackedMinutes - totalBreakMinutes,
+      totalTrackedMinutes: mStats.workedMinutes,
+      totalBreakMinutes: mStats.breakMinutes,
+      totalPayrollMinutes: mStats.workedMinutes - mStats.breakMinutes,
       isOngoing
     };
 

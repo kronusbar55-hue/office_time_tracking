@@ -92,17 +92,19 @@ export default function EmployeeActivityCard({ employee, viewMode }: EmployeeAct
     return (
         <>
             <div className="flex flex-col rounded-3xl bg-slate-900/60 border border-white/10 overflow-hidden group hover:border-accent/30 transition-all hover:shadow-[0_0_30px_-10px_rgba(var(--accent-rgb),0.3)] backdrop-blur-md">
-                {/* Header */}
-                <div className="p-5 flex items-center justify-between border-b border-white/5">
-                    <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-accent/20 to-accent/5 border border-white/10 flex items-center justify-center text-accent text-xs font-bold uppercase shadow-lg">
+                {/* Header - Compact */}
+                <div className="p-3 flex items-center justify-between border-b border-white/5 bg-slate-900/40">
+                    <div className="flex items-center gap-2">
+                        <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-accent/20 to-accent/5 border border-white/10 flex items-center justify-center text-accent text-[10px] font-bold uppercase">
                             {employee.firstName?.charAt(0)}{employee.lastName?.charAt(0)}
                         </div>
-                        <div>
-                            <h3 className="text-sm font-bold text-white leading-none">{employee.firstName} {employee.lastName}</h3>
-                            <div className="flex items-center gap-1.5 mt-1.5">
-                                <div className={`h-1.5 w-1.5 rounded-full ${statusColor.includes('green') ? 'bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.5)]' : statusColor.includes('orange') ? 'bg-orange-400' : statusColor.includes('purple') ? 'bg-purple-400' : 'bg-yellow-400'}`} />
-                                <span className={`text-[10px] font-bold uppercase tracking-wider ${statusColor.split(' ')[0]}`}>
+                        <div className="min-w-0">
+                            <h3 className="text-[11px] font-bold text-white leading-tight truncate max-w-[100px]" title={`${employee.firstName} ${employee.lastName}`}>
+                                {employee.firstName} {employee.lastName}
+                            </h3>
+                            <div className="flex items-center gap-1 mt-0.5">
+                                <div className={`h-1 w-1 rounded-full ${statusColor.includes('green') ? 'bg-green-400' : statusColor.includes('orange') ? 'bg-orange-400' : statusColor.includes('purple') ? 'bg-purple-400' : 'bg-yellow-400'}`} />
+                                <span className={`text-[8px] font-bold uppercase tracking-wider ${statusColor.split(' ')[0]}`}>
                                     {statusLabel}
                                 </span>
                             </div>
@@ -110,80 +112,71 @@ export default function EmployeeActivityCard({ employee, viewMode }: EmployeeAct
                     </div>
                 </div>
 
-                {/* Content / Screenshot Container */}
-                <div className="relative aspect-video w-full bg-slate-950 overflow-hidden cursor-zoom-in group/img" onClick={() => setIsZoomed(true)}>
+                {/* Content / Screenshot Container - Smaller aspect */}
+                <div className="relative aspect-[4/3] w-full bg-slate-950 overflow-hidden cursor-zoom-in group/img" onClick={() => setIsZoomed(true)}>
                     {activity?.imageUrl ? (
                         <>
                             <img
                                 src={activity.imageUrl}
                                 alt="Screen"
-                                className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700"
+                                className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-500"
                             />
-                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-60" />
-                            <div className="absolute bottom-3 left-3 flex items-center gap-2">
-                                <div className="backdrop-blur-md bg-black/40 border border-white/10 rounded-lg px-2 py-1 flex items-center gap-1.5">
-                                    <Clock className="h-3 w-3 text-accent" />
-                                    <span className="text-[10px] font-medium text-white">{activity.time}</span>
+
+                            {/* Hover Overlay with Stats */}
+                            <div className="absolute inset-0 bg-slate-950/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 backdrop-blur-sm flex flex-col p-3 justify-center">
+                                <div className="grid grid-cols-2 gap-2">
+                                    <HoverStat icon={<MousePointer2 />} value={activity?.mouseClicks || 0} label="Clicks" />
+                                    <HoverStat icon={<Type />} value={activity?.keyPresses || 0} label="Keys" />
+                                    <HoverStat icon={<Move />} value={activity?.mouseMovements || 0} label="Moves" />
+                                    <HoverStat icon={<Clock />} value={activity?.sessionTime || "0:0"} label="Session" />
+                                </div>
+
+                                {activity?.appUsage && Object.keys(activity.appUsage).length > 0 && (
+                                    <div className="mt-3 pt-2 border-t border-white/10">
+                                        <div className="flex flex-wrap gap-1 max-h-[40px] overflow-hidden">
+                                            {Object.entries(activity.appUsage)
+                                                .sort(([, a], [, b]) => (b as number) - (a as number))
+                                                .slice(0, 2)
+                                                .map(([appName, duration]) => (
+                                                    <div key={appName} className="px-1.5 py-0.5 rounded bg-white/5 border border-white/5 text-[8px] text-slate-300 truncate max-w-full">
+                                                        {appName}: <span className="text-accent">{Math.round(duration as number)}m</span>
+                                                    </div>
+                                                ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="absolute bottom-2 left-2 pointer-events-none group-hover:opacity-0 transition-opacity">
+                                <div className="backdrop-blur-md bg-black/40 border border-white/5 rounded px-1.5 py-0.5 flex items-center gap-1">
+                                    <Clock className="h-2.5 w-2.5 text-accent" />
+                                    <span className="text-[8px] font-medium text-white">{activity.time}</span>
                                 </div>
                             </div>
-                            <div className="absolute top-3 right-3 opacity-0 group-hover/img:opacity-100 transition-opacity">
-                                <div className="h-8 w-8 rounded-lg bg-accent text-slate-950 flex items-center justify-center shadow-lg transform translate-y-2 group-hover/img:translate-y-0 transition-transform">
-                                    <Maximize2 className="h-4 w-4" />
+
+                            <div className="absolute top-2 right-2 opacity-0 group-hover/img:opacity-100 transition-opacity">
+                                <div className="h-6 w-6 rounded-md bg-accent text-slate-950 flex items-center justify-center shadow-lg">
+                                    <Maximize2 className="h-3 w-3" />
                                 </div>
                             </div>
                         </>
                     ) : (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-700">
-                            <Monitor className="h-12 w-12 mb-3 opacity-10" />
-                            <span className="text-[10px] font-medium uppercase tracking-[0.2em]">No Recent Capture</span>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-800">
+                            <Monitor className="h-8 w-8 mb-2 opacity-20" />
+                            <span className="text-[8px] font-bold uppercase tracking-widest">No Capture</span>
                         </div>
                     )}
                 </div>
 
-                {/* Stats Footer */}
-                <div className="p-5 space-y-4">
-                    <div className="grid grid-cols-3 gap-3">
-                        <SmallStat icon={<MousePointer2 />} value={activity?.mouseClicks || 0} label="Clicks" />
-                        <SmallStat icon={<Move />} value={activity?.mouseMovements || 0} label="Moves" />
-                        <SmallStat icon={<Type />} value={activity?.keyPresses || 0} label="Keys" />
+                {/* Footer - Minimal */}
+                <div className="px-3 py-2 flex items-center justify-between bg-slate-900/20 border-t border-white/5">
+                    <div className="flex items-center gap-1.5 text-[8px] text-slate-500 font-bold uppercase tracking-tight">
+                        <Clock className="h-2.5 w-2.5" />
+                        {activity ? formatDistanceToNow(new Date(), { addSuffix: false }) : "N/A"}
                     </div>
-
-                    <div className="grid grid-cols-3 gap-3 pt-4 border-t border-white/5">
-                        <SmallStat icon={<Clock />} value={activity?.sessionTime || "00:00"} label="Session" />
-                        <SmallStat icon={<Clock />} value={activity?.breakTime || "00:00"} label="Break" />
-                        <SmallStat icon={<Clock />} value={activity?.meetingTime || "00:00"} label="Meeting" />
-                    </div>
-
-                    {/* App Usage Display */}
-                    {activity?.appUsage && Object.keys(activity.appUsage).length > 0 && (
-                        <div className="pt-4 border-t border-white/5">
-                            <div className="flex items-center gap-2 mb-3">
-                                <PieChart className="h-4 w-4 text-accent" />
-                                <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400">App Usage (Mins)</span>
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                                {Object.entries(activity.appUsage)
-                                    .sort(([, a], [, b]) => (b as number) - (a as number))
-                                    .slice(0, 4) // Show top 4 apps
-                                    .map(([appName, duration]) => (
-                                        <div key={appName} className="flex items-center gap-1.5 px-2 py-1 rounded bg-slate-950/50 border border-white/5 text-[10px]">
-                                            <span className="text-slate-300 truncate max-w-[80px]" title={appName}>{appName}</span>
-                                            <span className="font-bold text-accent">{Number(duration).toFixed(1)}m</span>
-                                        </div>
-                                    ))}
-                            </div>
-                        </div>
-                    )}
-
-                    <div className="pt-4 border-t border-white/5 flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-[10px] text-slate-500 font-medium">
-                            <Clock className="h-3.5 w-3.5" />
-                            {activity ? formatDistanceToNow(new Date(), { addSuffix: true }) : "N/A"}
-                        </div>
-                        <div className="flex items-center gap-2 text-[10px] text-slate-500 font-medium">
-                            <Globe className="h-3.5 w-3.5" />
-                            {activity?.timezone?.split('/')[1] || "UTC"}
-                        </div>
+                    <div className="flex items-center gap-1.5 text-[8px] text-slate-500 font-bold uppercase tracking-tight">
+                        <Globe className="h-2.5 w-2.5" />
+                        {activity?.timezone?.split('/')[1] || "UTC"}
                     </div>
                 </div>
             </div>
@@ -215,6 +208,18 @@ export default function EmployeeActivityCard({ employee, viewMode }: EmployeeAct
             )}
         </>
     );
+}
+
+function HoverStat({ icon, value, label }: { icon: any, value: any, label: string }) {
+    return (
+        <div className="flex items-center gap-2">
+            <div className="text-accent/60">{React.cloneElement(icon, { size: 10 })}</div>
+            <div className="min-w-0">
+                <p className="text-[9px] font-bold text-white leading-none">{value}</p>
+                <p className="text-[7px] text-slate-400 uppercase tracking-tighter mt-0.5">{label}</p>
+            </div>
+        </div>
+    )
 }
 
 function Stat({ icon, label, value }: { icon: any, label: string, value: any }) {
