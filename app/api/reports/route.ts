@@ -2,12 +2,11 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { verifyAuthToken } from "@/lib/auth";
 import { cookies } from "next/headers";
-import { AttendanceLog } from "@/models/AttendanceLog";
 import { User } from "@/models/User";
-import { TimeSession } from "@/models/TimeSession";
-import { TimeSessionBreak } from "@/models/TimeSessionBreak";
+import { EmployeeMonitor } from "@/models/EmployeeMonitor";
 import { successResp, errorResp } from "@/lib/apiResponse";
 import { startOfDay, endOfDay, eachDayOfInterval, format, parseISO } from "date-fns";
+import { timeToMinutes } from "@/lib/monitorUtils";
 
 export async function GET(request: Request) {
     try {
@@ -35,6 +34,7 @@ export async function GET(request: Request) {
         const start = parseISO(startDateStr);
         const end = parseISO(endDateStr);
         const days = eachDayOfInterval({ start, end });
+        const dateStrings = days.map(d => format(d, "yyyy-MM-dd"));
 
         // User filter
         const userFilter: any = { isDeleted: false, isActive: true };
@@ -52,57 +52,45 @@ export async function GET(request: Request) {
             .select("firstName lastName email avatarUrl department shiftHours role")
             .lean();
 
-        const userIds = users.map(u => u._id);
+        const userIds = users.map((u: any) => u._id.toString());
 
-        // Fetch logs for the range
-        const logs = await AttendanceLog.find({
-            userId: { $in: userIds },
-            date: { $gte: startDateStr, $lte: endDateStr }
-        }).lean();
+        // Aggregate all monitor data for the range at once
+        const monitorData = await EmployeeMonitor.aggregate([
+            {
+                $match: {
+                    userId: { $in: userIds },
+                    date: { $in: dateStrings }
+                }
+            },
+            {
+                $group: {
+                    _id: { userId: "$userId", date: "$date" },
+                    workSeconds: { $sum: "$activeSeconds" },
+                    maxBreak: { $max: "$breakTime" },
+                    firstIn: { $min: "$createdAt" },
+                    lastOut: { $max: "$createdAt" }
+                }
+            }
+        ]);
 
-        // Fetch sessions for the range (fallback/source of truth for durations)
-        const sessions = await TimeSession.find({
-            user: { $in: userIds },
-            date: { $gte: startDateStr, $lte: endDateStr }
-        }).lean();
-
-        const now = new Date();
+        const dataMap = new Map();
+        monitorData.forEach(d => {
+            dataMap.set(`${d._id.userId}_${d._id.date}`, d);
+        });
 
         const reportData = users.map((user: any) => {
             let totalWorkMs = 0;
-            let totalOvertimeMs = 0;
             let totalBreakMs = 0;
 
-            const dailyRecords = days.map(day => {
-                const dStr = format(day, "yyyy-MM-dd");
-                const log = logs.find(l => l.userId.toString() === user._id.toString() && l.date === dStr);
-                const session = sessions.find(s => s.user.toString() === user._id.toString() && s.date === dStr);
+            const dailyRecords = dateStrings.map(dStr => {
+                const dayData = dataMap.get(`${user._id.toString()}_${dStr}`);
 
-                let workMs = log?.totalWorkMs || 0;
-                let breakMs = log?.totalBreakMs || 0;
-                let overtimeMs = log?.overtimeMs || 0;
-
-                // If session exists but log has 0 workMs, or session is active, calculate live/fallback
-                if (session) {
-                    if (session.status === "completed") {
-                        // Use completed session data if log is missing it
-                        if (workMs === 0) workMs = (session.totalWorkMinutes || 0) * 60000;
-                        if (breakMs === 0) breakMs = (session.totalBreakMinutes || 0) * 60000;
-                    } else if (session.status === "active") {
-                        // Live calculation for active session
-                        const clockInMs = new Date(session.clockIn).getTime();
-                        const elapsedMs = Math.max(0, now.getTime() - clockInMs);
-                        const sessionBreakMs = (session.totalBreakMinutes || 0) * 60000;
-                        workMs = Math.max(0, elapsedMs - sessionBreakMs);
-                        breakMs = sessionBreakMs;
-                    }
-                }
+                const workMs = (dayData?.workSeconds || 0) * 1000;
+                const breakMs = timeToMinutes(dayData?.maxBreak || "00:00:00") * 60000;
 
                 totalWorkMs += workMs;
-                totalOvertimeMs += overtimeMs;
                 totalBreakMs += breakMs;
 
-                // Color logic helper
                 const hours = workMs / 3600000;
                 let intensity = 0;
                 if (hours > 0 && hours <= 2) intensity = 1;
@@ -112,19 +100,20 @@ export async function GET(request: Request) {
                 else if (hours > 8 && hours <= 10) intensity = 5;
                 else if (hours > 10) intensity = 6;
 
-                const isWeekend = day.getDay() === 0 || day.getDay() === 6;
+                const dayObj = parseISO(dStr);
+                const isWeekend = dayObj.getDay() === 0 || dayObj.getDay() === 6;
 
                 return {
                     date: dStr,
                     workMs,
                     breakMs,
-                    overtimeMs,
+                    overtimeMs: Math.max(0, workMs - (user.shiftHours || 8) * 3600000),
                     intensity,
                     isRestDay: isWeekend && workMs === 0,
                     isHoliday: false,
                     isTimeOff: false,
-                    checkInTime: log?.checkInTime || session?.clockIn,
-                    checkOutTime: log?.checkOutTime || session?.clockOut,
+                    checkInTime: dayData?.firstIn,
+                    checkOutTime: dayData?.lastOut,
                 };
             });
 
@@ -136,7 +125,7 @@ export async function GET(request: Request) {
                 department: user.department,
                 shiftHours: user.shiftHours || 8,
                 totalWorkMs,
-                totalOvertimeMs,
+                totalOvertimeMs: dailyRecords.reduce((acc, r) => acc + r.overtimeMs, 0),
                 totalBreakMs,
                 payrollHours: (totalWorkMs / 3600000).toFixed(2),
                 dailyRecords

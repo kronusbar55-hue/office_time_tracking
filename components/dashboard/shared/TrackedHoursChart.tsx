@@ -122,7 +122,7 @@ export default function TrackedHoursChart() {
             </div>
 
             {/* Chart Container */}
-            <div className="flex-grow min-h-[300px] relative">
+            <div className="h-[400px] relative">
                 <AnimatePresence mode="wait">
                     {loading ? (
                         <motion.div

@@ -2,32 +2,58 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { EmployeeMonitor } from "@/models/EmployeeMonitor";
 import { User } from "@/models/User";
+import { verifyAuthToken } from "@/lib/auth";
+import { cookies } from "next/headers";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export async function GET(req: Request) {
     try {
+        const cookieStore = cookies();
+        const token = cookieStore.get("auth_token")?.value;
+        const payload = token ? verifyAuthToken(token) as any : null;
+
+        if (!payload) {
+            return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+        }
+
         await connectDB();
 
         const { searchParams } = new URL(req.url);
-        const userId = searchParams.get("userId");
+        let userId = searchParams.get("userId");
         const dateParam = searchParams.get("date"); // YYYY-MM-DD
         const page = parseInt(searchParams.get("page") || "1");
         const limit = parseInt(searchParams.get("limit") || "12");
 
-        // Fetch all active employees (optionally filtered by userId)
-        const employeeQuery: any = { isDeleted: false };
-        if (userId && userId !== "all") {
-            employeeQuery._id = userId;
+        // Enforce "login user only" for employee and manager roles
+        if (payload.role !== "admin" && payload.role !== "hr") {
+            userId = payload.id;
         }
-        const employees = await User.find(employeeQuery, "firstName lastName avatarUrl").lean();
+
+        // Requirement: API only works with selected employee
+        if (!userId || userId === "all") {
+            return NextResponse.json({
+                success: true,
+                data: [],
+                pagination: {
+                    totalActiveRecords: 0,
+                    totalPages: 0,
+                    currentPage: page,
+                    limit
+                }
+            });
+        }
+
+        // Fetch the specific employee
+        const employees = await User.find({ _id: userId, isDeleted: false }, "firstName lastName avatarUrl").lean();
+
+        if (employees.length === 0) {
+            return NextResponse.json({ success: true, data: [] });
+        }
 
         // Build Monitor match query
-        const monitorMatch: any = {};
-        if (userId && userId !== "all") {
-            monitorMatch.userId = userId;
-        }
+        const monitorMatch: any = { userId: userId };
         if (dateParam) {
             monitorMatch.date = dateParam;
         }

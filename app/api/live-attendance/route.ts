@@ -2,9 +2,8 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { verifyAuthToken } from "@/lib/auth";
 import { cookies } from "next/headers";
-import { AttendanceLog } from "@/models/AttendanceLog";
 import { User } from "@/models/User";
-import { TimeSession } from "@/models/TimeSession";
+import { EmployeeMonitor } from "@/models/EmployeeMonitor";
 import { successResp, errorResp } from "@/lib/apiResponse";
 
 export async function GET(request: Request) {
@@ -27,27 +26,55 @@ export async function GET(request: Request) {
 
         // Get all active users
         const users = await User.find({ isDeleted: false, isActive: true })
-            .select("firstName lastName email avatarUrl technology role")
+            .select("firstName lastName email avatarUrl technology role updatedAt")
             .populate("technology", "name")
             .lean();
 
-        // Get today's attendance logs
-        const logs = await AttendanceLog.find({ date: today }).lean();
+        const userIds = users.map((u: any) => u._id.toString());
 
-        // Get active time sessions for today
-        const activeSessions = await TimeSession.find({ date: today, status: "active" }).lean();
+        // Get the latest monitor record for each user for today using aggregation
+        const latestMonitorRecords = await EmployeeMonitor.aggregate([
+            {
+                $match: {
+                    userId: { $in: userIds },
+                    date: today
+                }
+            },
+            {
+                $sort: { createdAt: -1 }
+            },
+            {
+                $group: {
+                    _id: "$userId",
+                    latestRecord: { $first: "$$ROOT" }
+                }
+            }
+        ]);
+
+        const monitorMap = new Map();
+        latestMonitorRecords.forEach(rec => {
+            monitorMap.set(rec._id, rec.latestRecord);
+        });
 
         const members = users.map((user: any) => {
-            const log = logs.find((l) => l.userId.toString() === user._id.toString());
-            const session = activeSessions.find((s) => s.user.toString() === user._id.toString());
+            const latest = monitorMap.get(user._id.toString());
 
-            let status = log?.status || "OUT";
-            let lastActivityAt = log?.lastActivityAt || user.updatedAt || new Date();
-            let checkInTime = log?.checkInTime || session?.clockIn;
+            let status: "IN" | "BREAK" | "OUT" = "OUT";
+            let lastActivityAt = user.updatedAt || new Date();
+            let rawStatus = "OFFLINE";
 
-            // Consistency check: If we have an active session, status must be IN or BREAK
-            if (session && status === "OUT") {
-                status = "IN";
+            if (latest) {
+                rawStatus = latest.status || "IDLE";
+                lastActivityAt = latest.createdAt;
+
+                // Map monitor status to UI status
+                if (["ACTIVE", "IDLE", "IN_MEETING"].includes(rawStatus.toUpperCase())) {
+                    status = "IN";
+                } else if (rawStatus.toUpperCase() === "ON_BREAK") {
+                    status = "BREAK";
+                } else {
+                    status = "IN"; // Default to IN if we have a record
+                }
             }
 
             return {
@@ -56,11 +83,11 @@ export async function GET(request: Request) {
                 email: user.email,
                 avatar: user.avatarUrl,
                 status: status,
+                rawStatus: rawStatus,
                 lastActivityAt: lastActivityAt,
-                timezone: "GMT+5:30",
-                checkInTime: checkInTime,
-                checkOutTime: log?.checkOutTime,
-                breaks: log?.breaks || []
+                timezone: latest?.timezone || "GMT+5:30",
+                sessionTime: latest?.sessionTime || "00:00:00",
+                breakTime: latest?.breakTime || "00:00:00"
             };
         });
 

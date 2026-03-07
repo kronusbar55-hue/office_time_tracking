@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { verifyAuthToken } from "@/lib/auth";
 import { cookies } from "next/headers";
-import { AttendanceLog } from "@/models/AttendanceLog";
 import { User } from "@/models/User";
+import { EmployeeMonitor } from "@/models/EmployeeMonitor";
 import { parseISO, eachDayOfInterval, format } from "date-fns";
 import ExcelJS from "exceljs";
 
@@ -36,17 +36,34 @@ export async function GET(request: Request) {
         const start = parseISO(startDateStr);
         const end = parseISO(endDateStr);
         const days = eachDayOfInterval({ start, end });
+        const dateStrings = days.map(d => format(d, "yyyy-MM-dd"));
 
         const userFilter: any = { isDeleted: false, isActive: true };
         if (department && department !== "all") userFilter.department = department;
 
         const users = await User.find(userFilter).lean();
-        const userIds = users.map(u => u._id);
+        const userIds = users.map((u: any) => u._id.toString());
 
-        const logs = await AttendanceLog.find({
-            userId: { $in: userIds },
-            date: { $gte: startDateStr, $lte: endDateStr }
-        }).lean();
+        // Aggregate all monitor data for the range at once
+        const monitorData = await EmployeeMonitor.aggregate([
+            {
+                $match: {
+                    userId: { $in: userIds },
+                    date: { $in: dateStrings }
+                }
+            },
+            {
+                $group: {
+                    _id: { userId: "$userId", date: "$date" },
+                    workSeconds: { $sum: "$activeSeconds" }
+                }
+            }
+        ]);
+
+        const dataMap = new Map();
+        monitorData.forEach(d => {
+            dataMap.set(`${d._id.userId}_${d._id.date}`, d.workSeconds);
+        });
 
         const formatDuration = (ms: number) => {
             if (durationFormat === "decimal") return (ms / 3600000).toFixed(2);
@@ -63,10 +80,9 @@ export async function GET(request: Request) {
             };
 
             let totalMs = 0;
-            days.forEach(day => {
-                const dStr = format(day, "yyyy-MM-dd");
-                const log = logs.find(l => l.userId.toString() === user._id.toString() && l.date === dStr);
-                const workMs = log?.totalWorkMs || 0;
+            dateStrings.forEach(dStr => {
+                const workSeconds = dataMap.get(`${user._id.toString()}_${dStr}`) || 0;
+                const workMs = workSeconds * 1000;
                 totalMs += workMs;
                 row[dStr] = formatDuration(workMs);
             });
@@ -76,7 +92,7 @@ export async function GET(request: Request) {
         });
 
         if (formatType === "csv") {
-            const fields = ["Employee", "Email", "Department", ...days.map(d => format(d, "yyyy-MM-dd")), "Total Hours"];
+            const fields = ["Employee", "Email", "Department", ...dateStrings, "Total Hours"];
             const json2csvParser = new Parser({ fields });
             const csv = json2csvParser.parse(data);
 
@@ -95,7 +111,7 @@ export async function GET(request: Request) {
                 { header: "Employee", key: "Employee", width: 20 },
                 { header: "Email", key: "Email", width: 25 },
                 { header: "Department", key: "Department", width: 15 },
-                ...days.map(d => ({ header: format(d, "yyyy-MM-dd"), key: format(d, "yyyy-MM-dd"), width: 12 })),
+                ...dateStrings.map(dStr => ({ header: dStr, key: dStr, width: 12 })),
                 { header: "Total Hours", key: "Total Hours", width: 15 }
             ];
 
