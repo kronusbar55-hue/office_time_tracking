@@ -100,7 +100,6 @@ export async function GET(request: Request) {
             const row: any = {
                 Employee: `${user.firstName} ${user.lastName}`,
                 Email: user.email,
-                Department: user.department || "General",
             };
 
             let totalMs = 0;
@@ -115,7 +114,7 @@ export async function GET(request: Request) {
         });
 
         // Forced CSV as per user request
-        const fields = ["Employee", "Email", "Department", ...dateStrings, "Total Hours"];
+        const fields = ["Employee", "Email", ...dateStrings, "Total Hours"];
         const json2csvParser = new Parser({ fields });
         const csv = json2csvParser.parse(data);
 

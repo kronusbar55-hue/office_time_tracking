@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, format } from "date-fns";
 import {
     MousePointer2,
     Move,
@@ -73,6 +73,12 @@ export default function EmployeeActivityCard({ employee, viewMode, showName = tr
                         <ListStat icon={<MousePointer2 />} label="Clicks" value={activity.mouseClicks} />
                         <ListStat icon={<Type />} label="Keys" value={activity.keyPresses} />
                         <ListStat icon={<Move />} label="Moves" value={activity.mouseMovements} />
+                        <div className="flex flex-col items-center bg-white/5 px-4 py-1.5 rounded-lg border border-white/10">
+                            <span className="text-[9px] text-slate-400 font-black uppercase tracking-tighter">Time</span>
+                            <span className="text-sm font-black text-white tabular-nums">
+                                {activity.time ? activity.time.substring(0, 5) : (activity.createdAt ? format(new Date(activity.createdAt), "HH:mm") : "--:--")}
+                            </span>
+                        </div>
                         <div className="flex flex-col items-center bg-accent/5 px-4 py-1.5 rounded-lg border border-accent/10">
                             <span className="text-[9px] text-accent font-black uppercase tracking-tighter">Session</span>
                             <span className="text-sm font-black text-white tabular-nums">{activity.sessionTime || "00:00"}</span>
@@ -102,6 +108,13 @@ export default function EmployeeActivityCard({ employee, viewMode, showName = tr
                                 alt="Screen"
                                 className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-700 scale-100 group-hover:scale-105"
                             />
+
+                            {/* Time Badge on Image */}
+                            <div className="absolute top-3 right-3 px-2 py-1 bg-black/60 backdrop-blur-md rounded-md border border-white/10 z-10">
+                                <span className="text-[10px] font-black text-white tabular-nums">
+                                    {activity.time ? activity.time.substring(0, 5) : (activity.createdAt ? format(new Date(activity.createdAt), "HH:mm") : "--:--")}
+                                </span>
+                            </div>
 
                             {/* Detailed Boxy Overlay On Image */}
                             <div className="absolute inset-x-0 bottom-0 p-3 bg-slate-950/90 border-t border-white/10 backdrop-blur-md flex flex-col gap-2 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
