@@ -28,7 +28,7 @@ export async function GET(req: Request) {
 
         // Enforce "login user only" for employee and manager roles
         if (payload.role !== "admin" && payload.role !== "hr") {
-            userId = payload.id;
+            userId = payload.sub;
         }
 
         // Requirement: API only works with selected employee

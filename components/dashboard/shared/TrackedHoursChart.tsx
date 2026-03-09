@@ -212,13 +212,13 @@ export default function TrackedHoursChart() {
                                         radius={[4, 4, 0, 0]}
                                         animationDuration={1500}
                                     />
-                                    <Bar
+                                    {/* <Bar
                                         dataKey="overtime"
                                         name="Overtime Hours"
                                         fill="#F87171"
                                         radius={[4, 4, 0, 0]}
                                         animationDuration={1500}
-                                    />
+                                    /> */}
                                 </BarChart>
                             </ResponsiveContainer>
                         </motion.div>

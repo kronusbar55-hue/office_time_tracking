@@ -66,7 +66,9 @@ export async function GET(request: Request) {
                 $group: {
                     _id: { userId: "$userId", date: "$date" },
                     workSeconds: { $sum: "$activeSeconds" },
+                    idleSeconds: { $sum: "$idleSeconds" },
                     maxBreak: { $max: "$breakTime" },
+                    maxSession: { $max: "$sessionTime" },
                     firstIn: { $min: "$createdAt" },
                     lastOut: { $max: "$createdAt" }
                 }
@@ -85,8 +87,17 @@ export async function GET(request: Request) {
             const dailyRecords = dateStrings.map(dStr => {
                 const dayData = dataMap.get(`${user._id.toString()}_${dStr}`);
 
-                const workMs = (dayData?.workSeconds || 0) * 1000;
                 const breakMs = timeToMinutes(dayData?.maxBreak || "00:00:00") * 60000;
+                const sessionMs = timeToMinutes(dayData?.maxSession || "00:00:00") * 60000;
+
+                // If session time is present, use (Session - Break)
+                // If not (legacy data), fallback to summing (Active + Idle)
+                let workMs = 0;
+                if (sessionMs > 0) {
+                    workMs = Math.max(0, sessionMs - breakMs);
+                } else {
+                    workMs = ((dayData?.workSeconds || 0) + (dayData?.idleSeconds || 0)) * 1000;
+                }
 
                 totalWorkMs += workMs;
                 totalBreakMs += breakMs;
@@ -127,7 +138,7 @@ export async function GET(request: Request) {
                 totalWorkMs,
                 totalOvertimeMs: dailyRecords.reduce((acc, r) => acc + r.overtimeMs, 0),
                 totalBreakMs,
-                payrollHours: (totalWorkMs / 3600000).toFixed(2),
+                payrollHours: totalWorkMs / 3600000,
                 dailyRecords
             };
         });
@@ -136,7 +147,7 @@ export async function GET(request: Request) {
             period: { start: startDateStr, end: endDateStr },
             summary: {
                 memberCount: users.length,
-                totalOrganizationHours: (reportData.reduce((acc, r) => acc + r.totalWorkMs, 0) / 3600000).toFixed(2)
+                totalOrganizationHours: reportData.reduce((acc, r) => acc + r.totalWorkMs, 0) / 3600000
             },
             members: reportData
         }));

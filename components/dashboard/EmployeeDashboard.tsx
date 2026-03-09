@@ -141,14 +141,14 @@ export default async function EmployeeDashboard({ userId }: Props) {
           color="yellow"
           delay={0.3}
         />
-        <StatsCard
+        {/* <StatsCard
           label="In Review"
           value={stats.inReview}
           subtext="Awaiting feedback"
           icon={<CheckCircle2 className="h-6 w-6" />}
           color="purple"
           delay={0.4}
-        />
+        /> */}
       </div>
 
       <div className="grid grid-cols-1 gap-6">

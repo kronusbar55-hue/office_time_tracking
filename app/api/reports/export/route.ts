@@ -26,8 +26,7 @@ export async function GET(request: Request) {
         const startDateStr = searchParams.get("startDate");
         const endDateStr = searchParams.get("endDate");
         const department = searchParams.get("department");
-        const formatType = searchParams.get("format") || "csv"; // csv or xls
-        const durationFormat = searchParams.get("durationFormat") || "hhmm"; // hhmm or decimal
+        const userId = searchParams.get("userId"); // Optional: for single employee export
 
         if (!startDateStr || !endDateStr) {
             return new Response("startDate and endDate are required", { status: 400 });
@@ -39,12 +38,27 @@ export async function GET(request: Request) {
         const dateStrings = days.map(d => format(d, "yyyy-MM-dd"));
 
         const userFilter: any = { isDeleted: false, isActive: true };
-        if (department && department !== "all") userFilter.department = department;
+        if (userId && userId !== "all") {
+            userFilter._id = userId;
+        } else if (department && department !== "all") {
+            userFilter.department = department;
+        }
 
         const users = await User.find(userFilter).lean();
         const userIds = users.map((u: any) => u._id.toString());
 
-        // Aggregate all monitor data for the range at once
+        // Helper to parse time string HH:mm:ss to minutes
+        const timeToMinutes = (timeStr: string | undefined): number => {
+            if (!timeStr || typeof timeStr !== "string") return 0;
+            const parts = timeStr.split(":").map(Number);
+            if (parts.length < 2) return 0;
+            const h = parts[0] || 0;
+            const m = parts[1] || 0;
+            const s = parts[2] || 0;
+            return h * 60 + m + s / 60;
+        };
+
+        // Aggregate monitor data with precise logic (Session - Break)
         const monitorData = await EmployeeMonitor.aggregate([
             {
                 $match: {
@@ -55,21 +69,31 @@ export async function GET(request: Request) {
             {
                 $group: {
                     _id: { userId: "$userId", date: "$date" },
-                    workSeconds: { $sum: "$activeSeconds" }
+                    workSeconds: { $sum: "$activeSeconds" },
+                    idleSeconds: { $sum: "$idleSeconds" },
+                    maxBreak: { $max: "$breakTime" },
+                    maxSession: { $max: "$sessionTime" }
                 }
             }
         ]);
 
         const dataMap = new Map();
         monitorData.forEach(d => {
-            dataMap.set(`${d._id.userId}_${d._id.date}`, d.workSeconds);
+            const breakMs = timeToMinutes(d.maxBreak || "00:00:00") * 60000;
+            const sessionMs = timeToMinutes(d.maxSession || "00:00:00") * 60000;
+
+            let workMs = 0;
+            if (sessionMs > 0) {
+                workMs = Math.max(0, sessionMs - breakMs);
+            } else {
+                workMs = (d.workSeconds + (d.idleSeconds || 0)) * 1000;
+            }
+
+            dataMap.set(`${d._id.userId}_${d._id.date}`, workMs);
         });
 
         const formatDuration = (ms: number) => {
-            if (durationFormat === "decimal") return (ms / 3600000).toFixed(2);
-            const h = Math.floor(ms / 3600000);
-            const m = Math.floor((ms % 3600000) / 60000);
-            return `${h}h ${m}m`;
+            return (ms / 3600000).toFixed(2); // Always return decimal for CSV compatibility
         };
 
         const data = users.map((user: any) => {
@@ -81,8 +105,7 @@ export async function GET(request: Request) {
 
             let totalMs = 0;
             dateStrings.forEach(dStr => {
-                const workSeconds = dataMap.get(`${user._id.toString()}_${dStr}`) || 0;
-                const workMs = workSeconds * 1000;
+                const workMs = dataMap.get(`${user._id.toString()}_${dStr}`) || 0;
                 totalMs += workMs;
                 row[dStr] = formatDuration(workMs);
             });
@@ -91,45 +114,17 @@ export async function GET(request: Request) {
             return row;
         });
 
-        if (formatType === "csv") {
-            const fields = ["Employee", "Email", "Department", ...dateStrings, "Total Hours"];
-            const json2csvParser = new Parser({ fields });
-            const csv = json2csvParser.parse(data);
+        // Forced CSV as per user request
+        const fields = ["Employee", "Email", "Department", ...dateStrings, "Total Hours"];
+        const json2csvParser = new Parser({ fields });
+        const csv = json2csvParser.parse(data);
 
-            return new Response(csv, {
-                headers: {
-                    "Content-Type": "text/csv",
-                    "Content-Disposition": `attachment; filename=timesheet_${startDateStr}_${endDateStr}.csv`,
-                },
-            });
-        } else {
-            // Excel logic
-            const workbook = new ExcelJS.Workbook();
-            const worksheet = workbook.addWorksheet("Timesheet");
-
-            const columns = [
-                { header: "Employee", key: "Employee", width: 20 },
-                { header: "Email", key: "Email", width: 25 },
-                { header: "Department", key: "Department", width: 15 },
-                ...dateStrings.map(dStr => ({ header: dStr, key: dStr, width: 12 })),
-                { header: "Total Hours", key: "Total Hours", width: 15 }
-            ];
-
-            worksheet.columns = columns;
-            worksheet.addRows(data);
-
-            // Styling
-            worksheet.getRow(1).font = { bold: true };
-            worksheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0E0E0' } };
-
-            const buffer = await workbook.xlsx.writeBuffer();
-            return new Response(buffer, {
-                headers: {
-                    "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    "Content-Disposition": `attachment; filename=timesheet_${startDateStr}_${endDateStr}.xlsx`,
-                },
-            });
-        }
+        return new Response(csv, {
+            headers: {
+                "Content-Type": "text/csv",
+                "Content-Disposition": `attachment; filename=timesheet_${startDateStr}_to_${endDateStr}.csv`,
+            },
+        });
     } catch (err: any) {
         console.error("[api/reports/export] error:", err);
         return new Response("Failed to export reports", { status: 500 });

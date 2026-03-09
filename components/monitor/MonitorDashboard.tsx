@@ -1,9 +1,11 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Search, Grid, List, RefreshCcw, Monitor, Activity, MousePointer2, Move, Type, Clock, Globe } from "lucide-react";
+import { Search, Grid, List, RefreshCcw, Monitor, Activity, MousePointer2, Move, Type, Clock, Globe, BarChart3 } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import EmployeeActivityCard from "./EmployeeActivityCard";
+import MonitorTimeline from "./MonitorTimeline";
+import { AnimatePresence } from "framer-motion";
 
 export default function MonitorDashboard() {
     const { user } = useAuth();
@@ -11,6 +13,7 @@ export default function MonitorDashboard() {
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+    const [showTimeline, setShowTimeline] = useState(false);
 
     // New filter states
     const [selectedDate, setSelectedDate] = useState("");
@@ -31,29 +34,29 @@ export default function MonitorDashboard() {
             fetch(`/api/users/${user.id}`)
                 .then(res => res.json())
                 .then(data => {
-                    if (data.success) {
-                        setAllUsers([data.data]);
+                    const userData = data.success ? data.data : (data.user || data);
+                    if (userData) {
+                        setAllUsers([userData]);
                     }
                 })
                 .catch(console.error);
-            return;
+        } else if (!isRestricted) {
+            // Fetch all users for the dropdown filter (only for admin/hr)
+            fetch("/api/users")
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        setAllUsers(data.data);
+                    } else if (Array.isArray(data)) {
+                        setAllUsers(data);
+                    }
+                })
+                .catch(console.error);
         }
-
-        // Fetch all users for the dropdown filter (only for admin/hr)
-        fetch("/api/users")
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    setAllUsers(data.data);
-                } else if (Array.isArray(data)) {
-                    setAllUsers(data);
-                }
-            })
-            .catch(console.error);
-    }, [user, isRestricted]);
+    }, [user?.id, user?.role, isRestricted]);
 
     const fetchMonitorData = async () => {
-        if (!selectedUserId || selectedUserId === "all") {
+        if (!selectedUserId || selectedUserId === "all" || !selectedDate) {
             setEmployees([]);
             setLoading(false);
             return;
@@ -101,45 +104,40 @@ export default function MonitorDashboard() {
     return (
         <div className="space-y-8 animate-in fade-in duration-700">
             {/* Header Section */}
-            <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between bg-slate-900/40 p-8 rounded-3xl border border-white/5 backdrop-blur-md shadow-2xl relative overflow-hidden">
+            <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between bg-slate-900/60 p-6 rounded-2xl border border-white/10 backdrop-blur-md shadow-2xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-accent/5 rounded-full blur-3xl -mr-32 -mt-32" />
 
                 <div className="relative z-10">
                     <div className="flex items-center gap-4 mb-2">
-                        <div className="p-3 bg-accent/10 rounded-2xl border border-accent/20">
-                            <Monitor className="h-8 w-8 text-accent" />
+                        <div className="p-2.5 bg-accent/10 rounded-xl border border-accent/20">
+                            <Monitor className="h-7 w-7 text-accent" />
                         </div>
                         <div>
-                            <h1 className="text-4xl font-black text-white tracking-tight">
-                                Monitor <span className="text-accent underline decoration-accent/30 underline-offset-8">Center</span>
+                            <h1 className="text-3xl font-black text-white tracking-tighter uppercase">
+                                Monitor <span className="text-accent">Center</span>
                             </h1>
-                            <p className="text-slate-400 text-sm mt-1 font-medium">Capture insights, enhance productivity.</p>
+                            <p className="text-slate-500 text-[10px] mt-1 font-bold uppercase tracking-[0.3em]">Insights & Activity Tracking</p>
                         </div>
                     </div>
 
                     {selectedUserData && (
-                        <div className="mt-6 flex items-center gap-4 animate-in slide-in-from-left duration-500">
-                            <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-accent to-accent/60 p-0.5 shadow-lg">
-                                <div className="h-full w-full rounded-[14px] bg-slate-950 flex items-center justify-center overflow-hidden">
-                                    {selectedUserData.avatarUrl ? (
-                                        <img src={selectedUserData.avatarUrl} alt="" className="h-full w-full object-cover" />
-                                    ) : (
-                                        <span className="text-xl font-black text-accent uppercase">
-                                            {selectedUserData.firstName?.charAt(0)}{selectedUserData.lastName?.charAt(0)}
-                                        </span>
-                                    )}
-                                </div>
+                        <div className="mt-6 flex items-center gap-4 animate-in slide-in-from-left duration-500 bg-black/20 p-3 rounded-xl border border-white/5">
+                            <div className="h-12 w-12 rounded-lg bg-accent flex items-center justify-center overflow-hidden shadow-lg">
+                                {selectedUserData.avatarUrl ? (
+                                    <img src={selectedUserData.avatarUrl} alt="" className="h-full w-full object-cover" />
+                                ) : (
+                                    <span className="text-lg font-black text-slate-950 uppercase">
+                                        {selectedUserData.firstName?.charAt(0)}{selectedUserData.lastName?.charAt(0)}
+                                    </span>
+                                )}
                             </div>
                             <div>
-                                <h2 className="text-2xl font-bold text-white leading-none">
+                                <h2 className="text-lg font-black text-white tracking-tight leading-none uppercase">
                                     {selectedUserData.firstName} {selectedUserData.lastName}
                                 </h2>
-                                <div className="flex items-center gap-2 mt-2">
-                                    <span className="px-2.5 py-1 rounded-full bg-accent/10 border border-accent/20 text-[10px] font-bold text-accent uppercase tracking-widest">
-                                        Selected Employee
-                                    </span>
-                                    <span className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">
-                                        ID: {selectedUserData._id || selectedUserData.id}
+                                <div className="flex items-center gap-2 mt-1.5">
+                                    <span className="px-2 py-0.5 rounded bg-accent/10 border border-accent/20 text-[8px] font-black text-accent uppercase tracking-widest">
+                                        Employee ID: {selectedUserData._id || selectedUserData.id}
                                     </span>
                                 </div>
                             </div>
@@ -147,16 +145,16 @@ export default function MonitorDashboard() {
                     )}
                 </div>
 
-                <div className="flex flex-wrap items-center gap-4 relative z-10">
+                <div className="flex flex-wrap items-center gap-3 relative z-10">
                     {/* Controls Group */}
-                    <div className="flex items-center gap-3 bg-slate-950/40 p-2 rounded-2xl border border-white/5 backdrop-blur-sm">
+                    <div className="flex items-center gap-2 bg-black/40 p-1.5 rounded-xl border border-white/10 backdrop-blur-sm">
                         {/* User Dropdown */}
                         {!isRestricted && (
                             <div className="relative">
                                 <select
                                     value={selectedUserId}
                                     onChange={(e) => setSelectedUserId(e.target.value)}
-                                    className="bg-slate-900/60 border border-white/10 rounded-xl px-5 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-accent/50 appearance-none min-w-[200px] transition-all cursor-pointer hover:bg-slate-800"
+                                    className="bg-slate-900/80 border border-white/10 rounded-lg px-4 py-2 text-xs font-bold text-white focus:outline-none focus:ring-1 focus:ring-accent/50 appearance-none min-w-[180px] transition-all cursor-pointer hover:bg-slate-800 uppercase tracking-widest"
                                 >
                                     <option value="all">Select Employee</option>
                                     {allUsers.map((u: any) => (
@@ -172,40 +170,64 @@ export default function MonitorDashboard() {
                         <div className="relative">
                             <input
                                 type="date"
-                                className="bg-slate-900/60 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-accent/50 transition-all cursor-pointer hover:bg-slate-800 [color-scheme:dark]"
+                                disabled={!selectedUserId || selectedUserId === "all"}
+                                title={(!selectedUserId || selectedUserId === "all") ? "Please select an employee first" : "Select date"}
+                                className={`bg-slate-900/80 border border-white/10 rounded-lg px-3 py-2 text-xs font-bold text-white focus:outline-none focus:ring-1 focus:ring-accent/50 transition-all cursor-pointer hover:bg-slate-800 [color-scheme:dark] ${(!selectedUserId || selectedUserId === "all") ? "opacity-50 cursor-not-allowed grayscale" : ""}`}
                                 value={selectedDate}
                                 onChange={(e) => setSelectedDate(e.target.value)}
                             />
                         </div>
 
-                        <div className="h-8 w-[1px] bg-white/5 mx-1" />
+                        <div className="h-6 w-[1px] bg-white/10 mx-1" />
 
-                        <div className="flex items-center bg-slate-900/40 border border-white/10 rounded-xl p-1">
+                        <div className="flex items-center bg-slate-900/60 border border-white/10 rounded-lg p-0.5">
                             <button
                                 onClick={() => setViewMode("grid")}
                                 title="Grid View"
-                                className={`p-2 rounded-lg transition-all ${viewMode === "grid" ? "bg-accent text-slate-950 shadow-lg shadow-accent/20" : "text-slate-500 hover:text-slate-300"}`}
+                                className={`p-1.5 rounded-md transition-all ${viewMode === "grid" ? "bg-accent text-slate-950 shadow-md" : "text-slate-500 hover:text-slate-300"}`}
                             >
-                                <Grid className="h-4 w-4" />
+                                <Grid className="h-3.5 w-3.5" />
                             </button>
                             <button
                                 onClick={() => setViewMode("list")}
                                 title="List View"
-                                className={`p-2 rounded-lg transition-all ${viewMode === "list" ? "bg-accent text-slate-950 shadow-lg shadow-accent/20" : "text-slate-500 hover:text-slate-300"}`}
+                                className={`p-1.5 rounded-md transition-all ${viewMode === "list" ? "bg-accent text-slate-950 shadow-md" : "text-slate-500 hover:text-slate-300"}`}
                             >
-                                <List className="h-4 w-4" />
+                                <List className="h-3.5 w-3.5" />
                             </button>
                         </div>
 
                         <button
-                            onClick={fetchMonitorData}
-                            className="p-2.5 rounded-xl bg-slate-900/60 border border-white/10 text-slate-400 hover:bg-slate-800 hover:text-white transition-all shadow-inner"
+                            onClick={() => setShowTimeline(!showTimeline)}
+                            disabled={!selectedUserId || selectedUserId === "all" || !selectedDate}
+                            className={`p-2 rounded-lg border transition-all flex items-center gap-2 ${showTimeline ? 'bg-accent text-slate-950 border-accent shadow-lg shadow-accent/20' : 'bg-slate-900/80 border-white/10 text-slate-400 hover:bg-accent hover:text-slate-950 disabled:opacity-30 disabled:cursor-not-allowed grayscale'}`}
+                            title="Visual Activity Timeline"
                         >
-                            <RefreshCcw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+                            <Activity className={`h-3.5 w-3.5 ${showTimeline ? 'animate-pulse' : ''}`} />
+                            <span className="text-[10px] font-black uppercase tracking-widest px-1">Timeline</span>
+                        </button>
+
+                        <button
+                            onClick={fetchMonitorData}
+                            className="p-2 rounded-lg bg-slate-900/80 border border-white/10 text-slate-400 hover:bg-accent hover:text-slate-950 transition-all font-bold group"
+                            title="Refresh Data"
+                        >
+                            <RefreshCcw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : "group-hover:rotate-180 transition-transform duration-500"}`} />
                         </button>
                     </div>
                 </div>
             </div>
+
+            {/* Timeline Section */}
+            <AnimatePresence>
+                {showTimeline && selectedUserId !== "all" && selectedDate && (
+                    <MonitorTimeline
+                        userId={selectedUserId}
+                        date={selectedDate}
+                        onClose={() => setShowTimeline(false)}
+                    />
+                )}
+            </AnimatePresence>
 
             {loading && employees.length === 0 ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
@@ -234,9 +256,11 @@ export default function MonitorDashboard() {
                             </div>
                             <h3 className="text-xl font-bold text-white/50 mb-2">No Data Available</h3>
                             <p className="text-slate-600 max-w-xs text-center text-sm">
-                                {selectedUserId === "all" || !selectedUserId
-                                    ? "Please select an employee from the dropdown to view their monitoring activity."
-                                    : "No activity records found for this employee on the selected date."}
+                                {(!selectedUserId || selectedUserId === "all")
+                                    ? "Please select an employee from the dropdown to Begin."
+                                    : !selectedDate
+                                        ? "Almost there! Now please select a date to view activity."
+                                        : "No activity records found for this employee on the selected date."}
                             </p>
                         </div>
                     )}

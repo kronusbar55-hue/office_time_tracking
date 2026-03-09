@@ -81,6 +81,21 @@ export default function ReportsPage() {
   const [showExport, setShowExport] = useState(false);
   const [hoveredDay, setHoveredDay] = useState<{ memberId: string, date: string } | null>(null);
 
+  // Export States
+  const [exportUserId, setExportUserId] = useState("all");
+  const [exportMonth, setExportMonth] = useState(format(new Date(), "yyyy-MM"));
+  const [allUsers, setAllUsers] = useState<any[]>([]);
+
+  // Helper to format duration
+  const formatDuration = (ms: number) => {
+    if (!ms || isNaN(ms)) return "00:00:00";
+    const totalSeconds = Math.floor(ms / 1000);
+    const hrs = Math.floor(totalSeconds / 3600);
+    const mins = Math.floor((totalSeconds % 3600) / 60);
+    const secs = totalSeconds % 60;
+    return `${hrs.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
+
   // Derive date range based on viewType
   const getRange = useCallback(() => {
     let start, end;
@@ -123,6 +138,17 @@ export default function ReportsPage() {
     fetchReports();
   }, [fetchReports]);
 
+  // Fetch all users for export dropdown
+  useEffect(() => {
+    fetch("/api/users")
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) setAllUsers(data.data);
+        else if (Array.isArray(data)) setAllUsers(data);
+      })
+      .catch(console.error);
+  }, []);
+
   // Navigate dates
   const navigate = (direction: 'prev' | 'next') => {
     if (viewType === "month") {
@@ -147,12 +173,6 @@ export default function ReportsPage() {
               Timesheets
             </h1>
             <nav className="flex gap-1">
-              <button className="px-4 py-1.5 rounded-full bg-blue-500/10 text-blue-400 text-sm font-medium border border-blue-500/20">
-                Timesheets
-              </button>
-              {/* <button className="px-4 py-1.5 rounded-full hover:bg-slate-800 text-slate-400 text-sm font-medium transition-colors">
-                Approvals
-              </button> */}
             </nav>
           </div>
 
@@ -319,7 +339,7 @@ export default function ReportsPage() {
                               {record?.isRestDay && <Moon className="h-3.5 w-3.5 text-slate-500" />}
                               {record?.isHoliday && <Palmtree className="h-3.5 w-3.5 text-orange-400" />}
                               {!record?.isTimeOff && !record?.isRestDay && !record?.isHoliday && record?.intensity! > 0 && (
-                                <span className="text-[10px] font-bold">{((record?.workMs || 0) / 3600000).toFixed(0)}</span>
+                                <span className="text-[10px] font-bold">{((record?.workMs || 0) / 3600000).toFixed(1)}h</span>
                               )}
                             </div>
 
@@ -344,16 +364,16 @@ export default function ReportsPage() {
                                     <div className="h-px bg-slate-800 my-1" />
                                     <div className="flex justify-between text-xs">
                                       <span className="text-slate-400">Work:</span>
-                                      <span className="text-emerald-400 font-bold">{(record.workMs / 3600000).toFixed(1)}h</span>
+                                      <span className="text-emerald-400 font-bold">{formatDuration(record.workMs)}</span>
                                     </div>
                                     <div className="flex justify-between text-xs">
                                       <span className="text-slate-400">Break:</span>
-                                      <span className="text-slate-500 font-bold">{(record.breakMs / 60000).toFixed(0)}m</span>
+                                      <span className="text-slate-500 font-bold">{formatDuration(record.breakMs)}</span>
                                     </div>
                                     {record.overtimeMs > 0 && (
                                       <div className="flex justify-between text-xs">
                                         <span className="text-slate-400">OT:</span>
-                                        <span className="text-pink-400 font-bold">{(record.overtimeMs / 3600000).toFixed(1)}h</span>
+                                        <span className="text-pink-400 font-bold">{formatDuration(record.overtimeMs)}</span>
                                       </div>
                                     )}
                                   </div>
@@ -364,7 +384,7 @@ export default function ReportsPage() {
                         );
                       })}
                       <td className="p-4 bg-slate-900/90 border-l border-slate-800 text-right group-hover:bg-slate-800/90 transition-colors">
-                        <span className="text-sm font-black text-white">{member.payrollHours}h</span>
+                        <span className="text-sm font-black text-white">{formatDuration(member.totalWorkMs)}</span>
                         <div className="h-1 w-12 bg-emerald-500/20 rounded-full mt-1 ml-auto overflow-hidden">
                           <div className="h-full bg-emerald-500" style={{ width: '80%' }} />
                         </div>
@@ -473,38 +493,53 @@ export default function ReportsPage() {
               initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
               className="relative w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl"
             >
-              <h3 className="text-2xl font-bold mb-6">Export Report</h3>
+              <div className="flex items-center justify-between mb-8">
+                <h3 className="text-2xl font-black text-white uppercase tracking-tighter">Export <span className="text-blue-500">Center</span></h3>
+                <button onClick={() => setShowExport(false)} className="p-2 rounded-full hover:bg-slate-800 text-slate-500 hover:text-white transition-colors">
+                  <ChevronRight className="h-5 w-5" />
+                </button>
+              </div>
 
               <div className="space-y-6">
                 <div>
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block">File Format</label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <button className="flex items-center justify-center gap-2 p-4 rounded-2xl bg-slate-950 border-2 border-blue-500/50 text-white">
-                      <span className="font-bold">XLSX</span>
-                    </button>
-                    <button className="flex items-center justify-center gap-2 p-4 rounded-2xl bg-slate-950 border border-slate-800 text-slate-400">
-                      <span className="font-bold">CSV</span>
-                    </button>
-                  </div>
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3 block">Select Employee</label>
+                  <select
+                    value={exportUserId}
+                    onChange={(e) => setExportUserId(e.target.value)}
+                    className="w-full p-4 bg-slate-950 border border-slate-800 rounded-2xl text-sm font-bold text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none cursor-pointer hover:bg-slate-800 transition-colors"
+                  >
+                    <option value="all">All Employees</option>
+                    {allUsers.map((u: any) => (
+                      <option key={u._id || u.id} value={u._id || u.id}>
+                        {u.firstName} {u.lastName}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block">Duration Format</label>
-                  <select className="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-sm focus:outline-none focus:border-blue-500">
-                    <option value="hhmm">HH:mm (e.g. 08:30)</option>
-                    <option value="decimal">Decimal (e.g. 8.50)</option>
-                  </select>
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3 block">Select Month</label>
+                  <input
+                    type="month"
+                    value={exportMonth}
+                    onChange={(e) => setExportMonth(e.target.value)}
+                    className="w-full p-4 bg-slate-950 border border-slate-800 rounded-2xl text-sm font-bold text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 [color-scheme:dark] cursor-pointer hover:bg-slate-800 transition-colors"
+                  />
                 </div>
 
                 <div className="pt-4">
                   <a
-                    href={`/api/reports/export?startDate=${format(start, "yyyy-MM-dd")}&endDate=${format(end, "yyyy-MM-dd")}&department=${department}&format=xls`}
+                    href={`/api/reports/export?startDate=${format(startOfMonth(parseISO(exportMonth + "-01")), "yyyy-MM-dd")}&endDate=${format(endOfMonth(parseISO(exportMonth + "-01")), "yyyy-MM-dd")}&userId=${exportUserId}`}
                     download
-                    className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-bold transition-all shadow-lg shadow-blue-500/20"
+                    className="w-full flex items-center justify-center gap-3 py-5 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-widest text-sm transition-all shadow-xl shadow-blue-500/30 hover:-translate-y-1 active:scale-95"
+                    onClick={() => setTimeout(() => setShowExport(false), 500)}
                   >
                     <Download className="h-5 w-5" />
-                    Download Report
+                    Generate CSV Report
                   </a>
+                  <p className="text-center text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-6">
+                    File will be exported in professional CSV format
+                  </p>
                 </div>
               </div>
             </motion.div>
