@@ -50,8 +50,9 @@ export default function ProjectsPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [memberSearch, setMemberSearch] = useState("");
-
-
+  const [projectSearch, setProjectSearch] = useState("");
+  const [projectPage, setProjectPage] = useState(1);
+  const PROJECTS_PER_PAGE = 6;
   async function loadProjects() {
     setLoading(true);
     setError(null);
@@ -186,6 +187,23 @@ export default function ProjectsPage() {
     }
   }
 
+  const filteredProjects = projects.filter(p =>
+    p.name.toLowerCase().includes(projectSearch.toLowerCase()) ||
+    (p as any).key?.toLowerCase().includes(projectSearch.toLowerCase()) ||
+    p.clientName?.toLowerCase().includes(projectSearch.toLowerCase())
+  );
+
+  const paginatedProjects = filteredProjects.slice(
+    (projectPage - 1) * PROJECTS_PER_PAGE,
+    projectPage * PROJECTS_PER_PAGE
+  );
+
+  const totalPages = Math.ceil(filteredProjects.length / PROJECTS_PER_PAGE);
+
+  useEffect(() => {
+    setProjectPage(1);
+  }, [projectSearch]);
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -210,18 +228,38 @@ export default function ProjectsPage() {
         </p>
       )}
 
+      {/* Project Search Bar */}
+      <div className="relative max-w-sm">
+        <svg className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        <input
+          type="text"
+          placeholder="Search projects by name, key, or client..."
+          value={projectSearch}
+          onChange={(e) => setProjectSearch(e.target.value)}
+          className="w-full rounded-xl border border-slate-800 bg-card/80 py-2.5 pl-9 pr-4 text-xs text-slate-100 outline-none transition-all placeholder:text-slate-500 hover:border-slate-700 focus:border-accent focus:ring-1 focus:ring-accent/40 shadow-sm"
+        />
+      </div>
+
       <section className="grid gap-4 md:grid-cols-3">
         {loading && (
           <div className="col-span-3 text-[11px] text-slate-500">
             Loading projects...
           </div>
         )}
-        {!loading && projects.length === 0 && (
-          <div className="col-span-3 rounded-xl border border-dashed border-slate-800 bg-slate-950/40 px-4 py-6 text-center text-[11px] text-slate-500">
-            No projects yet. Create your first project to get started.
+        {!loading && paginatedProjects.length === 0 && (
+          <div className="col-span-3 rounded-xl border border-dashed border-slate-800 bg-slate-950/40 px-4 py-12 flex flex-col items-center justify-center text-center">
+            <svg className="h-10 w-10 text-slate-700 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+            <p className="text-sm font-semibold text-slate-400">No projects found</p>
+            <p className="text-[11px] text-slate-500 mt-1 max-w-sm">
+              {projectSearch ? "Try adjusting your search query." : "Create your first project to get started and assign team members."}
+            </p>
           </div>
         )}
-        {projects.map((project) => {
+        {paginatedProjects.map((project) => {
           const initials =
             project.name
               .split(" ")
@@ -354,6 +392,32 @@ export default function ProjectsPage() {
           );
         })}
       </section>
+
+      {/* Pagination Controls */}
+      {!loading && totalPages > 1 && (
+        <div className="flex items-center justify-between mt-6 bg-card/50 px-4 py-3 rounded-xl border border-slate-800/50">
+          <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+            Page <span className="text-slate-300 mx-1">{projectPage}</span> of <span className="text-slate-300 mx-1">{totalPages}</span>
+            <span className="ml-4 lowercase text-[10px] text-slate-600 font-normal tracking-normal">- {filteredProjects.length} total projects</span>
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setProjectPage(p => Math.max(1, p - 1))}
+              disabled={projectPage === 1}
+              className="px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800/50 text-[11px] font-bold text-slate-300 hover:bg-slate-700 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            >
+              Prev
+            </button>
+            <button
+              onClick={() => setProjectPage(p => Math.min(totalPages, p + 1))}
+              disabled={projectPage === totalPages}
+              className="px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800/50 text-[11px] font-bold text-slate-300 hover:bg-slate-700 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
 
       {showForm && (
         <div className="fixed inset-0 z-30 flex items-center justify-end bg-black/40">

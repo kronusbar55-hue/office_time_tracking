@@ -91,13 +91,7 @@ export default function EmployeeActivityCard({ employee, viewMode, showName = tr
 
     return (
         <>
-            <div className="flex flex-col rounded-2xl bg-slate-900/60 border border-white/10 overflow-hidden group hover:border-accent/50 transition-all hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.7)] backdrop-blur-xl relative">
-                {/* Header with Status Only */}
-                <div className="p-3.5 flex items-center justify-center bg-slate-900/80 border-b border-white/10">
-                    <div className={`px-3 py-1 rounded-md text-[9px] font-black uppercase tracking-widest border shadow-inner ${statusColor} w-full text-center`}>
-                        {statusLabel}
-                    </div>
-                </div>
+            <div className="flex flex-col rounded-2xl bg-slate-900/60 border border-white/10 overflow-hidden group hover:border-accent/50 transition-all hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.7)] backdrop-blur-xl relative">           
 
                 {/* Main Boxy Image Container */}
                 <div className="relative aspect-video w-full bg-slate-950 overflow-hidden cursor-zoom-in group/img" onClick={() => setIsZoomed(true)}>

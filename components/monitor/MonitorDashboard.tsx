@@ -5,7 +5,7 @@ import { Search, Grid, List, RefreshCcw, Monitor, Activity, MousePointer2, Move,
 import { useAuth } from "@/components/auth/AuthProvider";
 import EmployeeActivityCard from "./EmployeeActivityCard";
 import MonitorTimeline from "./MonitorTimeline";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 
 export default function MonitorDashboard() {
     const { user } = useAuth();
@@ -22,6 +22,7 @@ export default function MonitorDashboard() {
     const [selectedDate, setSelectedDate] = useState("");
     const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
     const [showTimeline, setShowTimeline] = useState(false);
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
     // Pagination states for activity
     const [page, setPage] = useState(1);
@@ -80,7 +81,7 @@ export default function MonitorDashboard() {
             if (selectedDate) params.append("date", selectedDate);
             params.append("userId", selectedUserId);
             params.append("page", page.toString());
-            params.append("limit", "5");
+            params.append("limit", "10");
 
 
             const res = await fetch(`/api/monitor?${params.toString()}`);
@@ -123,107 +124,15 @@ export default function MonitorDashboard() {
     const selectedUserData = allUsers.find(u => (u._id || u.id) === selectedUserId);
 
     return (
-        <div className="flex flex-col lg:flex-row gap-6 animate-in fade-in duration-700 min-h-[600px]">
-            {/* Sidebar: Employee Selection */}
-            {!isRestricted && (
-                <div className="w-full lg:w-72 shrink-0 space-y-4">
-                    <div className="bg-slate-900/60 p-5 rounded-2xl border border-white/10 backdrop-blur-md shadow-xl flex flex-col h-full">
-                        <div className="flex items-center gap-3 mb-5">
-                            <div className="p-2 bg-accent/10 rounded-lg border border-accent/20">
-                                <Activity className="h-5 w-5 text-accent" />
-                            </div>
-                            <h2 className="text-sm font-black text-white uppercase tracking-wider">Employees</h2>
-                        </div>
-
-                        {/* Search Input */}
-                        <div className="relative mb-4">
-                            <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500" />
-                            <input
-                                type="text"
-                                placeholder="Search..."
-                                value={userSearchQuery}
-                                onChange={(e) => {
-                                    setUserSearchQuery(e.target.value);
-                                    setUserPage(1);
-                                }}
-                                className="w-full bg-black/40 border border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs font-bold text-white placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-accent/50 transition-all shadow-inner"
-                            />
-                        </div>
-
-                        {/* Employee List */}
-                        <div className="space-y-2 flex-1 overflow-y-auto">
-                            {allUsers.length === 0 ? (
-                                <div className="py-10 text-center text-slate-600 text-xs italic">No employees found</div>
-                            ) : (
-                                allUsers.map((u: any) => {
-                                    const isSelected = selectedUserId === u.id;
-                                    return (
-                                        <button
-                                            key={u.id}
-                                            onClick={() => {
-                                                setSelectedUserId(u.id);
-                                                // Default to today if no date selected
-                                                if (!selectedDate) {
-                                                    const today = new Date().toISOString().split('T')[0];
-                                                    setSelectedDate(today);
-                                                }
-                                            }}
-                                            className={`w-full flex items-center gap-3 p-2.5 rounded-xl border transition-all duration-300 text-left group ${isSelected
-                                                ? "bg-accent border-accent text-slate-950 shadow-lg shadow-accent/20 scale-[1.02]"
-                                                : "bg-white/5 border-transparent text-slate-400 hover:bg-white/10 hover:border-white/10"
-                                                }`}
-                                        >
-                                            <div className={`h-8 w-8 rounded-lg overflow-hidden flex items-center justify-center font-black text-xs shrink-0 ${isSelected ? "bg-slate-950 text-accent ring-2 ring-slate-950/20" : "bg-slate-800 text-slate-400"}`}>
-                                                {u.avatarUrl ? (
-                                                    <img src={u.avatarUrl} alt="" className="h-full w-full object-cover" />
-                                                ) : (
-                                                    `${u.firstName?.[0] || ""}${u.lastName?.[0] || ""}`.toUpperCase()
-                                                )}
-                                            </div>
-                                            <div className="min-w-0 flex-1">
-                                                <p className={`text-[11px] font-black truncate uppercase tracking-tight ${isSelected ? "text-slate-950" : "text-white"}`}>
-                                                    {u.firstName} {u.lastName}
-                                                </p>
-                                                <p className={`text-[9px] font-bold truncate ${isSelected ? "text-slate-900/60" : "text-slate-500"}`}>
-                                                    {u.role}
-                                                </p>
-                                            </div>
-                                            {isSelected && <div className="h-1.5 w-1.5 rounded-full bg-slate-950 animate-pulse" />}
-                                        </button>
-                                    );
-                                })
-                            )}
-                        </div>
-
-                        {/* Employee Pagination */}
-                        {totalUserPages > 1 && (
-                            <div className="mt-4 flex items-center justify-between border-t border-white/5 pt-4">
-                                <button
-                                    onClick={() => setUserPage(p => Math.max(1, p - 1))}
-                                    disabled={userPage === 1}
-                                    className="p-1.5 rounded-lg border border-white/10 text-slate-500 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition-all"
-                                >
-                                    <Move className="h-3.5 w-3.5 rotate-180" />
-                                </button>
-                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{userPage} / {totalUserPages}</span>
-                                <button
-                                    onClick={() => setUserPage(p => Math.min(totalUserPages, p + 1))}
-                                    disabled={userPage === totalUserPages}
-                                    className="p-1.5 rounded-lg border border-white/10 text-slate-500 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition-all"
-                                >
-                                    <Move className="h-3.5 w-3.5" />
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            )}
+        <div className="flex flex-col gap-6 animate-in fade-in duration-700 min-h-[600px]">
 
             {/* Main Content Area */}
             <div className="flex-1 space-y-6">
                 {/* Header Filter Bar */}
-                <div className="bg-slate-900/60 p-6 rounded-2xl border border-white/10 backdrop-blur-md shadow-2xl relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-accent/5 rounded-full blur-3xl -mr-32 -mt-32" />
+                <div className="bg-slate-900/60 p-6 rounded-2xl border border-white/10 backdrop-blur-md shadow-2xl relative z-50">
+                    <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-accent/5 rounded-full blur-3xl -mr-32 -mt-32" />
+                    </div>
 
                     <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between relative z-10">
                         <div>
@@ -250,6 +159,101 @@ export default function MonitorDashboard() {
                         </div>
 
                         <div className="flex flex-wrap items-center gap-3">
+                            {/* Employee Dropdown */}
+                            {!isRestricted && (
+                                <div className="relative">
+                                    <button
+                                        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                        className="flex items-center gap-2 bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-xs font-bold text-white focus:outline-none focus:ring-1 focus:ring-accent/50 transition-all cursor-pointer hover:bg-slate-800 shadow-inner min-w-[220px] justify-between"
+                                    >
+                                        <div className="flex items-center gap-2 truncate">
+                                            {selectedUserId !== "all" && selectedUserData && (
+                                                <div className="h-5 w-5 rounded bg-accent/20 flex items-center justify-center text-[8px] font-black text-accent uppercase shrink-0">
+                                                    {selectedUserData.avatarUrl ? <img src={selectedUserData.avatarUrl} alt="" className="h-full w-full object-cover rounded" /> : `${selectedUserData.firstName?.[0] || ""}${selectedUserData.lastName?.[0] || ""}`}
+                                                </div>
+                                            )}
+                                            <span className="truncate">
+                                                {selectedUserId === "all" ? "Select Employee..." : selectedUserData ? `${selectedUserData.firstName} ${selectedUserData.lastName}` : "Select Employee..."}
+                                            </span>
+                                        </div>
+                                        <Search className="h-3 w-3 text-slate-500 shrink-0" />
+                                    </button>
+
+                                    <AnimatePresence>
+                                        {isDropdownOpen && (
+                                            <motion.div
+                                                initial={{ opacity: 0, y: 5 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                exit={{ opacity: 0, y: 5 }}
+                                                className="absolute top-full right-0 md:left-0 md:right-auto mt-2 w-72 bg-slate-900 border border-white/10 rounded-xl shadow-2xl z-[100] overflow-hidden backdrop-blur-xl"
+                                                onMouseLeave={() => setIsDropdownOpen(false)}
+                                            >
+                                                <div className="p-3 border-b border-white/10 bg-black/20">
+                                                    <div className="relative">
+                                                        <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500" />
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Search employees..."
+                                                            value={userSearchQuery}
+                                                            onChange={(e) => {
+                                                                setUserSearchQuery(e.target.value);
+                                                                setUserPage(1);
+                                                            }}
+                                                            className="w-full bg-black/40 border border-white/10 rounded-lg pl-8 pr-3 py-2 text-xs font-bold text-white placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-accent/50 transition-all shadow-inner"
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div className="max-h-60 overflow-y-auto p-2 space-y-1">
+                                                    {allUsers.length === 0 ? (
+                                                        <div className="py-4 text-center text-slate-500 text-xs italic">No employees found</div>
+                                                    ) : (
+                                                        allUsers.map((u: any) => (
+                                                            <button
+                                                                key={u.id}
+                                                                onClick={() => {
+                                                                    setSelectedUserId(u.id);
+                                                                    if (!selectedDate) setSelectedDate(new Date().toISOString().split('T')[0]);
+                                                                    setIsDropdownOpen(false);
+                                                                }}
+                                                                className={`w-full flex items-center gap-3 p-2 rounded-lg transition-all text-left group ${selectedUserId === u.id ? "bg-accent/20 text-accent" : "hover:bg-white/5 text-slate-300"}`}
+                                                            >
+                                                                <div className={`h-6 w-6 rounded overflow-hidden shrink-0 flex items-center justify-center text-[8px] font-bold ${selectedUserId === u.id ? "bg-accent/10 border border-accent/20" : "bg-slate-800"}`}>
+                                                                    {u.avatarUrl ? <img src={u.avatarUrl} alt="" className="h-full w-full object-cover" /> : `${u.firstName?.[0] || ""}${u.lastName?.[0] || ""}`.toUpperCase()}
+                                                                </div>
+                                                                <div className="min-w-0 flex-1">
+                                                                    <p className="text-[11px] font-bold truncate">{u.firstName} {u.lastName}</p>
+                                                                </div>
+                                                            </button>
+                                                        ))
+                                                    )}
+                                                </div>
+
+                                                {totalUserPages > 1 && (
+                                                    <div className="flex items-center justify-between p-2 border-t border-white/10 bg-black/20">
+                                                        <button
+                                                            onClick={() => setUserPage(p => Math.max(1, p - 1))}
+                                                            disabled={userPage === 1}
+                                                            className="p-1 rounded bg-slate-800 text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                                                        >
+                                                            <Move className="h-3 w-3 rotate-180" />
+                                                        </button>
+                                                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">{userPage} / {totalUserPages}</span>
+                                                        <button
+                                                            onClick={() => setUserPage(p => Math.min(totalUserPages, p + 1))}
+                                                            disabled={userPage === totalUserPages}
+                                                            className="p-1 rounded bg-slate-800 text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                                                        >
+                                                            <Move className="h-3 w-3" />
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </div>
+                            )}
+
                             {/* Date Picker */}
                             <div className="relative group">
                                 <input

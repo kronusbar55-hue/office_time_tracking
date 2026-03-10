@@ -19,6 +19,8 @@ export default function TechnologiesPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingTech, setEditingTech] = useState<Technology | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
 
   async function loadTechnologies() {
     setLoading(true);
@@ -64,6 +66,17 @@ export default function TechnologiesPage() {
     const matchesStatus = statusFilter === "all" || t.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
+
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+
+  const paginated = filtered.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter]);
 
   return (
     <div className="space-y-4">
@@ -131,24 +144,23 @@ export default function TechnologiesPage() {
                     </tr>
                   ))}
                 </>
-              ) : filtered.length === 0 ? (
+              ) : paginated.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
                     No technologies found.
                   </td>
                 </tr>
               ) : (
-                filtered.map((tech, idx) => (
+                paginated.map((tech, idx) => (
                   <tr key={tech.id} className="border-t border-slate-800/70 text-slate-200 hover:bg-slate-800/30">
-                    <td className="px-4 py-2 text-slate-400">{idx + 1}</td>
+                    <td className="px-4 py-2 text-slate-400">{(currentPage - 1) * ITEMS_PER_PAGE + idx + 1}</td>
                     <td className="px-4 py-2 font-medium text-slate-100">{tech.name}</td>
                     {/* <td className="px-4 py-2 text-slate-400">—</td> */}
                     <td className="px-4 py-2">
-                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                        tech.status === "active"
+                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${tech.status === "active"
                           ? "bg-emerald-500/10 text-emerald-300"
                           : "bg-slate-800 text-slate-400"
-                      }`}>
+                        }`}>
                         {tech.status === "active" ? "Active" : "Inactive"}
                       </span>
                     </td>
@@ -177,6 +189,32 @@ export default function TechnologiesPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Controls */}
+        {!loading && totalPages > 1 && (
+          <div className="flex items-center justify-between mt-4 bg-slate-900/40 px-4 py-3 rounded-xl border border-slate-800/50">
+            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+              Page <span className="text-slate-200 mx-1">{currentPage}</span> of <span className="text-slate-200 mx-1">{totalPages}</span>
+              <span className="ml-4 lowercase text-[10px] text-slate-500 font-normal tracking-normal">- {filtered.length} total technologies</span>
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800/50 text-[11px] font-bold text-slate-300 hover:bg-slate-700 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+              >
+                Prev
+              </button>
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800/50 text-[11px] font-bold text-slate-300 hover:bg-slate-700 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </section>
 
       <TechnologyModal

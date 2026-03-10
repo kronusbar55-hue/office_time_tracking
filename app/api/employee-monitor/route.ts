@@ -6,7 +6,7 @@ export async function POST(req: Request) {
     try {
         await connectDB()
         const body = await req.json()
-        const {
+        let {
             userId,
             imageUrl,
             date,
@@ -24,6 +24,16 @@ export async function POST(req: Request) {
             meetingTime,
             appUsage
         } = body
+
+        // Sanitize appUsage keys to prevent Mongoose errors (keys containing '.' or '$')
+        let sanitizedAppUsage = appUsage;
+        if (appUsage && typeof appUsage === 'object') {
+            sanitizedAppUsage = {};
+            for (const [key, value] of Object.entries(appUsage)) {
+                const sanitizedKey = key.replace(/[\.\$]/g, '_');
+                sanitizedAppUsage[sanitizedKey] = value;
+            }
+        }
 
         if (!userId || !imageUrl || !date || !time) {
             return NextResponse.json(
@@ -48,7 +58,7 @@ export async function POST(req: Request) {
             sessionTime,
             breakTime,
             meetingTime,
-            appUsage
+            appUsage: sanitizedAppUsage
         })
 
         return NextResponse.json(
