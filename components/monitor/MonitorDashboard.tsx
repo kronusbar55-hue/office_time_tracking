@@ -323,18 +323,37 @@ export default function MonitorDashboard() {
                         ))}
                     </div>
                 ) : (
-                    <div className={viewMode === "grid"
-                        ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6"
-                        : "space-y-4"
-                    }>
-                        {employees.map(emp => (
-                            <EmployeeActivityCard
-                                key={emp._id}
-                                employee={emp}
-                                viewMode={viewMode}
-                                showName={false}
-                            />
-                        ))}
+                    <>
+                        <div className={viewMode === "grid"
+                            ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6"
+                            : "space-y-4"
+                        }>
+                            {loading ? (
+                                // Skeleton placeholders while loading
+                                [...Array(5)].map((_, i) => (
+                                    viewMode === "grid" ? (
+                                        <div key={i} className="aspect-video rounded-3xl bg-slate-900/40 animate-pulse border border-white/5" />
+                                    ) : (
+                                        <div key={i} className="flex items-center gap-4 p-4 bg-slate-900/40 rounded-2xl animate-pulse border border-white/5">
+                                            <div className="w-12 h-12 bg-slate-800 rounded-full" />
+                                            <div className="flex-1 space-y-2">
+                                                <div className="h-4 bg-slate-800 rounded w-3/4" />
+                                                <div className="h-3 bg-slate-800 rounded w-1/2" />
+                                            </div>
+                                        </div>
+                                    )
+                                ))
+                            ) : (
+                                employees.map(emp => (
+                                    <EmployeeActivityCard
+                                        key={emp._id}
+                                        employee={emp}
+                                        viewMode={viewMode}
+                                        showName={false}
+                                    />
+                                ))
+                            )}
+                        </div>
 
                         {employees.length === 0 && (
                             <div className="col-span-full flex flex-col items-center justify-center py-32 text-slate-500 bg-slate-900/10 rounded-[3rem] border border-dashed border-white/5 backdrop-blur-sm">
@@ -351,35 +370,35 @@ export default function MonitorDashboard() {
                                 </p>
                             </div>
                         )}
-                    </div>
-                )}
-
-                {/* Pagination Controls */}
-                {!loading && totalPages > 1 && (
-                    <div className="flex items-center justify-between bg-black/40 p-5 rounded-2xl border border-white/5 backdrop-blur-sm shadow-xl">
-                        <div className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em]">
-                            Page <span className="text-white">{page}</span> of <span className="text-white">{totalPages}</span>
-                            <span className="ml-3 text-accent opacity-60">Results: {totalActiveRecords}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <button
-                                onClick={() => setPage(p => Math.max(1, p - 1))}
-                                disabled={page === 1}
-                                className="h-9 px-4 rounded-xl bg-slate-900 border border-white/10 text-slate-300 hover:bg-accent hover:text-slate-950 disabled:opacity-20 disabled:cursor-not-allowed transition-all text-xs font-black uppercase tracking-widest"
-                            >
-                                Previous
-                            </button>
-                            <button
-                                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                                disabled={page === totalPages}
-                                className="h-9 px-4 rounded-xl bg-slate-900 border border-white/10 text-slate-300 hover:bg-accent hover:text-slate-950 disabled:opacity-20 disabled:cursor-not-allowed transition-all text-xs font-black uppercase tracking-widest"
-                            >
-                                Next
-                            </button>
-                        </div>
-                    </div>
+                    </>
                 )}
             </div>
+
+            {/* Pagination Controls */}
+            {!loading && totalPages > 1 && (
+                <div className="flex items-center justify-between bg-black/40 p-5 rounded-2xl border border-white/5 backdrop-blur-sm shadow-xl">
+                    <div className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em]">
+                        Page <span className="text-white">{page}</span> of <span className="text-white">{totalPages}</span>
+                        <span className="ml-3 text-accent opacity-60">Results: {totalActiveRecords}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setPage(p => Math.max(1, p - 1))}
+                            disabled={page === 1}
+                            className="h-9 px-4 rounded-xl bg-slate-900 border border-white/10 text-slate-300 hover:bg-accent hover:text-slate-950 disabled:opacity-20 disabled:cursor-not-allowed transition-all text-xs font-black uppercase tracking-widest"
+                        >
+                            Previous
+                        </button>
+                        <button
+                            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                            disabled={page === totalPages}
+                            className="h-9 px-4 rounded-xl bg-slate-900 border border-white/10 text-slate-300 hover:bg-accent hover:text-slate-950 disabled:opacity-20 disabled:cursor-not-allowed transition-all text-xs font-black uppercase tracking-widest"
+                        >
+                            Next
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 
