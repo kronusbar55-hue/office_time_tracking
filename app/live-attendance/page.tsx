@@ -42,6 +42,8 @@ export default function LiveAttendancePage() {
     const [search, setSearch] = useState("");
     const [filter, setFilter] = useState<"ALL" | "IN" | "BREAK" | "OUT">("ALL");
     const [lastRefreshed, setLastRefreshed] = useState(new Date());
+    const [page, setPage] = useState(1);
+    const ITEMS_PER_PAGE = 5;
 
     // RBAC check
     useEffect(() => {
@@ -80,6 +82,17 @@ export default function LiveAttendancePage() {
             return matchSearch && matchStatus;
         });
     }, [data, search, filter]);
+
+    const paginatedMembers = useMemo(() => {
+        const startIndex = (page - 1) * ITEMS_PER_PAGE;
+        return filteredMembers.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+    }, [filteredMembers, page]);
+
+    const totalPages = Math.ceil(filteredMembers.length / ITEMS_PER_PAGE);
+
+    useEffect(() => {
+        setPage(1);
+    }, [search, filter]);
 
     if (loading && !data) {
         return (
@@ -177,8 +190,8 @@ export default function LiveAttendancePage() {
             {/* Member List */}
             <div className="space-y-4">
                 <AnimatePresence mode="popLayout">
-                    {filteredMembers.length > 0 ? (
-                        filteredMembers.map((member, idx) => (
+                    {paginatedMembers.length > 0 ? (
+                        paginatedMembers.map((member, idx) => (
                             <MemberListItem key={member.userId} member={member} index={idx} />
                         ))
                     ) : (
@@ -193,6 +206,32 @@ export default function LiveAttendancePage() {
                     )}
                 </AnimatePresence>
             </div>
+
+            {/* Pagination Controls */}
+            {!loading && totalPages > 1 && (
+                <div className="flex items-center justify-between bg-slate-900/40 p-5 rounded-2xl border border-slate-800 backdrop-blur-sm shadow-xl mt-6">
+                    <div className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em]">
+                        Page <span className="text-white">{page}</span> of <span className="text-white">{totalPages}</span>
+                        <span className="ml-3 text-blue-500 opacity-60">Total: {filteredMembers.length}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setPage(p => Math.max(1, p - 1))}
+                            disabled={page === 1}
+                            className="h-9 px-4 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 hover:bg-blue-600 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition-all text-xs font-black uppercase tracking-widest"
+                        >
+                            Previous
+                        </button>
+                        <button
+                            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                            disabled={page === totalPages}
+                            className="h-9 px-4 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 hover:bg-blue-600 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition-all text-xs font-black uppercase tracking-widest"
+                        >
+                            Next
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
