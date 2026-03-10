@@ -44,6 +44,7 @@ export interface ITask {
   parentTask?: Types.ObjectId;
   childTasks?: Types.ObjectId[];
   progressPercent?: number;
+  order?: number;
   isDeleted?: boolean;
   attachments?: IAttachment[];
   createdAt?: Date;
@@ -56,7 +57,7 @@ const TaskSchema = new Schema<ITask>(
       type: String,
       required: true,
       unique: true,
-      index: true
+      trim: true
     },
     title: {
       type: String,
@@ -151,6 +152,10 @@ const TaskSchema = new Schema<ITask>(
       default: 0,
       min: 0,
       max: 100
+    },
+    order: {
+      type: Number,
+      default: 0
     },
     isDeleted: {
       type: Boolean,

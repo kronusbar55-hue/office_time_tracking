@@ -30,10 +30,12 @@ type UserListItem = {
 
 const emptyProjectForm = {
   name: "",
+  key: "",
   clientName: "",
   description: "",
   status: "active" as Project["status"]
 };
+
 
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -47,6 +49,8 @@ export default function ProjectsPage() {
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [memberSearch, setMemberSearch] = useState("");
+
 
   async function loadProjects() {
     setLoading(true);
@@ -101,21 +105,27 @@ export default function ProjectsPage() {
     setLogoFile(null);
     setShowForm(true);
     setError(null);
+    setMemberSearch("");
   }
+
 
   function startEdit(project: Project) {
     setEditingId(project.id);
     setForm({
       name: project.name,
+      key: (project as any).key || "",
       clientName: project.clientName || "",
       description: project.description || "",
       status: project.status
     });
+
     setSelectedMembers(project.members.map((m) => m.id));
     setLogoFile(null);
     setShowForm(true);
     setError(null);
+    setMemberSearch("");
   }
+
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -125,11 +135,13 @@ export default function ProjectsPage() {
     try {
       const formData = new FormData();
       formData.set("name", form.name);
+      formData.set("key", form.key);
       if (form.clientName) formData.set("clientName", form.clientName);
       if (form.description) formData.set("description", form.description);
       formData.set("status", form.status);
       selectedMembers.forEach((id) => formData.append("memberIds", id));
       if (logoFile) formData.set("logo", logoFile);
+
 
       const url = editingId ? `/api/projects/${editingId}` : "/api/projects";
       const method = editingId ? "PUT" : "POST";
@@ -222,19 +234,19 @@ export default function ProjectsPage() {
             project.status === "active"
               ? "ACTIVE"
               : project.status === "completed"
-              ? "COMPLETED"
-              : project.status === "on_hold"
-              ? "ON HOLD"
-              : "ARCHIVED";
+                ? "COMPLETED"
+                : project.status === "on_hold"
+                  ? "ON HOLD"
+                  : "ARCHIVED";
 
           const statusClass =
             project.status === "active"
               ? "bg-emerald-500/10 text-emerald-300 ring-emerald-500/40"
               : project.status === "completed"
-              ? "bg-sky-500/10 text-sky-300 ring-sky-500/40"
-              : project.status === "on_hold"
-              ? "bg-amber-500/10 text-amber-300 ring-amber-500/40"
-              : "bg-slate-700/40 text-slate-300 ring-slate-600/60";
+                ? "bg-sky-500/10 text-sky-300 ring-sky-500/40"
+                : project.status === "on_hold"
+                  ? "bg-amber-500/10 text-amber-300 ring-amber-500/40"
+                  : "bg-slate-700/40 text-slate-300 ring-slate-600/60";
 
           return (
             <article
@@ -260,9 +272,15 @@ export default function ProjectsPage() {
                     )}
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-xs font-semibold text-slate-50">
-                      {project.name}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold text-slate-50">
+                        {project.name}
+                      </span>
+                      <span className="rounded bg-slate-800 px-1 text-[9px] font-bold text-slate-400">
+                        {(project as any).key}
+                      </span>
+                    </div>
+
                     {project.clientName && (
                       <span className="text-[11px] text-slate-400">
                         {project.clientName}
@@ -325,13 +343,13 @@ export default function ProjectsPage() {
                 </span>
               </div>
 
-              <button
+              {/* <button
                 type="button"
                 onClick={() => archiveProject(project.id)}
                 className="mt-3 self-start text-[10px] text-slate-500 hover:text-rose-300"
               >
                 Archive project
-              </button>
+              </button> */}
             </article>
           );
         })}
@@ -370,9 +388,25 @@ export default function ProjectsPage() {
                     setForm((prev) => ({ ...prev, name: e.target.value }))
                   }
                   required
-                  className="h-8 w-full rounded-md border border-slate-700 bg-slate-950/60 px-2 text-[11px] text-slate-100 outline-none focus:border-accent focus:ring-1 focus:ring-accent/40"
+                  className="h-8 w-full cursor-pointer rounded-md border border-slate-700 bg-slate-950/60 px-2 text-[11px] text-slate-100 outline-none transition-all hover:border-slate-600 focus:border-accent focus:ring-1 focus:ring-accent/40"
                 />
               </div>
+
+              <div>
+                <label className="mb-1 block text-slate-300">Project Key</label>
+                <input
+                  value={form.key}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, key: e.target.value.toUpperCase() }))
+                  }
+                  placeholder="e.g. PRJ"
+                  className="h-8 w-full cursor-pointer rounded-md border border-slate-700 bg-slate-950/60 px-2 text-[11px] text-slate-100 outline-none transition-all hover:border-slate-600 focus:border-accent focus:ring-1 focus:ring-accent/40"
+                />
+                <p className="mt-0.5 text-[9px] text-slate-500">
+                  Short unique code for tasks (e.g., PROJ-123). Generated automatically if blank.
+                </p>
+              </div>
+
 
               <div>
                 <label className="mb-1 block text-slate-300">Client</label>
@@ -381,7 +415,7 @@ export default function ProjectsPage() {
                   onChange={(e) =>
                     setForm((prev) => ({ ...prev, clientName: e.target.value }))
                   }
-                  className="h-8 w-full rounded-md border border-slate-700 bg-slate-950/60 px-2 text-[11px] text-slate-100 outline-none focus:border-accent focus:ring-1 focus:ring-accent/40"
+                  className="h-8 w-full cursor-pointer rounded-md border border-slate-700 bg-slate-950/60 px-2 text-[11px] text-slate-100 outline-none transition-all hover:border-slate-600 focus:border-accent focus:ring-1 focus:ring-accent/40"
                   placeholder="Internal or client name"
                 />
               </div>
@@ -416,7 +450,7 @@ export default function ProjectsPage() {
                       status: e.target.value as Project["status"]
                     }))
                   }
-                  className="h-8 w-full rounded-md border border-slate-700 bg-slate-950/60 px-2 text-[11px] text-slate-100 outline-none focus:border-accent focus:ring-1 focus:ring-accent/40"
+                  className="h-8 w-full cursor-pointer rounded-md border border-slate-700 bg-slate-950/60 px-2 text-[11px] text-slate-100 outline-none transition-all hover:border-slate-600 focus:border-accent focus:ring-1 focus:ring-accent/40"
                 >
                   <option value="active">Active</option>
                   <option value="on_hold">On hold</option>
@@ -440,49 +474,115 @@ export default function ProjectsPage() {
               </div>
 
               <div>
-                <label className="mb-1 block text-slate-300">
+                <label className="mb-2 block text-slate-300">
                   Assign team members
                 </label>
-                <div className="max-h-40 overflow-y-auto rounded-md border border-slate-700 bg-slate-950/60">
-                  {users.length === 0 && (
-                    <p className="px-2 py-2 text-[11px] text-slate-500">
-                      No employees available yet.
+
+                {/* Selected Members Chips */}
+                {selectedMembers.length > 0 && (
+                  <div className="mb-3 flex flex-wrap gap-1.5 rounded-lg border border-slate-800/50 bg-slate-900/30 p-2">
+                    {selectedMembers.map(id => {
+                      const user = users.find(u => u.id === id);
+                      if (!user) return null;
+                      return (
+                        <div key={id} className="flex items-center gap-1.5 rounded-full bg-accent/10 border border-accent/20 pl-1 pr-2 py-0.5 animate-in fade-in zoom-in duration-200">
+                          <div className="h-4 w-4 rounded-full bg-slate-800 overflow-hidden">
+                            {user.avatarUrl ? (
+                              <img src={user.avatarUrl} alt="" className="h-full w-full object-cover" />
+                            ) : (
+                              <div className="flex h-full w-full items-center justify-center text-[7px] text-accent font-bold">
+                                {user.name.charAt(0)}
+                              </div>
+                            )}
+                          </div>
+                          <span className="text-[9px] font-medium text-accent-light">{user.name}</span>
+                          <button
+                            type="button"
+                            onClick={() => toggleMember(id)}
+                            className="text-accent/60 hover:text-rose-400 transition-colors"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                <div className="relative mb-2">
+                  <input
+                    type="text"
+                    placeholder="Search employees..."
+                    value={memberSearch}
+                    onChange={(e) => setMemberSearch(e.target.value)}
+                    className="h-8 w-full rounded-md border border-slate-700 bg-slate-950/60 pl-8 pr-2 text-[11px] text-slate-100 outline-none focus:border-accent focus:ring-1 focus:ring-accent/40"
+                  />
+                  <svg className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+
+                <div className="max-h-48 overflow-y-auto rounded-md border border-slate-700 bg-slate-950/60 custom-scrollbar">
+                  {users.filter(u => u.name.toLowerCase().includes(memberSearch.toLowerCase())).length === 0 ? (
+                    <p className="px-3 py-6 text-center text-[10px] text-slate-500 italic">
+                      {users.length === 0 ? "No employees available yet." : "No matching employees found."}
                     </p>
+                  ) : (
+                    <div className="divide-y divide-slate-800/50">
+                      {users
+                        .filter(u => u.name.toLowerCase().includes(memberSearch.toLowerCase()))
+                        .map((u) => {
+                          const isSelected = selectedMembers.includes(u.id);
+                          return (
+                            <div
+                              key={u.id}
+                              onClick={() => toggleMember(u.id)}
+                              className={`flex cursor-pointer items-center justify-between px-3 py-2 text-[11px] transition-colors hover:bg-slate-800/40 ${isSelected ? "bg-accent/5" : ""
+                                }`}
+                            >
+                              <div className="flex items-center gap-2.5">
+                                <div className={`relative h-7 w-7 rounded-full bg-slate-800 overflow-hidden ring-1 ${isSelected ? "ring-accent" : "ring-slate-700"}`}>
+                                  {u.avatarUrl ? (
+                                    <img
+                                      src={u.avatarUrl}
+                                      alt={u.name}
+                                      className="h-full w-full object-cover"
+                                    />
+                                  ) : (
+                                    <div className="flex h-full w-full items-center justify-center text-[9px] text-slate-400 font-medium">
+                                      {u.name.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2)}
+                                    </div>
+                                  )}
+                                  {isSelected && (
+                                    <div className="absolute inset-0 bg-accent/20 flex items-center justify-center">
+                                      <svg className="h-3 w-3 text-accent" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                      </svg>
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="flex flex-col">
+                                  <span className={`font-medium ${isSelected ? "text-accent" : "text-slate-200"}`}>
+                                    {u.name}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className={`h-4 w-4 rounded border flex items-center justify-center transition-all ${isSelected ? "bg-accent border-accent" : "border-slate-600 bg-transparent"
+                                }`}>
+                                {isSelected && (
+                                  <svg className="h-2.5 w-2.5 text-slate-950" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                  </svg>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                    </div>
                   )}
-                  {users.map((u) => (
-                    <label
-                      key={u.id}
-                      className="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-[11px] text-slate-100 hover:bg-slate-800/60"
-                    >
-                      <input
-                        type="checkbox"
-                        className="h-3.5 w-3.5 accent-accent"
-                        checked={selectedMembers.includes(u.id)}
-                        onChange={() => toggleMember(u.id)}
-                      />
-                      <span className="flex items-center gap-2">
-                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-800 text-[10px]">
-                          {u.avatarUrl ? (
-                            <img
-                              src={u.avatarUrl}
-                              alt={u.name}
-                              className="h-full w-full rounded-full object-cover"
-                            />
-                          ) : (
-                            u.name
-                              .split(" ")
-                              .map((w) => w.charAt(0))
-                              .join("")
-                              .slice(0, 2)
-                              .toUpperCase()
-                          )}
-                        </span>
-                        <span>{u.name}</span>
-                      </span>
-                    </label>
-                  ))}
                 </div>
               </div>
+
 
               <div className="flex items-center justify-between pt-2">
                 <button
@@ -502,8 +602,8 @@ export default function ProjectsPage() {
                       ? "Saving..."
                       : "Creating..."
                     : editingId
-                    ? "Save changes"
-                    : "Create project"}
+                      ? "Save changes"
+                      : "Create project"}
                 </button>
               </div>
             </form>

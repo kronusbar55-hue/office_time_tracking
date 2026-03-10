@@ -46,15 +46,35 @@ export default function EmployeesPage() {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  async function loadUsers() {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [limit] = useState(5);
+  const [searchQuery, setSearchQuery] = useState("");
+
+
+
+  async function loadUsers(page = 1, search = searchQuery) {
     setLoading(true);
+    setCurrentPage(page);
     try {
-      const res = await fetch("/api/users");
+      const res = await fetch(`/api/users?paginate=true&page=${page}&limit=${limit}&search=${encodeURIComponent(search)}`);
+
       if (!res.ok) {
         throw new Error("Failed to load users");
       }
-      const data = (await res.json()) as TeamUser[];
-      setUsers(data);
+      const data = (await res.json()) as {
+        users: TeamUser[];
+        pagination: {
+          total: number;
+          page: number;
+          limit: number;
+          totalPages: number;
+        };
+      };
+      setUsers(data.users);
+      setTotalPages(data.pagination.totalPages);
+      setTotalUsers(data.pagination.total);
     } catch (e) {
       console.error(e);
       setError("Could not load team members.");
@@ -78,9 +98,10 @@ export default function EmployeesPage() {
   }
 
   useEffect(() => {
-    void loadUsers();
+    void loadUsers(1, searchQuery);
     void loadTechnologies();
-  }, []);
+  }, [searchQuery]);
+
 
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -134,10 +155,11 @@ export default function EmployeesPage() {
       }
 
       toast.success(editingId ? "Employee updated successfully!" : "Employee created successfully!");
-      await loadUsers();
+      await loadUsers(editingId ? currentPage : 1);
       setForm(emptyForm);
       setAvatarFile(null);
       setEditingId(null);
+
     } catch (e) {
       console.error(e);
       const errorMessage = e instanceof Error ? e.message : "Failed to save user.";
@@ -160,7 +182,11 @@ export default function EmployeesPage() {
         throw new Error("Failed to delete user");
       }
       toast.success("Employee deleted successfully!");
-      setUsers((prev) => prev.filter((u) => u.id !== id));
+      if (users.length === 1 && currentPage > 1) {
+        await loadUsers(currentPage - 1);
+      } else {
+        await loadUsers(currentPage);
+      }
     } catch (e) {
       console.error(e);
       const errorMessage = "Could not delete user.";
@@ -239,9 +265,33 @@ export default function EmployeesPage() {
             <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
               Team members
             </p>
-            {loading && (
-              <p className="text-[11px] text-slate-500">Loading team...</p>
-            )}
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search employees..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="h-7 w-48 rounded-md border border-slate-800 bg-slate-950/50 pl-7 pr-2 text-[10px] text-slate-300 outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20"
+                />
+                <svg
+                  className="absolute left-2.5 top-1/2 h-3 w-3 -translate-y-1/2 text-slate-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+              </div>
+              {loading && (
+                <p className="text-[11px] text-slate-500">Loading...</p>
+              )}
+            </div>
           </div>
 
           <div className="mt-3 overflow-x-auto rounded-lg border border-slate-800/80 bg-slate-950/40">
@@ -369,7 +419,51 @@ export default function EmployeesPage() {
               </tbody>
             </table>
           </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="mt-4 flex items-center justify-between px-1">
+              <p className="text-[10px] text-slate-500">
+                Showing <span className="text-slate-300">{(currentPage - 1) * limit + 1}</span> to{" "}
+                <span className="text-slate-300">
+                  {Math.min(currentPage * limit, totalUsers)}
+                </span>{" "}
+                of <span className="text-slate-300">{totalUsers}</span> results
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => void loadUsers(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="rounded border border-slate-800 bg-slate-900/50 px-2 py-1 text-[10px] text-slate-400 hover:text-slate-200 disabled:opacity-50"
+                >
+                  Previous
+                </button>
+                <div className="flex items-center gap-1">
+                  {[...Array(totalPages)].map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => void loadUsers(i + 1)}
+                      className={`h-6 w-6 rounded text-[10px] ${currentPage === i + 1
+                        ? "bg-accent text-slate-950 font-semibold"
+                        : "text-slate-400 hover:bg-slate-800"
+                        }`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => void loadUsers(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="rounded border border-slate-800 bg-slate-900/50 px-2 py-1 text-[10px] text-slate-400 hover:text-slate-200 disabled:opacity-50"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </section>
+
 
         <section className="rounded-xl border border-slate-800 bg-card/70 p-3 shadow-card">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
@@ -395,7 +489,7 @@ export default function EmployeesPage() {
                   name="firstName"
                   value={form.firstName}
                   onChange={handleChange}
-                  className="h-8 w-full rounded-md border border-slate-700 bg-slate-950/60 px-2 text-[11px] text-slate-100 outline-none focus:border-accent focus:ring-1 focus:ring-accent/40"
+                  className="h-8 w-full cursor-pointer rounded-md border border-slate-700 bg-slate-950/60 px-2 text-[11px] text-slate-100 outline-none transition-all hover:border-slate-600 focus:border-accent focus:ring-1 focus:ring-accent/40"
                   required
                 />
               </div>

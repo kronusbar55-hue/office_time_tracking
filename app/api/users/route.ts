@@ -7,7 +7,14 @@ import { Technology } from "@/models/Technology";
 import bcrypt from "bcryptjs";
 import cloudinary from "@/lib/cloudinary";
 
-export async function GET() {
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const paginate = searchParams.get("paginate") === "true";
+  const search = searchParams.get("search") || "";
+  const page = parseInt(searchParams.get("page") || "1");
+  const limit = parseInt(searchParams.get("limit") || "5");
+  const skip = (page - 1) * limit;
+
   const cookieStore = cookies();
   const token = cookieStore.get("auth_token")?.value;
   const payload = token ? verifyAuthToken(token) : null;
@@ -15,7 +22,49 @@ export async function GET() {
 
   await connectDB();
 
-  const users = await User.find({ isDeleted: false })
+  const query: any = { isDeleted: false };
+
+  if (search) {
+    query.$or = [
+      { firstName: { $regex: search, $options: "i" } },
+      { lastName: { $regex: search, $options: "i" } },
+      { email: { $regex: search, $options: "i" } }
+    ];
+  }
+
+  if (paginate) {
+    const total = await User.countDocuments(query);
+    const users = await User.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate({ path: "technology", select: "name" })
+      .lean();
+
+    return NextResponse.json({
+      users: users.map((u: any) => ({
+        id: u._id.toString(),
+        firstName: u.firstName,
+        lastName: u.lastName,
+        email: u.email,
+        role: u.role,
+        technology: u.technology
+          ? { id: String(u.technology._id || u.technology), name: u.technology.name }
+          : null,
+        joinDate: u.joinDate,
+        avatarUrl: u.avatarUrl,
+        isActive: u.isActive
+      })),
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      }
+    });
+  }
+
+  const users = await User.find(query)
     .sort({ createdAt: -1 })
     .populate({ path: "technology", select: "name" })
     .lean();

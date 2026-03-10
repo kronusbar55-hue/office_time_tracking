@@ -109,10 +109,12 @@ export async function PUT(request: Request, { params }: Params) {
     color: updated.color,
     members: (updated.members as any[]).map((m) => ({
       id: m._id.toString(),
+      name: `${m.firstName} ${m.lastName}`,
       firstName: (m as any).firstName,
       lastName: (m as any).lastName,
       avatarUrl: (m as any).avatarUrl
     }))
+
   });
 }
 
