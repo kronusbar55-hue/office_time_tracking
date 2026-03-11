@@ -3,6 +3,8 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import Link from "next/link";
+import { ExternalLink, Users, MoreVertical, Briefcase, Layout } from "lucide-react";
 
 type MemberOption = {
   id: string;
@@ -52,7 +54,7 @@ export default function ProjectsPage() {
   const [memberSearch, setMemberSearch] = useState("");
   const [projectSearch, setProjectSearch] = useState("");
   const [projectPage, setProjectPage] = useState(1);
-  const PROJECTS_PER_PAGE = 6;
+  const PROJECTS_PER_PAGE = 20;
   async function loadProjects() {
     setLoading(true);
     setError(null);
@@ -242,153 +244,103 @@ export default function ProjectsPage() {
         />
       </div>
 
-      <section className="grid gap-4 md:grid-cols-3">
+      <section className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         {loading && (
-          <div className="col-span-3 text-[11px] text-slate-500">
+          <div className="col-span-12 text-[11px] text-slate-500 py-12 text-center">
             Loading projects...
           </div>
         )}
         {!loading && paginatedProjects.length === 0 && (
-          <div className="col-span-3 rounded-xl border border-dashed border-slate-800 bg-slate-950/40 px-4 py-12 flex flex-col items-center justify-center text-center">
+          <div className="col-span-12 rounded-xl border border-dashed border-slate-800 bg-slate-950/40 px-4 py-12 flex flex-col items-center justify-center text-center">
             <svg className="h-10 w-10 text-slate-700 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
             </svg>
             <p className="text-sm font-semibold text-slate-400">No projects found</p>
-            <p className="text-[11px] text-slate-500 mt-1 max-w-sm">
-              {projectSearch ? "Try adjusting your search query." : "Create your first project to get started and assign team members."}
-            </p>
           </div>
         )}
         {paginatedProjects.map((project) => {
-          const initials =
-            project.name
-              .split(" ")
-              .map((w) => w.charAt(0))
-              .join("")
-              .slice(0, 2)
-              .toUpperCase() || "P";
-
-          const statusLabel =
-            project.status === "active"
-              ? "ACTIVE"
-              : project.status === "completed"
-                ? "COMPLETED"
-                : project.status === "on_hold"
-                  ? "ON HOLD"
-                  : "ARCHIVED";
-
-          const statusClass =
-            project.status === "active"
-              ? "bg-emerald-500/10 text-emerald-300 ring-emerald-500/40"
-              : project.status === "completed"
-                ? "bg-sky-500/10 text-sky-300 ring-sky-500/40"
-                : project.status === "on_hold"
-                  ? "bg-amber-500/10 text-amber-300 ring-amber-500/40"
-                  : "bg-slate-700/40 text-slate-300 ring-slate-600/60";
+          const initials = project.name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase() || "P";
+          const statusLabel = project.status.toUpperCase().replace("_", " ");
 
           return (
-            <article
+            <Link
               key={project.id}
-              className="flex flex-col rounded-2xl border border-slate-800 bg-card/80 p-4 shadow-card"
+              href={`/dashboard/kanban/${project.id}`}
+              target="_blank"
+              className="group flex flex-col rounded-xl border border-slate-800/60 bg-card/40 p-3 shadow-sm hover:border-accent/40 hover:bg-slate-900/60 transition-all duration-300 relative overflow-hidden"
             >
               <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2.5">
                   <div
-                    className="flex h-9 w-9 items-center justify-center rounded-xl text-xs font-semibold text-slate-950"
-                    style={{
-                      backgroundColor: project.color || "#4F46E5"
-                    }}
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-slate-950"
+                    style={{ backgroundColor: project.color || "#4F46E5" }}
                   >
                     {project.logoUrl ? (
-                      <img
-                        src={project.logoUrl}
-                        alt={project.name}
-                        className="h-full w-full rounded-xl object-cover"
-                      />
-                    ) : (
-                      initials
-                    )}
+                      <img src={project.logoUrl} alt="" className="h-full w-full rounded-lg object-cover" />
+                    ) : initials}
                   </div>
-                  <div className="flex flex-col">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold text-slate-50">
-                        {project.name}
-                      </span>
-                      <span className="rounded bg-slate-800 px-1 text-[9px] font-bold text-slate-400">
-                        {(project as any).key}
-                      </span>
-                    </div>
-
-                    {project.clientName && (
-                      <span className="text-[11px] text-slate-400">
-                        {project.clientName}
-                      </span>
-                    )}
+                  <div className="flex flex-col min-w-0">
+                    <span className="truncate text-[11px] font-bold text-slate-100 group-hover:text-accent transition-colors">
+                      {project.name}
+                    </span>
+                    <span className="text-[9px] font-black text-slate-500 uppercase tracking-tighter">
+                      {(project as any).key}
+                    </span>
                   </div>
                 </div>
 
                 <button
                   type="button"
-                  onClick={() => startEdit(project)}
-                  className="rounded-full px-2 py-0.5 text-[10px] text-slate-400 hover:bg-slate-800/80 hover:text-slate-100"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    startEdit(project);
+                  }}
+                  className="rounded-full p-1 text-slate-500 hover:bg-slate-800 hover:text-slate-100 transition-colors"
                 >
-                  •••
+                  <MoreVertical size={12} />
                 </button>
               </div>
 
               {project.description && (
-                <p className="mt-3 line-clamp-2 text-[11px] text-slate-400">
+                <p className="mt-2 line-clamp-2 text-[10px] text-slate-400/80 leading-relaxed">
                   {project.description}
                 </p>
               )}
 
-              <div className="mt-4 flex items-center justify-between text-[11px] text-slate-500">
-                <div className="flex items-center -space-x-2">
-                  {project.members.slice(0, 4).map((m) => (
-                    <div
-                      key={m.id}
-                      className="h-6 w-6 rounded-full border border-slate-900 bg-slate-700"
-                    >
-                      {m.avatarUrl && m.name ? (
-                        <img
-                          src={m.avatarUrl}
-                          alt={m.name}
-                          className="h-full w-full rounded-full object-cover"
-                        />
+              <div className="mt-auto pt-3 flex items-center justify-between">
+                <div className="flex items-center -space-x-1.5">
+                  {project.members.slice(0, 3).map((m) => (
+                    <div key={m.id} className="h-5 w-5 rounded-full border border-slate-900 bg-slate-800 ring-1 ring-white/5">
+                      {m.avatarUrl ? (
+                        <img src={m.avatarUrl} alt="" className="h-full w-full rounded-full object-cover" />
                       ) : (
-                        <div className="flex h-full w-full items-center justify-center text-[9px] text-slate-200">
-                          {(m.name || "P")
-                            .split(" ")
-                            .map((w) => w.charAt(0))
-                            .join("")
-                            .slice(0, 2)
-                            .toUpperCase()}
+                        <div className="flex h-full w-full items-center justify-center text-[7px] font-bold text-slate-400 capitalize">
+                          {m.name.charAt(0)}
                         </div>
                       )}
                     </div>
                   ))}
-                  {project.members.length > 4 && (
-                    <div className="flex h-6 w-6 items-center justify-center rounded-full border border-slate-900 bg-slate-800 text-[9px] text-slate-200">
-                      +{project.members.length - 4}
+                  {project.members.length > 3 && (
+                    <div className="flex h-5 w-5 items-center justify-center rounded-full border border-slate-900 bg-slate-800 text-[7px] font-black text-slate-300 ring-1 ring-white/5">
+                      +{project.members.length - 3}
                     </div>
                   )}
                 </div>
 
-                <span
-                  className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 ${statusClass}`}
-                >
-                  {statusLabel}
-                </span>
+                <div className="flex items-center gap-1">
+                  <span className={`rounded-md px-1.5 py-0.5 text-[8px] font-black uppercase tracking-widest border border-current opacity-70 ${
+                    project.status === "active" ? "text-emerald-400 bg-emerald-400/5" : "text-slate-500 bg-slate-500/5"
+                  }`}>
+                    {statusLabel}
+                  </span>
+                  <div className="p-1 rounded bg-accent/10 border border-accent/20 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <ExternalLink size={8} className="text-accent" />
+                  </div>
+                </div>
               </div>
-
-              {/* <button
-                type="button"
-                onClick={() => archiveProject(project.id)}
-                className="mt-3 self-start text-[10px] text-slate-500 hover:text-rose-300"
-              >
-                Archive project
-              </button> */}
-            </article>
+              <div className="absolute bottom-0 left-0 h-0.5 w-0 bg-accent transition-all duration-500 group-hover:w-full" />
+            </Link>
           );
         })}
       </section>

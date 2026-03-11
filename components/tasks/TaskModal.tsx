@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { Check, X, Upload, AlertCircle, Trash2 } from "lucide-react";
+import { Check, X, Upload, AlertCircle, Trash2, Layout, Activity, MessageSquare } from "lucide-react";
+import ActivityTimeline from "./ActivityTimeline";
+import TaskComments from "./TaskComments";
+import TaskEditor from "./TaskEditor";
 import { toast } from "react-toastify";
 
 type Props = {
@@ -29,6 +32,7 @@ export default function TaskModal({ open, onClose, onSaved, initial }: Props) {
   const [loadingMeta, setLoadingMeta] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
+  const [activeTab, setActiveTab] = useState<"overview" | "activity" | "comments">("overview");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dragContainerRef = useRef<HTMLDivElement>(null);
 
@@ -159,8 +163,6 @@ export default function TaskModal({ open, onClose, onSaved, initial }: Props) {
     return URL.createObjectURL(file);
   };
 
-  if (!open) return null;
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitting(true);
@@ -236,20 +238,96 @@ export default function TaskModal({ open, onClose, onSaved, initial }: Props) {
     } finally {
       setSubmitting(false);
     }
-  }
+  };
+
+  const handleDelete = async () => {
+    if (!initial || !window.confirm("Are you sure you want to delete this task?")) return;
+    try {
+      setSubmitting(true);
+      const res = await fetch(`/api/tasks/${initial._id}`, {
+        method: "DELETE"
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error || "Failed to delete task");
+      }
+      toast.success("Task deleted successfully!");
+      onSaved(null);
+      onClose();
+    } catch (err) {
+      console.error(err);
+      const errorMessage = err instanceof Error ? err.message : "Failed to delete";
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
 
       <form onSubmit={handleSubmit} className="z-10 w-[900px] rounded-lg bg-card/90 p-6 shadow-lg max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-slate-50">{initial ? "Edit Task" : "Create Task"}</h3>
-          <button type="button" onClick={onClose} className="text-slate-400 hover:text-slate-200">
-            <X className="h-4 w-4" />
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+             <div className="h-10 w-10 rounded-xl bg-accent/20 border border-accent/40 flex items-center justify-center text-accent">
+                <Layout size={20} />
+             </div>
+             <div>
+                <h3 className="text-sm font-black text-white uppercase tracking-tighter">
+                  {initial ? `Task: ${initial.key}` : "Create Task"}
+                </h3>
+                <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">
+                  {initial ? initial.title : "New Task Item"}
+                </p>
+             </div>
+          </div>
+          <button type="button" onClick={onClose} className="p-2 rounded-lg hover:bg-white/5 text-slate-400 hover:text-white transition-colors">
+            <X className="h-5 w-5" />
           </button>
         </div>
 
+        {initial && (
+          <div className="flex items-center gap-1 mb-6 p-1 bg-slate-900/50 border border-white/5 rounded-xl w-fit">
+            <button
+               type="button"
+               onClick={() => setActiveTab("overview")}
+               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === "overview" ? "bg-accent text-slate-950 shadow-lg shadow-accent/20" : "text-slate-400 hover:text-white"}`}
+            >
+               <Layout size={14} />
+               <span>Overview</span>
+            </button>
+            <button
+               type="button"
+               onClick={() => setActiveTab("activity")}
+               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === "activity" ? "bg-accent text-slate-950 shadow-lg shadow-accent/20" : "text-slate-400 hover:text-white"}`}
+            >
+               <Activity size={14} />
+               <span>Activity</span>
+            </button>
+            <button
+               type="button"
+               onClick={() => setActiveTab("comments")}
+               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === "comments" ? "bg-accent text-slate-950 shadow-lg shadow-accent/20" : "text-slate-400 hover:text-white"}`}
+            >
+               <MessageSquare size={14} />
+               <span>Comments</span>
+            </button>
+          </div>
+        )}
+
+        {error && (
+          <div className="mb-6 flex items-center gap-3 rounded-xl bg-red-500/10 border border-red-500/20 p-4 text-sm text-red-100">
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            <p>{error}</p>
+          </div>
+        )}
+
+        {activeTab === "overview" && (
+          <>
         {/* Grid of fields */}
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div>
@@ -300,8 +378,8 @@ export default function TaskModal({ open, onClose, onSaved, initial }: Props) {
 
         {/* Description */}
         <div className="mb-4">
-          <label className="text-[11px] text-slate-300 uppercase">Description</label>
-          <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100 focus:border-slate-600 focus:outline-none" rows={3} />
+          <label className="text-[11px] text-slate-300 uppercase block mb-1">Description</label>
+          <TaskEditor content={description} onChange={(json) => setDescription(json)} />
         </div>
 
         {/* Image Attachments Section */}
@@ -424,6 +502,18 @@ export default function TaskModal({ open, onClose, onSaved, initial }: Props) {
             <span>{initial ? "Save changes" : "Create Task"}</span>
           </button>
 
+          {initial && (
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={submitting}
+              className="inline-flex items-center gap-2 rounded-md bg-red-600/10 border border-red-600/20 px-4 py-2 text-sm font-medium text-red-500 hover:bg-red-600/20 transition disabled:opacity-50"
+            >
+              <Trash2 className="h-4 w-4" />
+              <span>Delete</span>
+            </button>
+          )}
+
           <button
             type="button"
             onClick={onClose}
@@ -432,6 +522,20 @@ export default function TaskModal({ open, onClose, onSaved, initial }: Props) {
             Cancel
           </button>
         </div>
+          </>
+        )}
+
+        {activeTab === "activity" && (
+          <div className="mt-4">
+            <ActivityTimeline taskId={initial?._id} />
+          </div>
+        )}
+
+        {activeTab === "comments" && (
+          <div className="mt-4">
+            <TaskComments taskId={initial?._id} />
+          </div>
+        )}
       </form>
     </div>
   );

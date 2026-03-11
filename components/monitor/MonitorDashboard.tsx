@@ -81,7 +81,7 @@ export default function MonitorDashboard() {
             if (selectedDate) params.append("date", selectedDate);
             params.append("userId", selectedUserId);
             params.append("page", page.toString());
-            params.append("limit", "10");
+            params.append("limit", "20");
 
 
             const res = await fetch(`/api/monitor?${params.toString()}`);

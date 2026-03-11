@@ -18,6 +18,11 @@ export interface IEmployeeMonitor extends Document {
     breakTime?: string;
     meetingTime?: string;
     appUsage?: Map<string, number> | Record<string, number>;
+    projects?: Array<{
+        projectId: string;
+        update: string;
+        hoursWorked: number;
+    }>;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -95,7 +100,14 @@ const EmployeeMonitorSchema = new Schema<IEmployeeMonitor>(
             of: Number,
             required: false,
             default: {}
-        }
+        },
+        projects: [
+            {
+                projectId: { type: String, required: false },
+                update: { type: String, required: false },
+                hoursWorked: { type: Number, required: false }
+            }
+        ]
     },
     {
         timestamps: true

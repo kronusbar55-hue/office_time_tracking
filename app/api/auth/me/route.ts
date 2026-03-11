@@ -4,6 +4,8 @@ import { verifyAuthToken } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { User } from "@/models/User";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const cookieStore = cookies();
   const token = cookieStore.get("auth_token")?.value;

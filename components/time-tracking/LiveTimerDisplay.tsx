@@ -12,7 +12,6 @@ function formatHHMMSS(ms: number) {
 
 export default function LiveTimerDisplay() {
   const { active, ongoingBreak, workedMs, currentBreakMs } = useTimeTracking();
-
   if (!active) return null;
 
   const displayMs = ongoingBreak ? currentBreakMs : workedMs;

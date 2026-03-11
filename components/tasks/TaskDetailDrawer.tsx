@@ -50,7 +50,14 @@ export default function TaskDetailDrawer({ open, taskId, onClose }: { open: bool
           <div className="mt-4 space-y-3 text-sm text-slate-200">
             <div className="font-medium text-slate-100">{task.key} — {task.title}</div>
             <div className="text-slate-400">{task.project?.name}</div>
-            <div className="mt-2 whitespace-pre-wrap">{task.description || "No description"}</div>
+            {task.description ? (
+              <div 
+                className="mt-2 prose prose-invert prose-sm max-w-none text-slate-300"
+                dangerouslySetInnerHTML={{ __html: task.description }}
+              />
+            ) : (
+              <div className="mt-2 text-slate-500 italic">No description</div>
+            )}
             <div className="mt-3 text-xs text-slate-300">Assignee: {task.assignee ? `${task.assignee.firstName} ${task.assignee.lastName}` : "—"}</div>
             <div className="text-xs text-slate-300">Priority: {task.priority}</div>
             <div className="text-xs text-slate-300">Status: {task.status}</div>

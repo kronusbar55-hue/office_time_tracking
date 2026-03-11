@@ -4,7 +4,14 @@ async function testUpload() {
         userId: 'EMP123',
         imageUrl: 'https://example.com/screenshot.png',
         date: new Date().toISOString().split('T')[0],
-        time: new Date().toTimeString().split(' ')[0]
+        time: new Date().toTimeString().split(' ')[0],
+        projects: [
+            {
+                projectId: "69983a78a407e3b1cc42d49f",
+                update: "Completed API integration and bug fixes",
+                hoursWorked: 3.5
+            }
+        ]
     };
 
     try {

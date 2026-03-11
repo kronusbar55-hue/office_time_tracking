@@ -9,6 +9,8 @@ import TaskActivityLog from "@/models/TaskActivityLog";
 import { verifyAuthToken } from "@/lib/auth";
 import { captureAuditLogs } from "@/lib/taskAudit";
 import cloudinary from "@/lib/cloudinary";
+import { Comment } from "@/models/Comment";
+import SubTask from "@/models/SubTask";
 
 export async function GET(request: Request) {
   try {
@@ -73,11 +75,40 @@ export async function GET(request: Request) {
       .populate({ path: "reporter", select: "firstName lastName email" })
       .lean();
 
+    // Augment with comment counts
+    const taskIds = tasks.map(t => t._id);
+    const commentCounts = await Comment.aggregate([
+      { $match: { taskId: { $in: taskIds } } },
+      { $group: { _id: "$taskId", count: { $sum: 1 } } }
+    ]);
+    const countsMap = new Map(commentCounts.map(c => [c._id.toString(), c.count]));
+
+    // Augment with subtask stats
+    const subtaskStats = await SubTask.aggregate([
+      { $match: { parentTask: { $in: taskIds }, isDeleted: false } },
+      { $group: { 
+          _id: "$parentTask", 
+          total: { $sum: 1 },
+          done: { $sum: { $cond: [{ $eq: ["$status", "done"] }, 1, 0] } }
+      } }
+    ]);
+    const subtaskStatsMap = new Map(subtaskStats.map(s => [s._id.toString(), { total: s.total, done: s.done }]));
+
+    const augmentedTasks = tasks.map(t => {
+      const sStats = subtaskStatsMap.get(t._id.toString()) || { total: 0, done: 0 };
+      return {
+        ...t,
+        commentCount: countsMap.get(t._id.toString()) || 0,
+        attachmentCount: t.attachments?.length || 0,
+        subtaskStats: sStats
+      };
+    });
+
     // Optional grouping by project
     const groupBy = searchParams.get("group") || "";
     if (groupBy === "project") {
       const grouped: Record<string, any> = {};
-      for (const t of tasks) {
+      for (const t of augmentedTasks) {
         const name = (t as any).project?.name || "Unassigned Project";
         if (!grouped[name]) grouped[name] = [];
         grouped[name].push(t);
@@ -85,7 +116,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ data: grouped, total, page, limit });
     }
 
-    return NextResponse.json({ data: tasks, total, page, limit });
+    return NextResponse.json({ data: augmentedTasks, total, page, limit });
   } catch (error) {
     console.error("Tasks GET error:", error);
     return NextResponse.json({ error: "Failed to fetch tasks" }, { status: 500 });

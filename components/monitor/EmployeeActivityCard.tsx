@@ -13,7 +13,8 @@ import {
     CheckCircle2,
     Calendar,
     Monitor,
-    PieChart
+    PieChart,
+    Briefcase
 } from "lucide-react";
 
 interface EmployeeActivityCardProps {
@@ -83,6 +84,14 @@ export default function EmployeeActivityCard({ employee, viewMode, showName = tr
                             <span className="text-[9px] text-accent font-black uppercase tracking-tighter">Session</span>
                             <span className="text-sm font-black text-white tabular-nums">{activity.sessionTime || "00:00"}</span>
                         </div>
+                        {activity.projects && activity.projects.length > 0 && (
+                            <div className="flex flex-col items-start bg-slate-800/40 px-4 py-1.5 rounded-lg border border-white/5 max-w-[200px]">
+                                <span className="text-[9px] text-slate-400 font-bold uppercase tracking-tight">Active Projects</span>
+                                <div className="text-[10px] text-white font-medium truncate w-full">
+                                    {activity.projects.map((p: any) => p.update).join(", ")}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
@@ -177,6 +186,27 @@ export default function EmployeeActivityCard({ employee, viewMode, showName = tr
                                 <ModalStatBox icon={<Move />} value={activity.mouseMovements} label="MOVES" />
                                 <ModalStatBox icon={<Clock />} value={activity.sessionTime || "00:00"} label="DURATION" accent />
                             </div>
+
+                            {/* Projects Overlay in Modal */}
+                            {activity.projects && activity.projects.length > 0 && (
+                                <div className="absolute bottom-6 left-6 max-w-sm bg-slate-900/90 border border-white/10 p-5 rounded-2xl backdrop-blur-xl animate-in slide-in-from-bottom-5">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <Briefcase className="h-4 w-4 text-accent" />
+                                        <span className="text-xs font-black text-white uppercase tracking-wider">Project Updates</span>
+                                    </div>
+                                    <div className="space-y-3">
+                                        {activity.projects.map((proj: any, idx: number) => (
+                                            <div key={idx} className="border-l-2 border-accent/30 pl-3 py-1">
+                                                <div className="flex items-center justify-between mb-1">
+                                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">ID: {proj.projectId.slice(-6)}</span>
+                                                    <span className="text-[10px] font-black text-accent">{proj.hoursWorked} hrs</span>
+                                                </div>
+                                                <p className="text-xs text-white/90 font-medium leading-relaxed">{proj.update}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

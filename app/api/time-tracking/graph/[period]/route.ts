@@ -5,6 +5,8 @@ import { verifyAuthToken } from "@/lib/auth";
 import { TimeSession } from "@/models/TimeSession";
 import { TimeSessionBreak } from "@/models/TimeSessionBreak";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: Request, { params }: { params: { period: string } }) {
   try {
     await connectDB();

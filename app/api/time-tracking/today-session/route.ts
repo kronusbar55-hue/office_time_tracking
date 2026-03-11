@@ -6,6 +6,8 @@ import { TimeSession } from "@/models/TimeSession";
 import { TimeSessionBreak } from "@/models/TimeSessionBreak";
 import { format } from "date-fns";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     await connectDB();

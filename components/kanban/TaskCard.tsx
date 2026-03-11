@@ -17,6 +17,7 @@ import {
 interface TaskCardProps {
     task: any;
     isOverlay?: boolean;
+    onClick?: (task: any) => void;
 }
 
 const getPriorityIcon = (priority: string) => {
@@ -37,7 +38,7 @@ const getTypeColor = (type: string) => {
     }
 };
 
-export default function TaskCard({ task, isOverlay }: TaskCardProps) {
+export default function TaskCard({ task, isOverlay, onClick }: TaskCardProps) {
     const {
         attributes,
         listeners,
@@ -68,7 +69,8 @@ export default function TaskCard({ task, isOverlay }: TaskCardProps) {
             style={style}
             {...attributes}
             {...listeners}
-            className={`group relative rounded-xl bg-slate-800/80 border border-white/5 p-4 transition-all hover:border-accent/40 hover:bg-slate-800 shadow-lg cursor-grab active:cursor-grabbing ${isOverlay ? "ring-2 ring-accent/50 shadow-2xl scale-105" : ""
+            onClick={() => onClick?.(task)}
+            className={`group relative rounded-xl bg-slate-800/80 border border-white/5 p-4 transition-all hover:border-accent/40 hover:bg-slate-800 shadow-lg cursor-pointer active:cursor-grabbing ${isOverlay ? "ring-2 ring-accent/50 shadow-2xl scale-105" : ""
                 }`}
         >
             <div className="flex flex-col gap-3">
@@ -105,15 +107,15 @@ export default function TaskCard({ task, isOverlay }: TaskCardProps) {
                     <div className="flex items-center gap-3">
                         <div className="flex items-center gap-1 text-slate-500 group-hover:text-slate-400 transition-colors">
                             <MessageSquare className="h-3 w-3" />
-                            <span className="text-[10px] font-black tabular-nums">3</span>
+                            <span className="text-[10px] font-black tabular-nums">{task.commentCount || 0}</span>
                         </div>
                         <div className="flex items-center gap-1 text-slate-500 group-hover:text-slate-400 transition-colors">
                             <Paperclip className="h-3 w-3" />
-                            <span className="text-[10px] font-black tabular-nums">1</span>
+                            <span className="text-[10px] font-black tabular-nums">{task.attachmentCount || 0}</span>
                         </div>
                         <div className="flex items-center gap-1 text-slate-500 group-hover:text-slate-400 transition-colors">
                             <Layers className="h-3 w-3" />
-                            <span className="text-[10px] font-black tabular-nums">0/4</span>
+                            <span className="text-[10px] font-black tabular-nums">{task.subtaskStats?.done || 0}/{task.subtaskStats?.total || 0}</span>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">

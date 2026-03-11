@@ -28,9 +28,14 @@ const COLUMNS: { id: TaskStatus; title: string }[] = [
     { id: "done", title: "Done" },
 ];
 
-export default function Board() {
-    const { tasks, moveTask } = useBoard();
+export default function Board({ onTaskClick, searchQuery = "" }: { onTaskClick?: (task: any) => void; searchQuery?: string }) {
+    const { tasks: allTasks, moveTask } = useBoard();
     const [activeTask, setActiveTask] = useState<any>(null);
+
+    const tasks = allTasks.filter(task => 
+        task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        task.key.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -95,6 +100,7 @@ export default function Board() {
                         id={column.id}
                         title={column.title}
                         tasks={tasks.filter((t) => t.status === column.id)}
+                        onTaskClick={onTaskClick}
                     />
                 ))}
 

@@ -7,6 +7,8 @@ import { TimeSessionBreak } from "@/models/TimeSessionBreak";
 import { format, startOfWeek, addDays, endOfDay } from "date-fns";
 import mongoose from "mongoose";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     await connectDB();

@@ -22,7 +22,8 @@ export async function POST(req: Request) {
             sessionTime,
             breakTime,
             meetingTime,
-            appUsage
+            appUsage,
+            projects
         } = body
 
         // Sanitize appUsage keys to prevent Mongoose errors (keys containing '.' or '$')
@@ -58,7 +59,8 @@ export async function POST(req: Request) {
             sessionTime,
             breakTime,
             meetingTime,
-            appUsage: sanitizedAppUsage
+            appUsage: sanitizedAppUsage,
+            projects
         })
 
         return NextResponse.json(

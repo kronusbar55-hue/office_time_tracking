@@ -8,6 +8,7 @@ interface BoardContextType {
     loading: boolean;
     refreshTasks: () => Promise<void>;
     moveTask: (taskId: string, toStatus: string, order: number) => Promise<void>;
+    createTask: (taskData: any) => Promise<void>;
 }
 
 const BoardContext = createContext<BoardContextType | undefined>(undefined);
@@ -19,9 +20,9 @@ export const BoardProvider: React.FC<{ projectId: string; children: React.ReactN
     const refreshTasks = useCallback(async () => {
         try {
             setLoading(true);
-            const res = await fetch(`/api/tasks?projectId=${projectId}`);
+            const res = await fetch(`/api/tasks?project=${projectId}`);
             const result = await res.json();
-            if (result.success) {
+            if (result.data) {
                 setTasks(result.data);
             }
         } catch (error) {
@@ -58,9 +59,12 @@ export const BoardProvider: React.FC<{ projectId: string; children: React.ReactN
             refreshTasks(); // Revert on failure
         }
     };
+    const createTask = async () => {
+        await refreshTasks();
+    };
 
     return (
-        <BoardContext.Provider value={{ tasks, loading, refreshTasks, moveTask }}>
+        <BoardContext.Provider value={{ tasks, loading, refreshTasks, moveTask, createTask }}>
             {children}
         </BoardContext.Provider>
     );

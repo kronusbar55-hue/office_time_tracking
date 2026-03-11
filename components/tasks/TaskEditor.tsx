@@ -84,8 +84,9 @@ export default function TaskEditor({ content, onChange, editable = true }: TaskE
         ],
         content: content || "",
         editable,
+        immediatelyRender: false,
         onUpdate: ({ editor }) => {
-            onChange(editor.getJSON());
+            onChange(editor.getHTML());
         },
     });
 

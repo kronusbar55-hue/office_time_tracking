@@ -13,10 +13,11 @@ import { Plus, MoreHorizontal } from "lucide-react";
 interface ColumnProps {
     id: string;
     title: string;
-    tasks: ITask[];
+    tasks: any[];
+    onTaskClick?: (task: any) => void;
 }
 
-export default function Column({ id, title, tasks }: ColumnProps) {
+export default function Column({ id, title, tasks, onTaskClick }: ColumnProps) {
     const { setNodeRef } = useDroppable({
         id: id,
     });
@@ -46,7 +47,7 @@ export default function Column({ id, title, tasks }: ColumnProps) {
             <div className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar">
                 <SortableContext items={tasks.map((t) => t._id.toString())} strategy={verticalListSortingStrategy}>
                     {tasks.map((task) => (
-                        <TaskCard key={task._id.toString()} task={task} />
+                        <TaskCard key={task._id.toString()} task={task} onClick={onTaskClick} />
                     ))}
                 </SortableContext>
 
