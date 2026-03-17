@@ -34,11 +34,9 @@ export default async function EmployeeDashboard({ userId }: Props) {
   const today = new Date();
   const dateStr = today.toISOString().split("T")[0];
 
-  // Today's time session
-  const todaySession = await TimeSession.findOne({
-    user: userId,
-    date: dateStr
-  }).lean();
+  // Today's stats from EmployeeMonitor
+  const { getDayMonitorStats } = await import("@/lib/monitorUtils");
+  const monitorStats = await getDayMonitorStats(userId, dateStr);
 
   // Get user info for greeting
   const user = await User.findById(userId).select("firstName lastName").lean();
@@ -74,24 +72,18 @@ export default async function EmployeeDashboard({ userId }: Props) {
     done: taskStats.find((t: any) => t._id === "done")?.count || 0
   };
 
-  // Calculate work hours today
-  let hoursWorked = 0;
-  let isActive = false;
+  // Calculate work hours today from monitor
+  const hoursWorked = Math.round((monitorStats.workedMinutes / 60) * 10) / 10;
+  const isActive = monitorStats.isActive;
   let elapsedSeconds = 0;
 
-  if (todaySession) {
-    const s = todaySession as any;
-    if (s.clockOut) {
-      hoursWorked = Math.round((s.totalWorkMinutes || 0) / 60 * 10) / 10;
-    } else if (s.clockIn) {
-      isActive = true;
-      const elapsedMins = Math.floor((Date.now() - new Date(s.clockIn).getTime()) / 60000);
-      elapsedSeconds = Math.floor((Date.now() - new Date(s.clockIn).getTime()) / 1000);
-      hoursWorked = Math.round((elapsedMins - (s.totalBreakMinutes || 0)) / 60 * 10) / 10;
-    }
+  if (isActive && monitorStats.lastActivityAt) {
+    // For the live timer, we can approximate based on worked minutes
+    elapsedSeconds = monitorStats.workedMinutes * 60;
   }
 
-  // Recent activity (last 5 entries)
+  // Recent activity (last 3 sessions)
+  const { TimeSession } = await import("@/models/TimeSession");
   const recentSessions = await TimeSession.find({
     user: userId
   })
@@ -114,42 +106,7 @@ export default async function EmployeeDashboard({ userId }: Props) {
         </div>
       </div>
 
-      {/* Row 2: Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatsCard
-          label="Hours Worked"
-          value={`${hoursWorked}h`}
-          subtext="+2.4h from last week"
-          icon={<Clock className="h-6 w-6" />}
-          color="blue"
-          trend={{ value: 12, isPositive: true }}
-          delay={0.1}
-        />
-        <StatsCard
-          label="Tasks Assigned"
-          value={stats.todo + stats.inProgress + stats.backlog}
-          subtext="3 due today"
-          icon={<Briefcase className="h-6 w-6" />}
-          color="green"
-          delay={0.2}
-        />
-        <StatsCard
-          label="In Progress"
-          value={stats.inProgress}
-          subtext="High priority"
-          icon={<AlertCircle className="h-6 w-6" />}
-          color="yellow"
-          delay={0.3}
-        />
-        {/* <StatsCard
-          label="In Review"
-          value={stats.inReview}
-          subtext="Awaiting feedback"
-          icon={<CheckCircle2 className="h-6 w-6" />}
-          color="purple"
-          delay={0.4}
-        /> */}
-      </div>
+
 
       <div className="grid grid-cols-1 gap-6">
         <DashboardCard className="w-full" delay={0.5}>

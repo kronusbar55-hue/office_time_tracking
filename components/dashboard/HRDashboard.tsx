@@ -36,9 +36,11 @@ export default async function HRDashboard() {
   const activeEmployees = await User.countDocuments({ isDeleted: false, isActive: true });
   const inactiveEmployees = totalEmployees - activeEmployees;
 
-  // Attendance metrics for today
-  const checkedInToday = await TimeSession.countDocuments({ date: dateStr });
-  const attendanceRate = totalEmployees > 0 ? Math.round((checkedInToday / activeEmployees) * 100) : 0;
+  // Attendance metrics for today from EmployeeMonitor
+  const { EmployeeMonitor } = await import("@/models/EmployeeMonitor");
+  const uniqueUsersToday = await EmployeeMonitor.distinct("userId", { date: dateStr });
+  const checkedInToday = uniqueUsersToday.length;
+  const attendanceRate = activeEmployees > 0 ? Math.round((checkedInToday / activeEmployees) * 100) : 0;
 
   // Leave metrics
   const pendingLeaves = await LeaveRequest.countDocuments({ status: "pending" });

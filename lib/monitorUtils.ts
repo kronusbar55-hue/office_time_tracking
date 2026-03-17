@@ -19,7 +19,7 @@ export function timeToMinutes(timeStr: string | undefined): number {
  * Aggregates monitor metrics for a user over a date range
  */
 export async function getMonitorStats(userId: string, startDate: Date, endDate: Date) {
-    // Generate date strings for the range (YYYY-MM-DD)
+    // Generate list of dates to process
     const dates: string[] = [];
     let curr = new Date(startDate);
     while (curr <= endDate) {
@@ -27,31 +27,44 @@ export async function getMonitorStats(userId: string, startDate: Date, endDate: 
         curr.setDate(curr.getDate() + 1);
     }
 
-    // Aggregate active seconds per day
-    const activeAgg = await EmployeeMonitor.aggregate([
-        {
-            $match: {
-                userId: userId,
-                date: { $in: dates }
-            }
-        },
-        {
-            $group: {
-                _id: "$date",
-                totalActiveSeconds: { $sum: "$activeSeconds" },
-                maxBreakTime: { $max: "$breakTime" },
-                maxSessionTime: { $max: "$sessionTime" }
-            }
-        },
-        { $sort: { _id: 1 } }
-    ]);
+    const results = [];
 
-    return activeAgg.map(item => ({
-        date: item._id,
-        workedMinutes: Math.round(item.totalActiveSeconds / 60),
-        breakMinutes: Math.round(timeToMinutes(item.maxBreakTime)),
-        sessionMinutes: Math.round(timeToMinutes(item.maxSessionTime))
-    }));
+    for (const date of dates) {
+        // Find first and last record for this date
+        const records = await EmployeeMonitor.find({ userId, date })
+            .sort({ time: 1 })
+            .lean();
+
+        if (records.length === 0) {
+            results.push({
+                date,
+                workedMinutes: 0,
+                breakMinutes: 0,
+                sessionMinutes: 0
+            });
+            continue;
+        }
+
+        const first = records[0];
+        const last = records[records.length - 1];
+
+        const startMins = timeToMinutes(first.time);
+        const endMins = timeToMinutes(last.time);
+        const breakMins = timeToMinutes(last.breakTime || "00:00:00");
+
+        // The logic: (last record time - first record time) - total break time
+        // This gives the total worked minutes between start and end
+        let workedMins = Math.max(0, endMins - startMins - breakMins);
+
+        results.push({
+            date,
+            workedMinutes: Math.round(workedMins),
+            breakMinutes: Math.round(breakMins),
+            sessionMinutes: Math.round(endMins - startMins)
+        });
+    }
+
+    return results;
 }
 
 /**
@@ -59,25 +72,35 @@ export async function getMonitorStats(userId: string, startDate: Date, endDate: 
  */
 export async function getDayMonitorStats(userId: string, dateStr: string) {
     const records = await EmployeeMonitor.find({ userId, date: dateStr })
-        .sort({ createdAt: -1 })
-        .limit(1)
+        .sort({ time: 1 })
         .lean();
 
-    if (records.length === 0) return { workedMinutes: 0, breakMinutes: 0, sessionMinutes: 0 };
+    if (records.length === 0) {
+        return { workedMinutes: 0, breakMinutes: 0, sessionMinutes: 0, isActive: false, lastActivityAt: null };
+    }
 
-    const latest = records[0];
+    const first = records[0];
+    const last = records[records.length - 1];
 
-    // For worked minutes, we still want the sum of activeSeconds for the whole day
-    const sumResult = await EmployeeMonitor.aggregate([
-        { $match: { userId, date: dateStr } },
-        { $group: { _id: null, total: { $sum: "$activeSeconds" } } }
-    ]);
+    const startMins = timeToMinutes(first.time);
+    const endMins = timeToMinutes(last.time);
+    const breakMins = timeToMinutes(last.breakTime || "00:00:00");
 
-    const totalActiveSeconds = sumResult[0]?.total || 0;
+    const workedMinutes = Math.max(0, endMins - startMins - breakMins);
+
+    // Check if user is currently active (last record within 15 minutes and status not OFFLINE/CHECKED_OUT)
+    const lastCreatedAt = new Date(last.createdAt).getTime();
+    const now = Date.now();
+    const isRecent = (now - lastCreatedAt) < 15 * 60 * 1000;
+    const status = (last.status || "").toUpperCase();
+    const isActive = isRecent && status !== "OFFLINE" && status !== "CHECKED_OUT";
 
     return {
-        workedMinutes: Math.round(totalActiveSeconds / 60),
-        breakMinutes: Math.round(timeToMinutes(latest.breakTime)),
-        sessionMinutes: Math.round(timeToMinutes(latest.sessionTime))
+        workedMinutes: Math.round(workedMinutes),
+        breakMinutes: Math.round(breakMins),
+        sessionMinutes: Math.round(endMins - startMins),
+        isActive,
+        lastActivityAt: last.createdAt,
+        status: last.status
     };
 }

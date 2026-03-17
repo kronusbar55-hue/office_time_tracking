@@ -13,7 +13,7 @@ const ROLE_PATHS: Array<{ prefix: string; allowed: string[] }> = [
   { prefix: '/projects', allowed: ['admin', 'manager', 'employee'] },
   { prefix: '/tasks', allowed: ['admin', 'manager', 'employee'] },
   { prefix: '/leaves', allowed: ['admin', 'hr', 'manager', 'employee'] },
-  { prefix: '/check-in-out', allowed: ['hr', 'manager'] }
+  { prefix: '/check-in-out', allowed: ['manager'] }
 ];
 
 function parseJwtPayload(token?: string) {

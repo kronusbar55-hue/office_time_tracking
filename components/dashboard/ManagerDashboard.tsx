@@ -40,12 +40,13 @@ export default async function ManagerDashboard({ userId }: Props) {
     .lean();
   const teamIds = team.map((t) => t._id);
 
-  // KPI Data
-  const teamSize = team.length;
-  const teamCheckedInToday = await TimeSession.countDocuments({
-    user: { $in: teamIds },
-    date: dateStr
+  // KPI Data from EmployeeMonitor
+  const { EmployeeMonitor } = await import("@/models/EmployeeMonitor");
+  const uniqueTeamToday = await EmployeeMonitor.distinct("userId", { 
+    userId: { $in: teamIds.map(id => id.toString()) }, 
+    date: dateStr 
   });
+  const teamCheckedInToday = uniqueTeamToday.length;
 
   // Pending approvals
   const pendingLeaves = await LeaveRequest.countDocuments({
@@ -59,13 +60,18 @@ export default async function ManagerDashboard({ userId }: Props) {
     status: "active"
   });
 
-  // Team attendance details for today
-  const teamAttendance = await TimeSession.find({
-    user: { $in: teamIds },
-    date: dateStr
-  })
-    .populate("user", "firstName lastName")
-    .lean();
+  // Team attendance details for today from EmployeeMonitor
+  const teamAttendance = await EmployeeMonitor.aggregate([
+    { $match: { userId: { $in: teamIds.map(id => id.toString()) }, date: dateStr } },
+    { $sort: { createdAt: -1 } },
+    { 
+      $group: { 
+        _id: "$userId", 
+        latestStatus: { $first: "$status" },
+        lastTime: { $first: "$time" }
+      } 
+    }
+  ]);
 
   // Attendance map
   const attendanceMap: { [key: string]: any } = {};
@@ -78,10 +84,17 @@ export default async function ManagerDashboard({ userId }: Props) {
   });
 
   teamAttendance.forEach((session: any) => {
-    const userId = session.user._id.toString();
+    const userId = session._id;
     if (attendanceMap[userId]) {
-      attendanceMap[userId].status = session.clockOut ? "checked-out" : "active";
-      attendanceMap[userId].clockIn = session.clockIn;
+      const rawStatus = (session.latestStatus || "").toUpperCase();
+      if (rawStatus === "ON_BREAK") {
+        attendanceMap[userId].status = "on-break";
+      } else if (rawStatus === "OFFLINE" || rawStatus === "CHECKED_OUT") {
+        attendanceMap[userId].status = "checked-out";
+      } else {
+        attendanceMap[userId].status = "active";
+      }
+      attendanceMap[userId].clockIn = session.lastTime;
     }
   });
 
@@ -203,6 +216,7 @@ export default async function ManagerDashboard({ userId }: Props) {
                   <div key={member._id} className="flex items-center justify-between p-3 rounded-xl bg-slate-800/30 border border-white/5">
                     <div className="flex items-center gap-3">
                       <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold border ${attendance.status === 'active' ? 'bg-green-500/10 border-green-500/20 text-green-400' :
+                        attendance.status === 'on-break' ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-500' :
                         attendance.status === 'checked-out' ? 'bg-blue-500/10 border-blue-500/20 text-blue-400' :
                           'bg-slate-500/10 border-slate-500/20 text-slate-500'
                         }`}>
@@ -211,6 +225,7 @@ export default async function ManagerDashboard({ userId }: Props) {
                       <span className="text-sm font-medium text-slate-200">{member.firstName}</span>
                     </div>
                     <span className={`text-[10px] font-bold uppercase tracking-wider ${attendance.status === 'active' ? 'text-green-500' :
+                      attendance.status === 'on-break' ? 'text-yellow-500' :
                       attendance.status === 'checked-out' ? 'text-blue-500' : 'text-slate-500'
                       }`}>
                       {attendance.status}

@@ -310,7 +310,7 @@ function MemberListItem({ member, index }: { member: Member; index: number }) {
                 <div>
                     <h4 className="text-white font-bold group-hover:text-blue-400 transition-colors">{member.name}</h4>
                     <p className="text-xs text-slate-500 flex items-center gap-1">
-                        {formattedTime(member.lastActivityAt)}, {relativeTime(member.lastActivityAt)} ({member.timezone})
+                        {formattedTime(member.lastActivityAt)}, {relativeTime(member.lastActivityAt)}
                     </p>
                 </div>
             </div>

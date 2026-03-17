@@ -44,12 +44,21 @@ export default function EmployeeActivityCard({ employee, viewMode, showName = tr
 
     const statusColor = getStatusColor(statusLabel);
 
+    // Mouse Activity Border Logic
+    const getActivityBorderClass = (clicks: number) => {
+        if (clicks < 10) return "animate-blink-red border-red-500/50";
+        if (clicks > 50) return "animate-glow-green-border border-green-500/50";
+        return "animate-glow-yellow-border border-yellow-500/50";
+    };
+
+    const activityBorderClass = activity ? getActivityBorderClass(activity.mouseClicks) : "border-white/10";
+
     if (viewMode === "list") {
         return (
             <div className="flex items-center gap-6 p-2 pr-6 rounded-xl bg-slate-900/60 border border-white/5 hover:border-accent/30 transition-all backdrop-blur-md group shadow-xl">
                 {/* Boxy Thumbnail for List View */}
                 <div
-                    className="relative h-20 w-32 rounded-lg bg-slate-950 overflow-hidden cursor-zoom-in border border-white/10 shrink-0 group-hover:border-accent/20"
+                    className={`relative h-20 w-32 rounded-lg bg-slate-950 overflow-hidden cursor-zoom-in border shrink-0 transition-all ${activityBorderClass}`}
                     onClick={() => setIsZoomed(true)}
                 >
                     {activity?.imageUrl ? (
@@ -100,7 +109,7 @@ export default function EmployeeActivityCard({ employee, viewMode, showName = tr
 
     return (
         <>
-            <div className="flex flex-col rounded-2xl bg-slate-900/60 border border-white/10 overflow-hidden group hover:border-accent/50 transition-all hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.7)] backdrop-blur-xl relative">           
+            <div className={`flex flex-col rounded-2xl bg-slate-900/60 border overflow-hidden group hover:border-accent/50 transition-all hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.7)] backdrop-blur-xl relative ${activityBorderClass}`}>           
 
                 {/* Main Boxy Image Container */}
                 <div className="relative aspect-video w-full bg-slate-950 overflow-hidden cursor-zoom-in group/img" onClick={() => setIsZoomed(true)}>
@@ -176,7 +185,7 @@ export default function EmployeeActivityCard({ employee, viewMode, showName = tr
                         </div>
 
                         {/* Modal Image Body */}
-                        <div className="flex-1 w-full rounded-2xl overflow-hidden border border-white/10 bg-black shadow-2xl relative">
+                        <div className={`flex-1 w-full rounded-2xl overflow-hidden border bg-black shadow-2xl relative ${activityBorderClass}`}>
                             <img src={activity.imageUrl} alt="Full Resolution" className="w-full h-full object-contain" />
 
                             {/* Modal Sidebar Stats */}

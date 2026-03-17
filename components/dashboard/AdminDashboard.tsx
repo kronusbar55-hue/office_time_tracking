@@ -46,14 +46,19 @@ export default async function AdminDashboard() {
   const totalEmployees = await User.countDocuments({ isDeleted: false });
   const activeEmployees = await User.countDocuments({ isDeleted: false, isActive: true });
 
-  // Attendance data for today
-  const checkedInToday = await TimeSession.countDocuments({ date: dateStr, status: "active" });
-  const onBreakToday = await TimeSession.countDocuments({
-    date: dateStr,
-    status: "active",
-    $expr: { $gt: ["$totalBreakMinutes", 0] }
-  });
-  const notCheckedInToday = activeEmployees - checkedInToday;
+  // Attendance data for today from EmployeeMonitor
+  const { EmployeeMonitor } = await import("@/models/EmployeeMonitor");
+  const uniqueUsersToday = await EmployeeMonitor.distinct("userId", { date: dateStr });
+  const checkedInToday = uniqueUsersToday.length;
+
+  // For "On Break", we look at the latest record status for users active today
+  const latestRecords = await EmployeeMonitor.aggregate([
+    { $match: { date: dateStr, userId: { $in: uniqueUsersToday } } },
+    { $sort: { createdAt: -1 } },
+    { $group: { _id: "$userId", status: { $first: "$status" } } }
+  ]);
+  const onBreakToday = latestRecords.filter(r => r.status?.toUpperCase() === "ON_BREAK").length;
+  const notCheckedInToday = Math.max(0, activeEmployees - checkedInToday);
 
   // Leave requests
   const pendingLeaves = await LeaveRequest.countDocuments({ status: "pending" });

@@ -89,3 +89,30 @@ body {
 .hover-glow-blue:hover {
   animation: glow-border 2s ease-in-out infinite;
 }
+
+@keyframes blink-red {
+  0%, 100% { border-color: rgba(239, 68, 68, 0.4); box-shadow: 0 0 10px rgba(239, 68, 68, 0.2); }
+  50% { border-color: rgba(239, 68, 68, 1); box-shadow: 0 0 20px rgba(239, 68, 68, 0.6); }
+}
+
+@keyframes glow-yellow {
+  0%, 100% { border-color: rgba(234, 179, 8, 0.4); }
+  50% { border-color: rgba(234, 179, 8, 1); }
+}
+
+@keyframes glow-green-br {
+  0%, 100% { border-color: rgba(34, 197, 94, 0.4); }
+  50% { border-color: rgba(34, 197, 94, 1); }
+}
+
+.animate-blink-red {
+  animation: blink-red 1s infinite;
+}
+
+.animate-glow-yellow-border {
+  animation: glow-yellow 1.5s infinite;
+}
+
+.animate-glow-green-border {
+  animation: glow-green-br 1.5s infinite;
+}
