@@ -6,9 +6,12 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import EmployeeActivityCard from "./EmployeeActivityCard";
 import MonitorTimeline from "./MonitorTimeline";
 import { AnimatePresence, motion } from "framer-motion";
+import { useSearchParams, useRouter } from "next/navigation";
 
 export default function MonitorDashboard() {
     const { user } = useAuth();
+    const searchParams = useSearchParams();
+    const router = useRouter();
     const [employees, setEmployees] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     // List of users for the sidebar
@@ -18,8 +21,8 @@ export default function MonitorDashboard() {
     const [allUsers, setAllUsers] = useState<any[]>([]);
 
     // Filter states
-    const [selectedUserId, setSelectedUserId] = useState("all");
-    const [selectedDate, setSelectedDate] = useState("");
+    const [selectedUserId, setSelectedUserId] = useState(() => searchParams.get("userId") || "all");
+    const [selectedDate, setSelectedDate] = useState(() => searchParams.get("date") || "");
     const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
     const [showTimeline, setShowTimeline] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -101,14 +104,31 @@ export default function MonitorDashboard() {
     };
 
     useEffect(() => {
-        // Automatically select today's date if not set
-        if (!selectedDate) {
+        // Automatically select today's date if not set and no query param was provided
+        if (!selectedDate && !searchParams.get("date")) {
             setSelectedDate(new Date().toISOString().split('T')[0]);
         }
-    }, []);
+    }, [searchParams]);
+
+    useEffect(() => {
+        // Automatically update filters if URL changes
+        const uId = searchParams.get("userId");
+        const dStr = searchParams.get("date");
+        if (uId && uId !== selectedUserId) setSelectedUserId(uId);
+        if (dStr && dStr !== selectedDate) setSelectedDate(dStr);
+    }, [searchParams]);
 
     useEffect(() => {
         setPage(1); // Reset to page 1 when filters change
+        
+        // Sync URL parameters
+        const params = new URLSearchParams(searchParams.toString());
+        if (selectedUserId && selectedUserId !== "all") params.set("userId", selectedUserId);
+        else params.delete("userId");
+        if (selectedDate) params.set("date", selectedDate);
+        else params.delete("date");
+        
+        router.replace(`?${params.toString()}`, { scroll: false });
     }, [selectedDate, selectedUserId]);
 
 

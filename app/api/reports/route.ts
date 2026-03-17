@@ -88,14 +88,19 @@ export async function GET(request: Request) {
                 const dayData = dataMap.get(`${user._id.toString()}_${dStr}`);
 
                 const breakMs = timeToMinutes(dayData?.maxBreak || "00:00:00") * 60000;
-                const sessionMs = timeToMinutes(dayData?.maxSession || "00:00:00") * 60000;
+                
+                // Calculate session based on first and last screenshot/record times
+                let sessionMs = 0;
+                if (dayData?.firstIn && dayData?.lastOut) {
+                    sessionMs = new Date(dayData.lastOut).getTime() - new Date(dayData.firstIn).getTime();
+                } else if (dayData?.maxSession) {
+                    sessionMs = timeToMinutes(dayData.maxSession) * 60000;
+                }
 
-                // If session time is present, use (Session - Break)
-                // If not (legacy data), fallback to summing (Active + Idle)
-                let workMs = 0;
-                if (sessionMs > 0) {
-                    workMs = Math.max(0, sessionMs - breakMs);
-                } else {
+                let workMs = Math.max(0, sessionMs - breakMs);
+                
+                // Fallback to active + idle if session is empty (e.g. single record only)
+                if (sessionMs === 0) {
                     workMs = ((dayData?.workSeconds || 0) + (dayData?.idleSeconds || 0)) * 1000;
                 }
 

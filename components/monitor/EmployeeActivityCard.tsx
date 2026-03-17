@@ -44,14 +44,20 @@ export default function EmployeeActivityCard({ employee, viewMode, showName = tr
 
     const statusColor = getStatusColor(statusLabel);
 
-    // Mouse Activity Border Logic
-    const getActivityBorderClass = (clicks: number) => {
-        if (clicks < 10) return "animate-blink-red border-red-500/50";
-        if (clicks > 50) return "animate-glow-green-border border-green-500/50";
+    // Mouse Activity Border Logic based on both Clicks and Key Presses
+    const getActivityBorderClass = (clicks: number, keyPresses: number) => {
+        const totalActivity = clicks + keyPresses;
+        
+        // Threshold logic:
+        // Red: Low activity (less than 20 total interactions)
+        // Green: High activity (more than 100 total interactions)
+        // Yellow: Moderate activity (between 20 and 100)
+        if (totalActivity < 20) return "animate-blink-red border-red-500/50";
+        if (totalActivity > 100) return "animate-glow-green-border border-green-500/50";
         return "animate-glow-yellow-border border-yellow-500/50";
     };
 
-    const activityBorderClass = activity ? getActivityBorderClass(activity.mouseClicks) : "border-white/10";
+    const activityBorderClass = activity ? getActivityBorderClass(activity.mouseClicks, activity.keyPresses || 0) : "border-white/10";
 
     if (viewMode === "list") {
         return (

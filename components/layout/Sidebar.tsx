@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { Clock3, LayoutDashboard, CalendarCheck, FileSpreadsheet, BarChart3, Code, UserSquare2, ListChecks, Megaphone, Users, Settings, CalendarDays, Monitor } from "lucide-react";
+import { Clock3, LayoutDashboard, CalendarCheck, FileSpreadsheet, BarChart3, Code, UserSquare2, ListChecks, Megaphone, Users, Settings, CalendarDays, Monitor, FileText } from "lucide-react";
 import { NAV_CONFIG, ROLES } from "@/lib/roles";
 import { LogOut } from "lucide-react";
 
@@ -21,6 +21,7 @@ const ICON_MAP: Record<string, any> = {
   calendar: <CalendarDays className="h-4 w-4" />,
   timesheets: <FileSpreadsheet className="h-4 w-4" />,
   reports: <BarChart3 className="h-4 w-4" />,
+  employee_report: <FileText className="h-4 w-4" />,
   leaves: <CalendarCheck className="h-4 w-4" />,
   tech: <Code className="h-4 w-4" />,
   projects: <UserSquare2 className="h-4 w-4" />,

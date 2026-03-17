@@ -14,6 +14,7 @@ export const NAV_CONFIG = [
   { label: "Live Attendance", href: "/live-attendance", icon: "time", allowed: [ROLES.ADMIN] },
   { label: "Check-In/Out", href: "/check-in-out", icon: "checkin", allowed: [ROLES.MANAGER] },
   { label: "Reports", href: "/reports", icon: "reports", allowed: [ROLES.ADMIN, ROLES.HR] },
+  { label: "Employee Report", href: "/employee-report", icon: "employee_report", allowed: [ROLES.ADMIN, ROLES.HR, ROLES.MANAGER] },
   { label: "Leave Management", href: "/leaves", icon: "leaves", allowed: [ROLES.ADMIN, ROLES.HR, ROLES.MANAGER, ROLES.EMPLOYEE] },
   { label: "Technologies", href: "/technologies", icon: "tech", allowed: [ROLES.ADMIN] },
   { label: "Projects", href: "/projects", icon: "projects", allowed: [ROLES.ADMIN, ROLES.MANAGER] },
