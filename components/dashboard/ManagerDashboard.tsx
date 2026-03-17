@@ -39,11 +39,12 @@ export default async function ManagerDashboard({ userId }: Props) {
     .select("firstName lastName email")
     .lean();
   const teamIds = team.map((t) => t._id);
+  const teamSize = team.length;
 
   // KPI Data from EmployeeMonitor
   const { EmployeeMonitor } = await import("@/models/EmployeeMonitor");
   const uniqueTeamToday = await EmployeeMonitor.distinct("userId", { 
-    userId: { $in: teamIds.map(id => id.toString()) }, 
+    userId: { $in: teamIds.map((id: any) => id.toString()) }, 
     date: dateStr 
   });
   const teamCheckedInToday = uniqueTeamToday.length;
@@ -62,7 +63,7 @@ export default async function ManagerDashboard({ userId }: Props) {
 
   // Team attendance details for today from EmployeeMonitor
   const teamAttendance = await EmployeeMonitor.aggregate([
-    { $match: { userId: { $in: teamIds.map(id => id.toString()) }, date: dateStr } },
+    { $match: { userId: { $in: teamIds.map((id: any) => id.toString()) }, date: dateStr } },
     { $sort: { createdAt: -1 } },
     { 
       $group: { 
