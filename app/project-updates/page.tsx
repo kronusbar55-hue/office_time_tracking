@@ -54,7 +54,7 @@ export default function ProjectUpdateModule() {
     const [updates, setUpdates] = useState<UpdateRecord[]>([]);
     const [users, setUsers] = useState<any[]>([]);
     const [projects, setProjects] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, pages: 1 });
 
     // UI state
@@ -93,6 +93,8 @@ export default function ProjectUpdateModule() {
 
     // Fetch Updates
     const fetchUpdates = useCallback(async (page: number) => {
+        if (selectedUserId === "all" && selectedProjectId === "all") return;
+        
         setLoading(true);
         try {
             const params = new URLSearchParams({
@@ -124,8 +126,12 @@ export default function ProjectUpdateModule() {
     }, [selectedMonth, selectedUserId, selectedProjectId]);
 
     useEffect(() => {
-        fetchUpdates(1);
-    }, [fetchUpdates]);
+        if (selectedUserId !== "all" || selectedProjectId !== "all") {
+            fetchUpdates(1);
+        } else {
+            setUpdates([]);
+        }
+    }, [fetchUpdates, selectedUserId, selectedProjectId]);
 
     // Handle clicks outside dropdown
     useEffect(() => {
@@ -297,9 +303,19 @@ export default function ProjectUpdateModule() {
                                 className="bg-slate-900/40 rounded-3xl border border-slate-800 p-20 text-center"
                             >
                                 <div className="flex flex-col items-center justify-center opacity-40">
-                                    <SearchX className="h-16 w-16 mb-4 text-slate-600" />
-                                    <p className="text-lg font-black uppercase tracking-widest">No Updates Found</p>
-                                    <p className="text-sm font-medium text-slate-500 mt-2">Try adjusting your filters or selecting a different month.</p>
+                                    <Search className="h-16 w-16 mb-4 text-slate-600" />
+                                    {selectedUserId === "all" && selectedProjectId === "all" ? (
+                                        <>
+                                            <p className="text-lg font-black uppercase tracking-widest">Ready to Search</p>
+                                            <p className="text-sm font-medium text-slate-500 mt-2">Please select an employee or project to view updates.</p>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <SearchX className="h-16 w-16 mb-4 text-slate-600" />
+                                            <p className="text-lg font-black uppercase tracking-widest">No Updates Found</p>
+                                            <p className="text-sm font-medium text-slate-500 mt-2">Try adjusting your filters or selecting a different month.</p>
+                                        </>
+                                    )}
                                 </div>
                             </motion.div>
                         ) : viewMode === "feed" ? (
