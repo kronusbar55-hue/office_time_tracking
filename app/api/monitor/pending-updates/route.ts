@@ -52,11 +52,16 @@ export async function GET(request: Request) {
             project: record.projects || []
         }));
 
-        return NextResponse.json(successResp("Pending project updates fetched", {
-            userId,
-            count: pendingRecords.length,
-            pendingUpdates
-        }));
+        return NextResponse.json({
+            success: true,
+            message: "Pending project updates fetched",
+            data: {
+                userId,
+                count: pendingRecords.length,
+                pendingUpdates
+            },
+            allProject: formattedAssignedProjects
+        });
 
     } catch (error: any) {
         console.error("Error in pending-updates API:", error);

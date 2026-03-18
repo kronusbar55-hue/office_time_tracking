@@ -18,6 +18,7 @@ export const NAV_CONFIG = [
   { label: "Leave Management", href: "/leaves", icon: "leaves", allowed: [ROLES.ADMIN, ROLES.HR, ROLES.MANAGER, ROLES.EMPLOYEE] },
   { label: "Technologies", href: "/technologies", icon: "tech", allowed: [ROLES.ADMIN] },
   { label: "Projects", href: "/projects", icon: "projects", allowed: [ROLES.ADMIN, ROLES.MANAGER] },
+  { label: "Project Update", href: "/project-updates", icon: "projects", allowed: [ROLES.ADMIN, ROLES.HR, ROLES.MANAGER] },
   { label: "Tasks", href: "/tasks", icon: "tasks", allowed: [ROLES.ADMIN, ROLES.MANAGER, ROLES.EMPLOYEE] },
   { label: "Announcements", href: "/announcements", icon: "announcements", allowed: [ROLES.ADMIN, ROLES.HR, ROLES.MANAGER, ROLES.EMPLOYEE] },
   { label: "Employees", href: "/employees", icon: "users", allowed: [ROLES.ADMIN, ROLES.HR] },
