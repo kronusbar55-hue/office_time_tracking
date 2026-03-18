@@ -297,11 +297,6 @@ export default function EmployeeReportPage() {
                               <span className={`text-sm font-bold ${record.workMs > 0 ? "text-emerald-400" : "text-slate-600"}`}>
                                 {formatDuration(record.workMs)}
                               </span>
-                              {record.overtimeMs > 0 && (
-                                <span className="text-[10px] text-pink-400 font-bold uppercase tracking-wider">
-                                  + {formatDuration(record.overtimeMs)} OT
-                                </span>
-                              )}
                             </div>
                           </td>
                           <td className="p-4 text-right">

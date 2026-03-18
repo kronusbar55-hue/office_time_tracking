@@ -123,7 +123,7 @@ export async function GET(request: Request) {
                     date: dStr,
                     workMs,
                     breakMs,
-                    overtimeMs: Math.max(0, workMs - (user.shiftHours || 8) * 3600000),
+                    overtimeMs: 0,
                     intensity,
                     isRestDay: isWeekend && workMs === 0,
                     isHoliday: false,
@@ -141,7 +141,7 @@ export async function GET(request: Request) {
                 department: user.department,
                 shiftHours: user.shiftHours || 8,
                 totalWorkMs,
-                totalOvertimeMs: dailyRecords.reduce((acc, r) => acc + r.overtimeMs, 0),
+                totalOvertimeMs: 0,
                 totalBreakMs,
                 payrollHours: totalWorkMs / 3600000,
                 dailyRecords

@@ -107,6 +107,15 @@ export default function EmployeeActivityCard({ employee, viewMode, showName = tr
                                 </div>
                             </div>
                         )}
+                        {activity.appUsage && Object.keys(activity.appUsage).length > 0 && (
+                            <div className="flex flex-col items-start bg-accent/5 px-4 py-1.5 rounded-lg border border-accent/10 max-w-[120px] hidden xl:flex">
+                                <span className="text-[9px] text-accent font-bold uppercase tracking-tight">Top App</span>
+                                <div className="text-[10px] text-white font-medium truncate w-full">
+                                    {Object.entries(activity.appUsage).sort((a: any, b: any) => b[1] - a[1])[0][0].replace(/_/g, ' ')}
+                                    <span className="ml-1 text-[9px] text-accent font-bold">({formatUsageTime(Object.entries(activity.appUsage).sort((a: any, b: any) => b[1] - a[1])[0][1] as number)})</span>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
@@ -140,10 +149,19 @@ export default function EmployeeActivityCard({ employee, viewMode, showName = tr
                                     <DetailBox icon={<MousePointer2 />} value={activity.mouseClicks} label="CLICKS" />
                                     <DetailBox icon={<Type />} value={activity.keyPresses} label="KEYS" />
                                 </div>
+                                {activity.appUsage && Object.keys(activity.appUsage).length > 0 && (
+                                    <div className="flex items-center gap-2 px-2 py-1 rounded bg-accent/5 border border-accent/10 mt-1">
+                                        <PieChart className="h-2.5 w-2.5 text-accent" />
+                                        <span className="text-[9px] font-black text-slate-300 uppercase tracking-tighter truncate max-w-[140px]">
+                                            {Object.entries(activity.appUsage).sort((a: any, b: any) => b[1] - a[1])[0][0].replace(/_/g, ' ')}
+                                        </span>
+                                        <span className="text-[9px] font-black text-accent ml-auto whitespace-nowrap">{formatUsageTime(Object.entries(activity.appUsage).sort((a: any, b: any) => b[1] - a[1])[0][1] as number)}</span>
+                                    </div>
+                                )}
                                 <div className="flex items-center gap-2 mt-1">
                                     <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-white/5 border border-white/5 w-full justify-center">
                                         <Clock className="h-3 w-3 text-accent" />
-                                        <span className="text-[10px] font-black text-white tabular-nums">{activity.sessionTime || "0:0"}</span>
+                                        <span className="text-[10px] font-black text-white tabular-nums">{activity.sessionTime || "00:00"}</span>
                                     </div>
                                 </div>
                             </div>
@@ -201,6 +219,39 @@ export default function EmployeeActivityCard({ employee, viewMode, showName = tr
                                 <ModalStatBox icon={<Move />} value={activity.mouseMovements} label="MOVES" />
                                 <ModalStatBox icon={<Clock />} value={activity.sessionTime || "00:00"} label="DURATION" accent />
                             </div>
+
+                            {/* App Usage Overlay in Modal */}
+                            {activity.appUsage && Object.keys(activity.appUsage).length > 0 && (
+                                <div className="absolute top-6 left-6 max-w-[240px] bg-slate-900/90 border border-white/10 p-5 rounded-2xl backdrop-blur-xl animate-in slide-in-from-left-5">
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <PieChart className="h-4 w-4 text-accent" />
+                                        <span className="text-xs font-black text-white uppercase tracking-wider">App Usage</span>
+                                    </div>
+                                    <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 scrollbar-hide">
+                                        {Object.entries(activity.appUsage)
+                                            .sort((a: any, b: any) => b[1] - a[1])
+                                            .slice(0, 10)
+                                            .map(([app, seconds], idx) => (
+                                                <div key={idx} className="flex flex-col gap-1.5">
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-[10px] font-bold text-slate-300 uppercase tracking-tight truncate max-w-[140px]">
+                                                            {app.replace(/_/g, ' ')}
+                                                        </span>
+                                                        <span className="text-[10px] font-black text-accent tabular-nums">
+                                                            {formatUsageTime(seconds as number)}
+                                                        </span>
+                                                    </div>
+                                                    <div className="w-full bg-white/5 h-1 rounded-full overflow-hidden">
+                                                        <div 
+                                                            className="bg-accent h-full rounded-full transition-all duration-1000" 
+                                                            style={{ width: `${Math.min(100, ((seconds as number) / (activity.activeSeconds || 600)) * 100)}%` }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            ))}
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Projects Overlay in Modal */}
                             {activity.projects && activity.projects.length > 0 && (
@@ -296,4 +347,12 @@ function SmallStat({ icon, value, label }: { icon: any, value: any, label: strin
             <span className="text-[8px] text-slate-600 font-bold uppercase tracking-widest mt-1 group-hover:text-slate-500 transition-colors">{label}</span>
         </div>
     )
+}
+
+function formatUsageTime(seconds: number) {
+    if (seconds === 0) return "0s";
+    if (seconds < 60) return `${seconds}s`;
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return secs > 0 ? `${mins}m ${secs}s` : `${mins}m`;
 }
