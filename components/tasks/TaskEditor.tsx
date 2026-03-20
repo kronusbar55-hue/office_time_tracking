@@ -1,5 +1,4 @@
 "use client";
-
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Heading from "@tiptap/extension-heading";
@@ -13,7 +12,11 @@ import {
     Heading1,
     Heading2,
     Quote,
-    Link as LinkIcon
+    Undo,
+    Redo,
+    Strikethrough,
+    Code,
+    Minus
 } from "lucide-react";
 
 interface TaskEditorProps {
@@ -25,52 +28,131 @@ interface TaskEditorProps {
 const MenuBar = ({ editor }: { editor: any }) => {
     if (!editor) return null;
 
+    const btnClass = (active: boolean) =>
+        `p-2 rounded-lg hover:bg-white/10 transition-all ${active ? "text-accent bg-accent/15 border border-accent/20" : "text-slate-400 border border-transparent"}`;
+
     return (
-        <div className="flex flex-wrap gap-1 p-2 bg-slate-900/50 border-b border-white/10 rounded-t-xl mb-2">
-            <button
-                onClick={() => editor.chain().focus().toggleBold().run()}
-                className={`p-1.5 rounded-lg hover:bg-white/10 transition-colors ${editor.isActive("bold") ? "text-accent bg-accent/20" : "text-slate-400"}`}
-            >
-                <Bold size={16} />
-            </button>
-            <button
-                onClick={() => editor.chain().focus().toggleItalic().run()}
-                className={`p-1.5 rounded-lg hover:bg-white/10 transition-colors ${editor.isActive("italic") ? "text-accent bg-accent/20" : "text-slate-400"}`}
-            >
-                <Italic size={16} />
-            </button>
-            <div className="w-px h-6 bg-white/5 mx-1" />
-            <button
-                onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-                className={`p-1.5 rounded-lg hover:bg-white/10 transition-colors ${editor.isActive("heading", { level: 1 }) ? "text-accent bg-accent/20" : "text-slate-400"}`}
-            >
-                <Heading1 size={16} />
-            </button>
-            <button
-                onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-                className={`p-1.5 rounded-lg hover:bg-white/10 transition-colors ${editor.isActive("heading", { level: 2 }) ? "text-accent bg-accent/20" : "text-slate-400"}`}
-            >
-                <Heading2 size={16} />
-            </button>
-            <div className="w-px h-6 bg-white/5 mx-1" />
-            <button
-                onClick={() => editor.chain().focus().toggleBulletList().run()}
-                className={`p-1.5 rounded-lg hover:bg-white/10 transition-colors ${editor.isActive("bulletList") ? "text-accent bg-accent/20" : "text-slate-400"}`}
-            >
-                <List size={16} />
-            </button>
-            <button
-                onClick={() => editor.chain().focus().toggleOrderedList().run()}
-                className={`p-1.5 rounded-lg hover:bg-white/10 transition-colors ${editor.isActive("orderedList") ? "text-accent bg-accent/20" : "text-slate-400"}`}
-            >
-                <ListOrdered size={16} />
-            </button>
-            <button
-                onClick={() => editor.chain().focus().toggleBlockquote().run()}
-                className={`p-1.5 rounded-lg hover:bg-white/10 transition-colors ${editor.isActive("blockquote") ? "text-accent bg-accent/20" : "text-slate-400"}`}
-            >
-                <Quote size={16} />
-            </button>
+        <div className="flex flex-wrap items-center gap-1 p-1.5 bg-slate-900/60 border-b border-white/10 rounded-t-xl">
+            <div className="flex items-center space-x-0.5 mr-2">
+                <button
+                    type="button"
+                    title="Undo"
+                    onClick={() => editor.chain().focus().undo().run()}
+                    disabled={!editor.can().undo()}
+                    className="p-2 rounded-lg hover:bg-white/10 text-slate-400 disabled:opacity-30"
+                >
+                    <Undo size={15} />
+                </button>
+                <button
+                    type="button"
+                    title="Redo"
+                    onClick={() => editor.chain().focus().redo().run()}
+                    disabled={!editor.can().redo()}
+                    className="p-2 rounded-lg hover:bg-white/10 text-slate-400 disabled:opacity-30"
+                >
+                    <Redo size={15} />
+                </button>
+            </div>
+
+            <div className="w-px h-5 bg-white/10 mx-1" />
+
+            <div className="flex items-center space-x-0.5">
+                <button
+                    type="button"
+                    title="Heading 1"
+                    onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+                    className={btnClass(editor.isActive("heading", { level: 1 }))}
+                >
+                    <Heading1 size={15} />
+                </button>
+                <button
+                    type="button"
+                    title="Heading 2"
+                    onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+                    className={btnClass(editor.isActive("heading", { level: 2 }))}
+                >
+                    <Heading2 size={15} />
+                </button>
+            </div>
+
+            <div className="w-px h-5 bg-white/10 mx-1" />
+
+            <div className="flex items-center space-x-0.5">
+                <button
+                    type="button"
+                    title="Bold"
+                    onClick={() => editor.chain().focus().toggleBold().run()}
+                    className={btnClass(editor.isActive("bold"))}
+                >
+                    <Bold size={15} />
+                </button>
+                <button
+                    type="button"
+                    title="Italic"
+                    onClick={() => editor.chain().focus().toggleItalic().run()}
+                    className={btnClass(editor.isActive("italic"))}
+                >
+                    <Italic size={15} />
+                </button>
+                <button
+                    type="button"
+                    title="Strike"
+                    onClick={() => editor.chain().focus().toggleStrike().run()}
+                    className={btnClass(editor.isActive("strike"))}
+                >
+                    <Strikethrough size={15} />
+                </button>
+                <button
+                    type="button"
+                    title="Code"
+                    onClick={() => editor.chain().focus().toggleCode().run()}
+                    className={btnClass(editor.isActive("code"))}
+                >
+                    <Code size={15} />
+                </button>
+            </div>
+
+            <div className="w-px h-5 bg-white/10 mx-1" />
+
+            <div className="flex items-center space-x-0.5">
+                <button
+                    type="button"
+                    title="Bullet List"
+                    onClick={() => editor.chain().focus().toggleBulletList().run()}
+                    className={btnClass(editor.isActive("bulletList"))}
+                >
+                    <List size={15} />
+                </button>
+                <button
+                    type="button"
+                    title="Ordered List"
+                    onClick={() => editor.chain().focus().toggleOrderedList().run()}
+                    className={btnClass(editor.isActive("orderedList"))}
+                >
+                    <ListOrdered size={15} />
+                </button>
+            </div>
+
+            <div className="w-px h-5 bg-white/10 mx-1" />
+
+            <div className="flex items-center space-x-0.5">
+                <button
+                    type="button"
+                    title="Blockquote"
+                    onClick={() => editor.chain().focus().toggleBlockquote().run()}
+                    className={btnClass(editor.isActive("blockquote"))}
+                >
+                    <Quote size={15} />
+                </button>
+                <button
+                    type="button"
+                    title="Divider"
+                    onClick={() => editor.chain().focus().setHorizontalRule().run()}
+                    className="p-2 rounded-lg hover:bg-white/10 text-slate-400"
+                >
+                    <Minus size={15} />
+                </button>
+            </div>
         </div>
     );
 };
@@ -86,23 +168,78 @@ export default function TaskEditor({ content, onChange, editable = true }: TaskE
         editable,
         immediatelyRender: false,
         onUpdate: ({ editor }) => {
-            onChange(editor.getHTML());
+            const html = editor.getHTML();
+            if (html !== content) {
+                onChange(html);
+            }
         },
     });
 
     useEffect(() => {
-        if (editor && content && editor.isEmpty) {
-            editor.commands.setContent(content);
+        if (editor && content !== undefined && content !== editor.getHTML()) {
+            // only set content if it's actually different to avoid cursor reset
+            editor.commands.setContent(content || "");
         }
     }, [editor, content]);
 
     return (
-        <div className="w-full border border-white/10 rounded-xl bg-slate-900/30">
+        <div className="w-full border border-white/10 rounded-xl bg-slate-950/40 focus-within:border-accent/40 transition-all">
             {editable && <MenuBar editor={editor} />}
             <EditorContent
                 editor={editor}
-                className="prose prose-invert prose-sm max-w-none p-4 min-h-[150px] focus:outline-none focus:ring-1 focus:ring-accent/40 rounded-b-xl"
+                className="tiptap-editor-content p-4 min-h-[160px] focus:outline-none"
             />
+            <style jsx global>{`
+                .tiptap-editor-content .tiptap {
+                    outline: none;
+                    min-height: 140px;
+                }
+                .tiptap-editor-content .tiptap p {
+                    margin-bottom: 0.75rem;
+                }
+                .tiptap-editor-content .tiptap h1 {
+                    font-size: 1.5rem;
+                    font-weight: 800;
+                    margin-top: 1rem;
+                    margin-bottom: 0.5rem;
+                    color: white;
+                }
+                .tiptap-editor-content .tiptap h2 {
+                    font-size: 1.25rem;
+                    font-weight: 700;
+                    margin-top: 1rem;
+                    margin-bottom: 0.5rem;
+                    color: #e2e8f0;
+                }
+                .tiptap-editor-content .tiptap ul {
+                    list-style-type: disc;
+                    padding-left: 1.5rem;
+                    margin-bottom: 1rem;
+                }
+                .tiptap-editor-content .tiptap ol {
+                    list-style-type: decimal;
+                    padding-left: 1.5rem;
+                    margin-bottom: 1rem;
+                }
+                .tiptap-editor-content .tiptap blockquote {
+                    border-left: 3px solid #38bdf8;
+                    padding-left: 1rem;
+                    font-style: italic;
+                    color: #94a3b8;
+                    margin-bottom: 1rem;
+                }
+                .tiptap-editor-content .tiptap hr {
+                    border: none;
+                    border-top: 1px solid rgba(255,255,255,0.1);
+                    margin: 1.5rem 0;
+                }
+                .tiptap-editor-content .tiptap code {
+                    background: rgba(255,255,255,0.1);
+                    padding: 0.1rem 0.3rem;
+                    border-radius: 0.25rem;
+                    font-size: 0.9em;
+                }
+            `}</style>
         </div>
     );
 }

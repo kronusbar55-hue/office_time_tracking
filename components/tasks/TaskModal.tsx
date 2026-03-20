@@ -42,8 +42,8 @@ export default function TaskModal({ open, onClose, onSaved, initial }: Props) {
       setDescription(initial.description || "");
       setType(initial.type || "Task");
       setPriority(initial.priority || "Medium");
-      setProjectId(initial.project?._id || null);
-      setAssigneeId(initial.assignee?._id || null);
+      setProjectId(initial.project?._id || (typeof initial.project === "string" ? initial.project : null));
+      setAssigneeId(initial.assignee?._id || (typeof initial.assignee === "string" ? initial.assignee : null));
       setDueDate(initial.dueDate ? new Date(initial.dueDate).toISOString().slice(0, 10) : null);
     } else {
       setTitle("");
@@ -188,36 +188,41 @@ export default function TaskModal({ open, onClose, onSaved, initial }: Props) {
       };
 
       let res: Response;
-
-      // If creating and attachments exist, send multipart/form-data
-      if (!initial && attachments.length > 0) {
+      const isEdit = !!(initial?._id || initial?.id);
+      
+      // Use FormData if there are NEW attachments
+      if (attachments.length > 0) {
         const form = new FormData();
-        form.append("title", payload.title);
-        form.append("description", payload.description || "");
-        form.append("type", payload.type || "Task");
-        form.append("priority", payload.priority || "Medium");
-        form.append("project", String(payload.project));
-        if (payload.assignee) form.append("assignee", String(payload.assignee));
-        form.append("reporter", String(window.localStorage.getItem("userId") || ""));
-        if (payload.dueDate) form.append("dueDate", String(payload.dueDate));
-        attachments.forEach((f) => form.append("attachments", f));
+        Object.keys(payload).forEach(key => {
+          const val = (payload as any)[key];
+          if (val !== undefined && val !== null) {
+            form.append(key, String(val));
+          }
+        });
+        
+        // Add current user as reporter if new task
+        if (!isEdit) {
+          form.append("reporter", window.localStorage.getItem("userId") || "");
+        }
 
-        res = await fetch(`/api/tasks`, {
-          method: "POST",
+        // Add files
+        attachments.forEach(f => form.append("attachments", f));
+
+        res = await fetch(isEdit ? `/api/tasks/${initial._id || initial.id}` : `/api/tasks`, {
+          method: isEdit ? "PUT" : "POST",
           body: form
         });
-      } else if (!initial) {
-        res = await fetch(`/api/tasks`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...payload, reporter: window.localStorage.getItem("userId") || undefined })
-        });
       } else {
-        // edit path: keep JSON
-        res = await fetch(`/api/tasks/${initial._id}`, {
-          method: "PUT",
+        // Fallback to JSON if no new files
+        const body = { ...payload };
+        if (!isEdit) {
+           (body as any).reporter = window.localStorage.getItem("userId") || undefined;
+        }
+
+        res = await fetch(isEdit ? `/api/tasks/${initial._id || initial.id}` : `/api/tasks`, {
+          method: isEdit ? "PUT" : "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(body)
         });
       }
 
@@ -227,7 +232,7 @@ export default function TaskModal({ open, onClose, onSaved, initial }: Props) {
       }
 
       const json = await res.json();
-      toast.success(initial ? "Task updated successfully!" : "Task created successfully!");
+      toast.success(isEdit ? "Task updated successfully!" : "Task created successfully!");
       onSaved(json.data || json);
       onClose();
     } catch (err) {
@@ -241,10 +246,11 @@ export default function TaskModal({ open, onClose, onSaved, initial }: Props) {
   };
 
   const handleDelete = async () => {
-    if (!initial || !window.confirm("Are you sure you want to delete this task?")) return;
+    const isEdit = !!(initial?._id || initial?.id);
+    if (!isEdit || !window.confirm("Are you sure you want to delete this task?")) return;
     try {
       setSubmitting(true);
-      const res = await fetch(`/api/tasks/${initial._id}`, {
+      const res = await fetch(`/api/tasks/${initial._id || initial.id}`, {
         method: "DELETE"
       });
       if (!res.ok) {
@@ -278,10 +284,10 @@ export default function TaskModal({ open, onClose, onSaved, initial }: Props) {
              </div>
              <div>
                 <h3 className="text-sm font-black text-white uppercase tracking-tighter">
-                  {initial ? `Task: ${initial.key}` : "Create Task"}
+                  {initial?._id || initial?.id ? `Task: ${initial.key}` : "Create Task"}
                 </h3>
                 <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">
-                  {initial ? initial.title : "New Task Item"}
+                  {initial?._id || initial?.id ? initial.title : "New Task Item"}
                 </p>
              </div>
           </div>
@@ -290,7 +296,7 @@ export default function TaskModal({ open, onClose, onSaved, initial }: Props) {
           </button>
         </div>
 
-        {initial && (
+        {initial?._id || initial?.id ? (
           <div className="flex items-center gap-1 mb-6 p-1 bg-slate-900/50 border border-white/5 rounded-xl w-fit">
             <button
                type="button"
@@ -317,7 +323,7 @@ export default function TaskModal({ open, onClose, onSaved, initial }: Props) {
                <span>Comments</span>
             </button>
           </div>
-        )}
+        ) : null}
 
         {error && (
           <div className="mb-6 flex items-center gap-3 rounded-xl bg-red-500/10 border border-red-500/20 p-4 text-sm text-red-100">
@@ -337,7 +343,13 @@ export default function TaskModal({ open, onClose, onSaved, initial }: Props) {
 
           <div>
             <label className="text-[11px] text-slate-300 uppercase">Project</label>
-            <select value={projectId || ""} onChange={(e) => setProjectId(e.target.value || null)} required className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100 focus:border-slate-600 focus:outline-none">
+            <select 
+              value={projectId || ""} 
+              onChange={(e) => setProjectId(e.target.value || null)} 
+              required 
+              disabled={loadingMeta || (!!initial?.project && !(initial?._id || initial?.id))}
+              className={`mt-1 w-full rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100 focus:border-slate-600 focus:outline-none transition-opacity ${loadingMeta || (!!initial?.project && !(initial?._id || initial?.id)) ? "opacity-60 cursor-not-allowed" : ""}`}
+            >
               <option value="">Select project</option>
               {loadingMeta ? <option>Loading...</option> : projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
@@ -499,10 +511,10 @@ export default function TaskModal({ open, onClose, onSaved, initial }: Props) {
             ) : (
               <Check className="h-4 w-4" />
             )}
-            <span>{initial ? "Save changes" : "Create Task"}</span>
+            <span>{initial?._id || initial?.id ? "Save changes" : "Create Task"}</span>
           </button>
 
-          {initial && (
+          {initial?._id || initial?.id ? (
             <button
               type="button"
               onClick={handleDelete}
@@ -512,7 +524,7 @@ export default function TaskModal({ open, onClose, onSaved, initial }: Props) {
               <Trash2 className="h-4 w-4" />
               <span>Delete</span>
             </button>
-          )}
+          ) : null}
 
           <button
             type="button"

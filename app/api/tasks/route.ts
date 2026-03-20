@@ -40,10 +40,16 @@ export async function GET(request: Request) {
     if (role === "admin" || role === "hr") {
       // admin and hr can see all (hr is view-only at API-level)
     } else if (role === "manager") {
-      // manager: tasks they reported OR tasks assigned to their team
+      // Find projects where manager is a member
+      const projects = await Project.find({ members: userId }).select("_id").lean();
+      const projectIds = projects.map((p: any) => p._id);
+
+      // manager: tasks in their projects OR tasks they reported OR tasks assigned to their team
       const team = await User.find({ manager: userId, isDeleted: false }).select("_id").lean();
       const teamIds = team.map((t: any) => t._id.toString());
+      
       query.$or = [
+        { project: { $in: projectIds } },
         { reporter: userId },
         { assignee: { $in: teamIds } }
       ];
@@ -153,50 +159,55 @@ export async function POST(request: Request) {
 
       const files = formData.getAll("attachments");
       for (const f of files) {
-        if (f && f instanceof File && f.size > 0) {
+        // Robust check for file/blob across different Node environments
+        if (f && typeof f === "object" && "size" in f && (f as any).size > 0) {
+          const file = f as any;
           // Validate file size (5MB)
           const MAX_SIZE = 5 * 1024 * 1024;
-          if (f.size > MAX_SIZE) {
-            console.warn(`File ${f.name} exceeds 5MB limit`);
+          if (file.size > MAX_SIZE) {
+            console.warn(`File exceeds 5MB limit`);
             continue;
           }
 
           // Validate file type
           const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
-          if (!allowedTypes.includes(f.type)) {
-            console.warn(`File ${f.name} has unsupported type: ${f.type}`);
+          if (!allowedTypes.includes(file.type)) {
+            console.warn(`File has unsupported type: ${file.type}`);
             continue;
           }
 
-          const buffer = Buffer.from(await f.arrayBuffer());
+          const buffer = Buffer.from(await file.arrayBuffer());
           try {
             const base64 = buffer.toString("base64");
-            const dataUri = `data:${f.type};base64,${base64}`;
+            const dataUri = `data:${file.type};base64,${base64}`;
             const res = await cloudinary.uploader.upload(dataUri, {
               folder: `tasks/attachments`,
               resource_type: "auto",
-              format: "webp", // Auto-convert to webp for better compression
+              format: "webp",
               quality: "auto"
             });
 
             attachments.push({
               url: res.secure_url,
               publicId: res.public_id,
-              fileName: f.name,
-              fileSize: f.size,
-              mimeType: f.type,
+              fileName: file.name || "attachment",
+              fileSize: file.size,
+              mimeType: file.type || "image/jpeg",
               uploadedBy: payload.sub,
               uploadedAt: new Date()
             });
           } catch (e) {
-            console.error(`Cloudinary upload failed for ${f.name}:`, e);
-            // Skip this file and continue with others
+            console.error(`Cloudinary upload failed:`, e);
             continue;
           }
         }
       }
     } else {
       fields = await request.json();
+      // If attachments are passed in JSON (existing ones), use them
+      if (fields.attachments && Array.isArray(fields.attachments)) {
+        attachments.push(...fields.attachments);
+      }
     }
 
     const { title, description, type, priority, project, assignee, reporter: rawReporter, dueDate } = fields;

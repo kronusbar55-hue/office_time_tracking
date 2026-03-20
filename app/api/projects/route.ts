@@ -22,8 +22,11 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const forCurrentUser = url.searchParams.get("forCurrentUser") === "true";
 
-  const query: Record<string, unknown> = { status: { $ne: "archived" } };
-  if (forCurrentUser) {
+  const query: Record<string, any> = { status: { $ne: "archived" } };
+  
+  // Enforce filtering for managers and employees
+  // Admins and HR still see everything unless they explicitly request forCurrentUser
+  if (forCurrentUser || payload.role === "manager" || payload.role === "employee") {
     query.members = payload.sub;
   }
 

@@ -29,6 +29,10 @@ export default function TaskTable({ tasks, loading, onDelete, onStatusChange, us
   };
 
   const handleStatusChange = async (taskId: string, newStatus: string) => {
+    if (!taskId || taskId === "undefined") {
+      console.error("Attempted to update status with undefined taskId");
+      return;
+    }
     try {
       const res = await fetch(`/api/tasks/${taskId}`, {
         method: "PUT",
@@ -85,10 +89,11 @@ export default function TaskTable({ tasks, loading, onDelete, onStatusChange, us
         </thead>
         <tbody>
           {tasks.map((t) => {
+            const taskId = t._id || t.id;
             const due = t.dueDate ? new Date(t.dueDate) : null;
             const overdue = due && due.getTime() < Date.now();
             return (
-              <tr key={t._id} className="border-t border-slate-800/40 hover:bg-slate-800/30">
+              <tr key={taskId} className="border-t border-slate-800/40 hover:bg-slate-800/30">
                 <td className="px-3 py-2 align-top">{t.key}</td>
                 <td className="px-3 py-2 align-top">
                   <a href={`/tasks/${t._id}`} className="text-sky-400 hover:underline">{t.title}</a>
@@ -98,7 +103,7 @@ export default function TaskTable({ tasks, loading, onDelete, onStatusChange, us
                   <span className={`inline-block rounded-full px-2 py-1 text-xs font-medium text-slate-900 ${priorityColor(t.priority)}`}>{t.priority}</span>
                 </td>
                 <td className="px-3 py-2 align-top">
-                  <select defaultValue={t.status} onChange={(e) => handleStatusChange(t._id, e.target.value)} className="rounded-md border border-slate-700 bg-slate-950/60 px-2 py-1 text-sm text-slate-100">
+                  <select defaultValue={t.status} onChange={(e) => handleStatusChange(taskId, e.target.value)} className="rounded-md border border-slate-700 bg-slate-950/60 px-2 py-1 text-sm text-slate-100">
                     <option value="backlog">Backlog</option>
                     <option value="in_progress">In Progress</option>
                     <option value="done">Done</option>
@@ -123,12 +128,12 @@ export default function TaskTable({ tasks, loading, onDelete, onStatusChange, us
                 </td>
                 <td className="px-3 py-2 align-top">
                   <div className="flex items-center gap-3">
-                    <a href={`/tasks/${t._id}`} className="text-slate-300 hover:text-slate-100">View</a>
+                    <a href={`/tasks/${taskId}`} className="text-slate-300 hover:text-slate-100">View</a>
                     {user?.role !== "employee" && (
                       <>
-                        <a href={`/tasks/${t._id}/edit`} className="text-sky-400 hover:brightness-110">Edit</a>
-                        <button onClick={() => handleDelete(t)} disabled={deleting === t._id} className="text-rose-400 hover:brightness-110 disabled:opacity-50">
-                          {deleting === t._id ? "Deleting..." : "Delete"}
+                        <a href={`/tasks/${taskId}/edit`} className="text-sky-400 hover:brightness-110">Edit</a>
+                        <button onClick={() => handleDelete(t)} disabled={deleting === taskId} className="text-rose-400 hover:brightness-110 disabled:opacity-50">
+                          {deleting === taskId ? "Deleting..." : "Delete"}
                         </button>
                       </>
                     )}

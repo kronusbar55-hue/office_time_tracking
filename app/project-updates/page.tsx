@@ -144,9 +144,29 @@ export default function ProjectUpdateModule() {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const filteredUsers = users.filter(u =>
-        `${u.firstName} ${u.lastName}`.toLowerCase().includes(userSearchText.toLowerCase())
-    ).slice(0, 8);
+    // Filter users based on selected project
+    const filteredUsersByProject = (userId: string) => {
+        if (selectedProjectId !== "all") {
+            const proj = projects.find(p => (p._id || p.id) === selectedProjectId);
+            return proj?.members?.some((m: any) => (m._id || m.id) === userId);
+        }
+
+        // If 'all' is selected, managers should only see members of projects they are assigned to
+        // (projects list is already filtered by API for role manager)
+        if (authUser?.role === "manager") {
+            return projects.some(p => 
+                p.members?.some((m: any) => (m._id || m.id) === userId)
+            );
+        }
+
+        return true;
+    };
+
+    const filteredUsers = users
+        .filter(u => filteredUsersByProject(u._id || u.id))
+        .filter(u =>
+            `${u.firstName} ${u.lastName}`.toLowerCase().includes(userSearchText.toLowerCase())
+        ).slice(0, 50);
 
     const selectedUser = users.find(u => (u._id || u.id) === selectedUserId);
 

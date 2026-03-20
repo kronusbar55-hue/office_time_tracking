@@ -2,10 +2,13 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { Task } from "@/models/Task";
 import { User } from "@/models/User";
+import { Project } from "@/models/Project";
 import { cookies } from "next/headers";
 import { verifyAuthToken } from "@/lib/auth";
 import { captureAuditLogs } from "@/lib/taskAudit";
 import { TaskActivityLog } from "@/models/TaskActivityLog";
+import mongoose from "mongoose";
+import cloudinary from "@/lib/cloudinary";
 
 async function getUserFromRequest() {
   const cookieStore = cookies();
@@ -16,6 +19,9 @@ async function getUserFromRequest() {
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
+    if (!mongoose.Types.ObjectId.isValid(params.id)) {
+      return NextResponse.json({ error: "Invalid task ID" }, { status: 400 });
+    }
     await connectDB();
     const task = await Task.findById(params.id)
       .populate({ path: "project", select: "name" })
@@ -32,8 +38,58 @@ export async function GET(request: Request, { params }: { params: { id: string }
 
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
+    if (!mongoose.Types.ObjectId.isValid(params.id)) {
+      return NextResponse.json({ error: "Invalid task ID" }, { status: 400 });
+    }
     await connectDB();
-    const payload = await request.json();
+    
+    const contentType = request.headers.get("content-type") || "";
+    let payload: any = {};
+    const attachments: any[] = [];
+
+    if (contentType.includes("multipart/form-data")) {
+      const formData = await request.formData();
+      // Map basic fields
+      const fields = ["title", "description", "priority", "project", "assignee", "reporter", "dueDate", "status", "labels", "estimatedTime", "sprint"];
+      for (const field of fields) {
+        if (formData.has(field)) {
+          payload[field] = formData.get(field);
+        }
+      }
+
+      // Process new files
+      const files = formData.getAll("attachments");
+      for (const f of files) {
+        if (f && typeof f === "object" && "size" in f && (f as any).size > 0) {
+          const file = f as any;
+          const buffer = Buffer.from(await file.arrayBuffer());
+          try {
+            const base64 = buffer.toString("base64");
+            const dataUri = `data:${file.type};base64,${base64}`;
+            const res = await cloudinary.uploader.upload(dataUri, {
+              folder: `tasks/attachments`,
+              resource_type: "auto",
+              format: "webp",
+              quality: "auto"
+            });
+
+            attachments.push({
+              url: res.secure_url,
+              publicId: res.public_id,
+              fileName: file.name || "attachment",
+              fileSize: file.size,
+              mimeType: file.type || "image/jpeg",
+              uploadedBy: (await getUserFromRequest())?.sub,
+              uploadedAt: new Date()
+            });
+          } catch (e) {
+            console.error("Cloudinary upload failed", e);
+          }
+        }
+      }
+    } else {
+      payload = await request.json();
+    }
 
     const user = await getUserFromRequest();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -68,7 +124,16 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 
     const update: any = {};
     for (const k of Object.keys(payload)) {
-      if (allowed.includes(k)) update[k] = payload[k];
+      if (allowed.includes(k)) {
+        // For status, ensure lowercase consistency
+        if (k === "status") update[k] = String(payload[k]).toLowerCase();
+        else update[k] = payload[k];
+      }
+    }
+
+    // Merge new attachments if any
+    if (attachments.length > 0) {
+      update.attachments = [...(existing.attachments || []), ...attachments];
     }
 
     if (Object.keys(update).length === 0) {
@@ -81,20 +146,39 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     // capture audit logs
     await captureAuditLogs(existing as any, updated as any, { id: user.sub, role: user.role }, { ip: request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "", ua: request.headers.get("user-agent") || "" });
 
-    // Create activity log
-    try {
-      const fieldChanges = [];
-      const obsOld = existing as any;
-      const obsNew = updated as any;
-      for (const k of Object.keys(update)) {
-        if (JSON.stringify(obsOld[k]) !== JSON.stringify(obsNew[k])) {
-          fieldChanges.push({
-            fieldName: k,
-            oldValue: obsOld[k],
-            newValue: obsNew[k]
-          });
+      // Create activity log
+      try {
+        const fieldChanges = [];
+        const obsOld = existing as any;
+        const obsNew = updated as any;
+        for (const k of Object.keys(update)) {
+          // Compare values to see if they actually changed
+          const valOld = JSON.stringify(obsOld[k]);
+          const valNew = JSON.stringify(obsNew[k]);
+          
+          if (valOld !== valNew) {
+            const change: any = {
+              fieldName: k,
+              oldValue: obsOld[k],
+              newValue: obsNew[k]
+            };
+
+            // Resolve human-readable names for ID fields
+            if (k === "assignee" || k === "reporter") {
+                const oldU: any = obsOld[k] ? await User.findById(obsOld[k]).select("firstName lastName").lean() : null;
+                const newU: any = obsNew[k] ? await User.findById(obsNew[k]).select("firstName lastName").lean() : null;
+                if (oldU) change.displayOldValue = `${oldU.firstName} ${oldU.lastName}`;
+                if (newU) change.displayNewValue = `${newU.firstName} ${newU.lastName}`;
+            } else if (k === "project") {
+                const oldP: any = obsOld[k] ? await Project.findById(obsOld[k]).select("name").lean() : null;
+                const newP: any = obsNew[k] ? await Project.findById(obsNew[k]).select("name").lean() : null;
+                if (oldP) change.displayOldValue = oldP.name;
+                if (newP) change.displayNewValue = newP.name;
+            }
+
+            fieldChanges.push(change);
+          }
         }
-      }
 
       if (fieldChanges.length > 0) {
         let eventType: any = "FIELD_CHANGED";
@@ -125,6 +209,9 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
+    if (!mongoose.Types.ObjectId.isValid(params.id)) {
+      return NextResponse.json({ error: "Invalid task ID" }, { status: 400 });
+    }
     await connectDB();
     const user = await getUserFromRequest();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { ChevronLeft, Upload } from "lucide-react";
+import { ChevronLeft, Upload, MessageSquare, Clock } from "lucide-react";
 import { toast } from "react-toastify";
 import ActivityTimeline from "@/components/tasks/ActivityTimeline";
+import TaskComments from "@/components/tasks/TaskComments";
 import ImageGallery from "@/components/tasks/ImageGallery";
+import TaskEditor from "@/components/tasks/TaskEditor";
 import { useAuth } from "@/components/auth/AuthProvider";
 
 export default function TaskViewPage() {
@@ -23,6 +25,7 @@ export default function TaskViewPage() {
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [uploadingAttachments, setUploadingAttachments] = useState(false);
   const [deletingAttachments, setDeletingAttachments] = useState<Set<string>>(new Set());
+  const [activeTab, setActiveTab] = useState<"comments" | "activity">("comments");
 
   useEffect(() => {
     async function loadData() {
@@ -248,8 +251,12 @@ export default function TaskViewPage() {
 
         <div className="mt-6 border-t border-slate-800/40 pt-6">
           <h3 className="text-sm font-semibold text-slate-200 mb-4">Description</h3>
-          <div className="whitespace-pre-wrap text-sm text-slate-300">
-            {task.description || <span className="text-slate-500 italic">No description provided</span>}
+          <div className="text-sm text-slate-300">
+            {task.description ? (
+              <TaskEditor content={task.description} onChange={() => {}} editable={false} />
+            ) : (
+              <span className="text-slate-500 italic">No description provided</span>
+            )}
           </div>
         </div>
       </div>
@@ -340,12 +347,44 @@ export default function TaskViewPage() {
         </div>
       )}
 
-      {/* Activity Timeline Section */}
-      <div className="rounded-lg border border-slate-800/40 bg-slate-900/40 p-6">
-        <h3 className="text-sm font-semibold text-slate-200 mb-4 flex items-center gap-2">
-          <span>📋</span> Activity Timeline
-        </h3>
-        <ActivityTimeline taskId={taskId} />
+      {/* Activity / Comments Tabbed Section */}
+      <div className="rounded-lg border border-slate-800/40 bg-slate-900/40 overflow-hidden shadow-xl">
+        <div className="flex items-center gap-1 p-1 bg-slate-900/60 border-b border-white/5">
+          <button
+            onClick={() => setActiveTab("comments")}
+            className={`flex items-center gap-2 px-6 py-2.5 rounded-md text-sm font-black transition-all uppercase tracking-tighter ${
+              activeTab === "comments"
+                ? "bg-accent text-slate-950 shadow-lg shadow-accent/20"
+                : "text-slate-400 hover:text-white hover:bg-white/5"
+            }`}
+          >
+            <MessageSquare className="h-4 w-4" />
+            <span>Comments</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("activity")}
+            className={`flex items-center gap-2 px-6 py-2.5 rounded-md text-sm font-black transition-all uppercase tracking-tighter ${
+              activeTab === "activity"
+                ? "bg-accent text-slate-950 shadow-lg shadow-accent/20"
+                : "text-slate-400 hover:text-white hover:bg-white/5"
+            }`}
+          >
+            <Clock className="h-4 w-4" />
+            <span>Activity</span>
+          </button>
+        </div>
+
+        <div className="p-6">
+          {activeTab === "comments" ? (
+            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <TaskComments taskId={taskId} />
+            </div>
+          ) : (
+            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <ActivityTimeline taskId={taskId} />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

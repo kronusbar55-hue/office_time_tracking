@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import {
   Sparkles,
@@ -11,7 +10,8 @@ import {
   MessageSquare,
   Clock,
   Tag,
-  Settings
+  Settings,
+  ArrowRight
 } from "lucide-react";
 
 interface FieldChange {
@@ -31,6 +31,7 @@ interface ActivityLogEntry {
     lastName: string;
     email: string;
     role?: string;
+    avatarUrl?: string;
   };
   eventType: string;
   fieldChanges?: FieldChange[];
@@ -38,10 +39,6 @@ interface ActivityLogEntry {
   metadata?: any;
   createdAt: string;
   updatedAt: string;
-}
-
-interface ActivityTimelineProps {
-  taskId: string;
 }
 
 const EVENT_ICONS: Record<string, any> = {
@@ -53,48 +50,24 @@ const EVENT_ICONS: Record<string, any> = {
   IMAGES_ADDED: ImageIcon,
   IMAGES_REMOVED: ImageIcon,
   COMMENT_ADDED: MessageSquare,
-  TIME_LOGGED: Clock,
   FIELD_CHANGED: Settings,
   DUEDATE_CHANGED: Clock,
-  LABELS_CHANGED: Tag,
-  TYPE_CHANGED: Settings
 };
 
 const EVENT_COLORS: Record<string, string> = {
-  TASK_CREATED: "bg-green-500/20 text-green-300",
-  STATUS_CHANGED: "bg-blue-500/20 text-blue-300",
-  ASSIGNEE_CHANGED: "bg-purple-500/20 text-purple-300",
-  PRIORITY_CHANGED: "bg-orange-500/20 text-orange-300",
-  DESCRIPTION_EDITED: "bg-slate-500/20 text-slate-300",
-  IMAGES_ADDED: "bg-cyan-500/20 text-cyan-300",
-  IMAGES_REMOVED: "bg-red-500/20 text-red-300",
-  COMMENT_ADDED: "bg-indigo-500/20 text-indigo-300",
-  TIME_LOGGED: "bg-yellow-500/20 text-yellow-300",
-  FIELD_CHANGED: "bg-slate-500/20 text-slate-300",
-  DUEDATE_CHANGED: "bg-pink-500/20 text-pink-300",
-  LABELS_CHANGED: "bg-violet-500/20 text-violet-300",
-  TYPE_CHANGED: "bg-slate-500/20 text-slate-300"
-};
-
-const EVENT_LABELS: Record<string, string> = {
-  TASK_CREATED: "Task Created",
-  STATUS_CHANGED: "Status Changed",
-  ASSIGNEE_CHANGED: "Assignee Updated",
-  PRIORITY_CHANGED: "Priority Changed",
-  DESCRIPTION_EDITED: "Description Edited",
-  IMAGES_ADDED: "Images Added",
-  IMAGES_REMOVED: "Images Removed",
-  COMMENT_ADDED: "Comment Added",
-  TIME_LOGGED: "Time Logged",
-  FIELD_CHANGED: "Field Updated",
-  DUEDATE_CHANGED: "Due Date Changed",
-  LABELS_CHANGED: "Labels Changed",
-  TYPE_CHANGED: "Type Changed"
+  TASK_CREATED: "text-emerald-400",
+  STATUS_CHANGED: "text-blue-400",
+  ASSIGNEE_CHANGED: "text-purple-400",
+  PRIORITY_CHANGED: "text-amber-400",
+  DESCRIPTION_EDITED: "text-slate-400",
+  IMAGES_ADDED: "text-cyan-400",
+  COMMENT_ADDED: "text-indigo-400",
 };
 
 function formatDisplayValue(value: any): string {
-  if (value === null || value === undefined) return "—";
+  if (value === null || value === undefined || value === "") return "None";
   if (typeof value === "boolean") return value ? "Yes" : "No";
+  
   if (typeof value === "object") {
     if (value.firstName) return `${value.firstName} ${value.lastName}`;
     if (value.name) return value.name;
@@ -103,43 +76,33 @@ function formatDisplayValue(value: any): string {
   return String(value);
 }
 
-function FieldChangeDisplay({ change }: { change: FieldChange }) {
+function FieldChangeRow({ change }: { change: FieldChange }) {
+  const fieldLabel = change.fieldName.charAt(0).toUpperCase() + change.fieldName.slice(1);
   return (
-    <div className="bg-slate-800/40 rounded p-3 text-sm">
-      <div className="flex items-center justify-between gap-4">
-        <span className="text-slate-300 font-medium min-w-fit">{change.fieldName}:</span>
-        <div className="flex items-center gap-3 flex-1">
-          <div className="flex-1">
-            <div className="text-xs text-slate-500 mb-1">Before</div>
-            <div className="text-slate-200 break-words">
-              {change.displayOldValue || formatDisplayValue(change.oldValue)}
-            </div>
-          </div>
-          <span className="text-slate-500">→</span>
-          <div className="flex-1">
-            <div className="text-xs text-slate-500 mb-1">After</div>
-            <div className="text-slate-200 break-words">
-              {change.displayNewValue || formatDisplayValue(change.newValue)}
-            </div>
-          </div>
-        </div>
+    <div className="flex flex-wrap items-center gap-x-2 text-xs py-1">
+      <span className="text-slate-500 font-bold uppercase tracking-tighter">{fieldLabel}</span>
+      <div className="flex items-center gap-1.5">
+        <span className="text-slate-400 line-through decoration-slate-600">
+          {change.displayOldValue || formatDisplayValue(change.oldValue)}
+        </span>
+        <ArrowRight size={10} className="text-slate-600" />
+        <span className="text-accent font-bold">
+          {change.displayNewValue || formatDisplayValue(change.newValue)}
+        </span>
       </div>
     </div>
   );
 }
 
-export default function ActivityTimeline({ taskId }: ActivityTimelineProps) {
+export default function ActivityTimeline({ taskId }: { taskId: string }) {
   const [activities, setActivities] = useState<ActivityLogEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadActivities() {
       try {
         setLoading(true);
-        const res = await fetch(
-          `/api/tasks/${taskId}/activity?limit=50&sort=-createdAt`
-        );
+        const res = await fetch(`/api/tasks/${taskId}/activity?limit=50&sort=-createdAt`);
         if (res.ok) {
           const data = await res.json();
           setActivities(data.data || []);
@@ -150,18 +113,20 @@ export default function ActivityTimeline({ taskId }: ActivityTimelineProps) {
         setLoading(false);
       }
     }
-
     loadActivities();
   }, [taskId]);
 
   if (loading) {
     return (
-      <div className="space-y-3">
+      <div className="space-y-4">
         {[...Array(3)].map((_, i) => (
-          <div
-            key={i}
-            className="h-20 animate-pulse rounded-lg bg-slate-800/40"
-          />
+          <div key={i} className="flex gap-4 animate-pulse">
+            <div className="h-8 w-8 rounded-full bg-slate-800" />
+            <div className="flex-1 space-y-2 py-1">
+              <div className="h-3 w-1/4 rounded bg-slate-800" />
+              <div className="h-3 w-1/2 rounded bg-slate-800" />
+            </div>
+          </div>
         ))}
       </div>
     );
@@ -169,188 +134,113 @@ export default function ActivityTimeline({ taskId }: ActivityTimelineProps) {
 
   if (activities.length === 0) {
     return (
-      <div className="flex items-center justify-center rounded-lg border border-slate-800/40 bg-slate-900/20 p-8">
-        <p className="text-sm text-slate-400">No activity yet</p>
+      <div className="text-center py-10 rounded-xl border border-dashed border-white/5 bg-slate-900/20">
+        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest text-center">No activity history yet</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-3">
+    <div className="relative space-y-0 pb-4">
+      {/* Vertical Line */}
+      <div className="absolute left-4 top-2 bottom-0 w-px bg-white/5" />
+
       {activities.map((activity, idx) => {
-        const IconComponent = EVENT_ICONS[activity.eventType] || Settings;
-        const colorClass = EVENT_COLORS[activity.eventType] || EVENT_COLORS.FIELD_CHANGED;
-        const label = EVENT_LABELS[activity.eventType] || activity.eventType;
-        const isExpanded = expandedId === activity._id;
-
+        const Icon = EVENT_ICONS[activity.eventType] || Settings;
+        const color = EVENT_COLORS[activity.eventType] || "text-slate-400";
+        
         return (
-          <div
-            key={activity._id}
-            className="rounded-lg border border-slate-800/40 bg-slate-900/30 overflow-hidden hover:border-slate-700 transition-colors"
-          >
-            {/* Timeline Header */}
-            <button
-              onClick={() =>
-                setExpandedId(isExpanded ? null : activity._id)
-              }
-              className="w-full px-4 py-3 flex items-start justify-between gap-4 hover:bg-slate-800/20 transition-colors"
-            >
-              <div className="flex items-start gap-3 flex-1 min-w-0">
-                {/* Icon */}
-                <div className={`rounded-lg p-2 mt-0.5 flex-shrink-0 ${colorClass}`}>
-                  <IconComponent className="h-4 w-4" />
-                </div>
-
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium text-slate-100">{label}</div>
-
-                  <div className="mt-1 flex items-center gap-2 text-xs text-slate-400">
-                    <span>By</span>
-                    <span className="font-medium text-slate-300">
-                      {activity.user
-                        ? `${activity.user.firstName} ${activity.user.lastName}`
-                        : "System"}
-                    </span>
-                    {activity.user?.role && (
-                      <span className="inline-block bg-slate-800/60 rounded px-1.5 py-0.5 text-slate-400">
-                        {activity.user.role.toUpperCase()}
-                      </span>
-                    )}
-                  </div>
-
-                  {activity.description && (
-                    <p className="mt-1 text-sm text-slate-300">
-                      {activity.description}
-                    </p>
-                  )}
-                </div>
+          <div key={activity._id} className="relative flex gap-4 pb-8 group last:pb-0">
+            {/* User Avatar / Role Icon */}
+            <div className="relative z-10 flex-shrink-0">
+              <div className="h-8 w-8 rounded-full border border-white/10 bg-slate-900 flex items-center justify-center overflow-hidden shadow-lg group-hover:border-accent/40 transition-colors">
+                {activity.user?.avatarUrl ? (
+                  <img src={activity.user.avatarUrl} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <span className="text-[10px] font-black text-slate-500 uppercase">
+                    {activity.user?.firstName?.[0] || "S"}
+                  </span>
+                )}
               </div>
+              <div className={`absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-slate-950 flex items-center justify-center border border-white/10 ${color}`}>
+                <Icon size={10} />
+              </div>
+            </div>
 
-              {/* Timestamp */}
-              <div className="flex flex-col items-end gap-1 flex-shrink-0 text-xs text-slate-500">
-                <time>
-                  {new Date(activity.createdAt).toLocaleDateString()} -{" "}
-                  {new Date(activity.createdAt).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit"
-                  })}
+            {/* Content */}
+            <div className="flex-1 pt-0.5 min-w-0">
+              <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 mb-1 text-xs">
+                <span className="font-black text-slate-100 uppercase tracking-tighter">
+                  {activity.user ? `${activity.user.firstName} ${activity.user.lastName}` : "System"}
+                </span>
+                <span className="text-slate-500 font-medium">
+                  {activity.eventType === "TASK_CREATED" ? "created this task" : "updated this task"}
+                </span>
+                <div className="h-1 w-1 rounded-full bg-slate-700 mx-0.5" />
+                <time className="text-slate-500 font-bold tabular-nums">
+                   {new Date(activity.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                   {" • "}
+                   {new Date(activity.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </time>
-                {isExpanded && (
-                  <span className="text-slate-600">↑ Hide details</span>
-                )}
-                {!isExpanded && activity.fieldChanges && activity.fieldChanges.length > 0 && (
-                  <span className="text-slate-600">↓ Show {activity.fieldChanges.length} change(s)</span>
-                )}
               </div>
-            </button>
 
-            {/* Expanded Details */}
-            {isExpanded && (
-              <div className="border-t border-slate-800/40 bg-slate-950/40 px-4 py-3 space-y-3">
-                {/* Special handling for TASK_CREATED - show key task info */}
+              {/* Descriptions / Changes */}
+              <div className="space-y-1">
+                {activity.fieldChanges && activity.fieldChanges.length > 0 && (
+                  <div className="space-y-0.5 mt-2 bg-slate-900/40 rounded-lg p-2 border border-white/5">
+                    {activity.fieldChanges.map((change, cIdx) => (
+                      <FieldChangeRow key={cIdx} change={change} />
+                    ))}
+                  </div>
+                )}
+                
+                {activity.description && !activity.fieldChanges?.length && (
+                  <p className="text-sm text-slate-400 leading-relaxed max-w-2xl italic">
+                    {activity.description}
+                  </p>
+                )}
+
+                {/* Special Metadata Display: Task Creation Details */}
                 {activity.eventType === "TASK_CREATED" && activity.metadata?.taskData && (
-                  <>
-                    <div className="text-xs font-medium text-slate-400 uppercase tracking-wide">
-                      Initial Task Details
+                    <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 bg-emerald-500/5 rounded-xl p-3 border border-emerald-500/10 shadow-inner">
+                        <div className="flex flex-col gap-0.5">
+                            <span className="text-[9px] font-black text-emerald-500/60 uppercase tracking-widest">Initial Project</span>
+                            <span className="text-[11px] font-bold text-slate-300">
+                                {activity.metadata.taskData.project?.name || "Global"}
+                            </span>
+                        </div>
+                        <div className="flex flex-col gap-0.5">
+                            <span className="text-[9px] font-black text-emerald-500/60 uppercase tracking-widest">Initial Assignee</span>
+                            <span className="text-[11px] font-bold text-slate-300">
+                                {activity.metadata.taskData.assignee?.firstName 
+                                    ? `${activity.metadata.taskData.assignee.firstName} ${activity.metadata.taskData.assignee.lastName}`
+                                    : "Unassigned"}
+                            </span>
+                        </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                      <div className="bg-slate-800/40 rounded p-3">
-                        <div className="text-xs text-slate-500 mb-1">Type</div>
-                        <div className="text-slate-200">{activity.metadata.taskData?.type || "—"}</div>
-                      </div>
-                      <div className="bg-slate-800/40 rounded p-3">
-                        <div className="text-xs text-slate-500 mb-1">Priority</div>
-                        <div className="text-slate-200">{activity.metadata.taskData?.priority || "—"}</div>
-                      </div>
-                      <div className="bg-slate-800/40 rounded p-3">
-                        <div className="text-xs text-slate-500 mb-1">Status</div>
-                        <div className="text-slate-200">{activity.metadata.taskData?.status || "—"}</div>
-                      </div>
-                      <div className="bg-slate-800/40 rounded p-3">
-                        <div className="text-xs text-slate-500 mb-1">Assignee</div>
-                        <div className="text-slate-200">
-                          {activity.metadata.taskData?.assignee
-                            ? `${activity.metadata.taskData.assignee.firstName} ${activity.metadata.taskData.assignee.lastName}`
-                            : "Unassigned"}
-                        </div>
-                      </div>
-                      {activity.metadata.taskData?.description && (
-                        <div className="bg-slate-800/40 rounded p-3 col-span-2">
-                          <div className="text-xs text-slate-500 mb-1">Description</div>
-                          <div className="text-slate-200 text-xs">{activity.metadata.taskData.description}</div>
-                        </div>
-                      )}
-                      {activity.metadata.taskData?.attachments?.length > 0 && (
-                        <div className="bg-slate-800/40 rounded p-3 col-span-2">
-                          <div className="text-xs text-slate-500 mb-1">Attachments</div>
-                          <div className="text-slate-200 text-xs">
-                            {activity.metadata.taskData.attachments.length} image(s) uploaded
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </>
                 )}
 
-                {/* Field Changes */}
-                {activity.eventType !== "TASK_CREATED" && activity.fieldChanges && activity.fieldChanges.length > 0 && (
-                  <>
-                    <div className="text-xs font-medium text-slate-400 uppercase tracking-wide">
-                      Field Changes ({activity.fieldChanges.length})
+                {/* Special Metadata Display: Comment Content */}
+                {activity.eventType === "COMMENT_ADDED" && activity.metadata?.commentContent && (
+                    <div className="mt-2 bg-slate-900/60 rounded-xl p-3 border border-indigo-500/20 shadow-lg animate-in fade-in slide-in-from-left-2 duration-500">
+                         <p className="text-[13px] text-slate-300 leading-relaxed italic border-l-2 border-indigo-500/40 pl-3">
+                            &quot;{activity.metadata.commentContent}&quot;
+                         </p>
                     </div>
-                    <div className="space-y-2">
-                      {activity.fieldChanges.map((change, idx) => (
-                        <FieldChangeDisplay key={idx} change={change} />
+                )}
+
+                {/* Special Metadata Display: Image Uploads */}
+                {activity.eventType === "IMAGES_ADDED" && activity.metadata?.files && (
+                   <div className="mt-2 flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                      {activity.metadata.files.map((file: any, fIdx: number) => (
+                         <div key={fIdx} className="px-2 py-1 rounded bg-slate-800 border border-white/5 text-[10px] text-slate-300 font-medium truncate max-w-[150px]">
+                            {file}
+                         </div>
                       ))}
-                    </div>
-                  </>
+                   </div>
                 )}
-
-                {/* Metadata (for non-TASK_CREATED events) */}
-                {activity.eventType !== "TASK_CREATED" && activity.metadata && Object.keys(activity.metadata).length > 0 && (
-                  <>
-                    <div className="text-xs font-medium text-slate-400 uppercase tracking-wide mt-4">
-                      Details
-                    </div>
-                    <div className="space-y-2">
-                      {activity.eventType === "IMAGES_ADDED" && activity.metadata.files && (
-                        <div className="bg-slate-800/40 rounded p-3 text-xs text-slate-300">
-                          <p className="font-medium mb-2">Files uploaded:</p>
-                          <ul className="list-disc list-inside space-y-1">
-                            {activity.metadata.files.map((file: string, idx: number) => (
-                              <li key={idx}>{file}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                      {activity.eventType === "IMAGES_REMOVED" && (
-                        <div className="bg-slate-800/40 rounded p-3 text-xs text-slate-300">
-                          <p><span className="text-slate-500">File:</span> {activity.metadata.fileName}</p>
-                        </div>
-                      )}
-                      {!["IMAGES_ADDED", "IMAGES_REMOVED"].includes(activity.eventType) && (
-                        <div className="bg-slate-800/40 rounded p-3 text-xs text-slate-300 font-mono max-h-48 overflow-y-auto">
-                          <pre className="whitespace-pre-wrap break-words">
-                            {JSON.stringify(activity.metadata, null, 2)}
-                          </pre>
-                        </div>
-                      )}
-                    </div>
-                  </>
-                )}
-
-                {!activity.fieldChanges?.length &&
-                  (!activity.metadata ||
-                    Object.keys(activity.metadata).length === 0) && (
-                    activity.eventType !== "TASK_CREATED" && (
-                      <div className="text-sm text-slate-400 italic">
-                        No additional details for this event
-                      </div>
-                    )
-                  )}
               </div>
-            )}
+            </div>
           </div>
         );
       })}
