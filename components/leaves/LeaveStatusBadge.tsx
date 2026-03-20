@@ -5,7 +5,7 @@ export default function LeaveStatusBadge({ status }: { status: string }) {
     approved: { bg: "bg-emerald-500/20 border-emerald-500/50", text: "text-emerald-400" },
     pending: { bg: "bg-amber-500/20 border-amber-500/50", text: "text-amber-400" },
     rejected: { bg: "bg-rose-500/20 border-rose-500/50", text: "text-rose-400" },
-    cancelled: { bg: "bg-slate-500/20 border-slate-500/50", text: "text-slate-400" },
+    cancelled: { bg: "bg-slate-500/20 border-slate-500/50", text: "text-text-secondary" },
   };
 
   const label = status?.toString() || "pending";

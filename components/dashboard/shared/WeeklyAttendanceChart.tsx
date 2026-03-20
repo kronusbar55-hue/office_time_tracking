@@ -34,11 +34,11 @@ export default function WeeklyAttendanceChart({
                                 className={`w-full max-w-[40px] rounded-t-lg transition-colors ${isToday ? 'bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)]' : 'bg-slate-700 group-hover:bg-slate-600'
                                     }`}
                             />
-                            <div className="absolute -top-8 bg-slate-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20">
+                            <div className="absolute -top-8 bg-card-bg text-text-primary text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20">
                                 {count} Present
                             </div>
                         </div>
-                        <span className={`text-[10px] font-bold ${isToday ? 'text-blue-400' : 'text-slate-500'}`}>{dateLabel}</span>
+                        <span className={`text-[10px] font-bold ${isToday ? 'text-blue-400' : 'text-text-secondary'}`}>{dateLabel}</span>
                     </div>
                 );
             })}

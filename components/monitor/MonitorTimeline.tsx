@@ -91,11 +91,11 @@ export default function MonitorTimeline({ userId, date, onClose }: MonitorTimeli
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
-            className="w-full bg-slate-900/80 backdrop-blur-xl border border-white/10 rounded-[2rem] p-8 shadow-2xl relative overflow-hidden"
+            className="w-full bg-bg-secondary/80 backdrop-blur-xl border border-border-color rounded-[2rem] p-8 shadow-2xl relative overflow-hidden"
         >
             <button
                 onClick={onClose}
-                className="absolute top-6 right-6 p-2 rounded-full bg-white/5 hover:bg-white/10 text-white/50 hover:text-white transition-all z-20"
+                className="absolute top-6 right-6 p-2 rounded-full bg-hover-bg hover:bg-hover-bg text-text-primary/50 hover:text-text-primary transition-all z-20"
             >
                 <X className="h-5 w-5" />
             </button>
@@ -108,8 +108,8 @@ export default function MonitorTimeline({ userId, date, onClose }: MonitorTimeli
                             <Clock className="h-6 w-6" />
                         </div>
                         <div>
-                            <h3 className="text-xl font-black text-white uppercase tracking-tighter">Activity <span className="text-accent underline decoration-accent/30">Timeline</span></h3>
-                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.3em] mt-1">{format(parseISO(date), "MMMM dd, yyyy")}</p>
+                            <h3 className="text-xl font-black text-text-primary uppercase tracking-tighter">Activity <span className="text-accent underline decoration-accent/30">Timeline</span></h3>
+                            <p className="text-[10px] text-text-secondary font-bold uppercase tracking-[0.3em] mt-1">{format(parseISO(date), "MMMM dd, yyyy")}</p>
                         </div>
                     </div>
 
@@ -126,7 +126,7 @@ export default function MonitorTimeline({ userId, date, onClose }: MonitorTimeli
                     <div className="h-48 flex items-center justify-center">
                         <div className="flex flex-col items-center gap-4">
                             <div className="h-12 w-12 border-4 border-accent border-t-transparent rounded-full animate-spin" />
-                            <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Reconstructing Day...</p>
+                            <p className="text-[10px] text-text-secondary font-black uppercase tracking-widest">Reconstructing Day...</p>
                         </div>
                     </div>
                 ) : data.length === 0 ? (
@@ -141,8 +141,8 @@ export default function MonitorTimeline({ userId, date, onClose }: MonitorTimeli
                             <div className="absolute top-0 inset-x-0 flex justify-between px-1">
                                 {Array.from({ length: END_HOUR - START_HOUR + 1 }).map((_, i) => (
                                     <div key={i} className="flex flex-col items-center gap-1.5">
-                                        <div className="h-2 w-[1px] bg-white/20" />
-                                        <span className="text-[8px] font-black text-slate-500 tracking-tighter">
+                                        <div className="h-2 w-[1px] bg-bg-primary/20" />
+                                        <span className="text-[8px] font-black text-text-secondary tracking-tighter">
                                             {((START_HOUR + i) % 12 === 0 ? 12 : (START_HOUR + i) % 12)} {(START_HOUR + i) >= 12 ? 'PM' : 'AM'}
                                         </span>
                                     </div>
@@ -150,12 +150,12 @@ export default function MonitorTimeline({ userId, date, onClose }: MonitorTimeli
                             </div>
 
                             {/* Track Container */}
-                            <div className="h-14 bg-black/40 rounded-2xl border border-white/5 relative mt-6 flex items-center overflow-hidden">
+                            <div className="h-14 bg-black/40 rounded-2xl border border-border-color relative mt-6 flex items-center overflow-hidden">
                                 {/* Vertical Grid Lines */}
                                 {Array.from({ length: (END_HOUR - START_HOUR) * 2 }).map((_, i) => (
                                     <div
                                         key={i}
-                                        className="absolute h-full w-[1px] bg-white/5"
+                                        className="absolute h-full w-[1px] bg-hover-bg"
                                         style={{ left: `${(i / ((END_HOUR - START_HOUR) * 2)) * 100}%` }}
                                     />
                                 ))}
@@ -206,18 +206,18 @@ export default function MonitorTimeline({ userId, date, onClose }: MonitorTimeli
                                     initial={{ opacity: 0, x: -20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     exit={{ opacity: 0, x: 20 }}
-                                    className="bg-black/60 rounded-3xl border border-white/5 p-6 flex flex-wrap gap-12 items-center"
+                                    className="bg-black/60 rounded-3xl border border-border-color p-6 flex flex-wrap gap-12 items-center"
                                 >
                                     <div className="flex flex-col">
-                                        <span className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-1">Time Slice</span>
-                                        <span className="text-2xl font-black text-white uppercase">{hoveredSegment.formattedTime}</span>
+                                        <span className="text-[10px] text-text-secondary font-black uppercase tracking-widest mb-1">Time Slice</span>
+                                        <span className="text-2xl font-black text-text-primary uppercase">{hoveredSegment.formattedTime}</span>
                                         <div className="flex items-center gap-2 mt-2">
                                             <div className={`h-2 w-2 rounded-full ${getStatusColor(hoveredSegment.status)} shadow-lg shadow-emerald-500/20`} />
-                                            <span className="text-[10px] text-slate-300 font-bold uppercase tracking-widest">{hoveredSegment.status}</span>
+                                            <span className="text-[10px] text-text-secondary font-bold uppercase tracking-widest">{hoveredSegment.status}</span>
                                         </div>
                                     </div>
 
-                                    <div className="h-12 w-[1px] bg-white/10" />
+                                    <div className="h-12 w-[1px] bg-hover-bg" />
 
                                     <div className="flex gap-8">
                                         <DetailStat icon={<MousePointer2 />} label="CLICKS" value={hoveredSegment.stats.clicks} />
@@ -231,7 +231,7 @@ export default function MonitorTimeline({ userId, date, onClose }: MonitorTimeli
                                     key="hint"
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
-                                    className="h-[104px] flex items-center justify-center border border-dashed border-white/5 rounded-3xl bg-white/2"
+                                    className="h-[104px] flex items-center justify-center border border-dashed border-border-color rounded-3xl bg-bg-primary/2"
                                 >
                                     <div className="flex items-center gap-3 text-slate-600">
                                         <Info className="h-4 w-4" />
@@ -252,8 +252,8 @@ export default function MonitorTimeline({ userId, date, onClose }: MonitorTimeli
 
 function StatPill({ icon, label, value, accent = false }: { icon: any, label: string, value: string, accent?: boolean }) {
     return (
-        <div className={`flex flex-col items-center px-6 py-2 rounded-2xl border ${accent ? 'bg-accent text-slate-950 border-accent' : 'bg-black/40 text-white border-white/5'}`}>
-            <span className={`text-[8px] font-black uppercase tracking-[0.2em] mb-1 ${accent ? 'opacity-60' : 'text-slate-500'}`}>{label}</span>
+        <div className={`flex flex-col items-center px-6 py-2 rounded-2xl border ${accent ? 'bg-accent text-slate-950 border-accent' : 'bg-black/40 text-text-primary border-border-color'}`}>
+            <span className={`text-[8px] font-black uppercase tracking-[0.2em] mb-1 ${accent ? 'opacity-60' : 'text-text-secondary'}`}>{label}</span>
             <div className="flex items-center gap-2">
                 <span className={accent ? 'text-slate-900' : 'text-accent'}>{React.cloneElement(icon, { size: 12 })}</span>
                 <span className="text-sm font-black tabular-nums font-mono">{value}</span>
@@ -266,7 +266,7 @@ function LegendItem({ color, label }: { color: string, label: string }) {
     return (
         <div className="flex items-center gap-2 opacity-60 hover:opacity-100 transition-opacity">
             <div className={`h-2.5 w-5 rounded-sm ${color}`} />
-            <span className="text-[9px] font-black text-white/50 tracking-widest">{label}</span>
+            <span className="text-[9px] font-black text-text-primary/50 tracking-widest">{label}</span>
         </div>
     );
 }
@@ -274,11 +274,11 @@ function LegendItem({ color, label }: { color: string, label: string }) {
 function DetailStat({ icon, label, value }: { icon: any, label: string, value: any }) {
     return (
         <div className="flex flex-col">
-            <div className="flex items-center gap-2 text-slate-500 mb-1">
+            <div className="flex items-center gap-2 text-text-secondary mb-1">
                 {React.cloneElement(icon, { size: 10 })}
                 <span className="text-[8px] font-black uppercase tracking-widest">{label}</span>
             </div>
-            <span className="text-xl font-black text-white tabular-nums">{value}</span>
+            <span className="text-xl font-black text-text-primary tabular-nums">{value}</span>
         </div>
     );
 }

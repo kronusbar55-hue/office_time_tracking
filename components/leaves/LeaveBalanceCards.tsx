@@ -35,7 +35,7 @@ export default function LeaveBalanceCards() {
     return (
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-28 animate-pulse rounded-xl bg-slate-800/40" />
+          <div key={i} className="h-28 animate-pulse rounded-xl bg-card-bg/40" />
         ))}
       </div>
     );
@@ -55,14 +55,14 @@ export default function LeaveBalanceCards() {
           >
             <div className="mb-2 flex items-center gap-2">
               <div className="h-2 w-2 rounded-full bg-emerald-400" />
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <span className="text-xs font-semibold uppercase tracking-wider text-text-secondary">
                 {label}
               </span>
             </div>
-            <p className="text-2xl font-bold text-white">
-              {remainingDays} <span className="text-sm font-normal text-slate-500">/ {totalDays}</span>
+            <p className="text-2xl font-bold text-text-primary">
+              {remainingDays} <span className="text-sm font-normal text-text-secondary">/ {totalDays}</span>
             </p>
-            <p className="mt-1 text-xs text-slate-400">Remaining days</p>
+            <p className="mt-1 text-xs text-text-secondary">Remaining days</p>
           </div>
         );
       })}

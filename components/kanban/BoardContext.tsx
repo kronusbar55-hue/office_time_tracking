@@ -9,6 +9,8 @@ interface BoardContextType {
     refreshTasks: () => Promise<void>;
     moveTask: (taskId: string, toStatus: string, order: number) => Promise<void>;
     createTask: (taskData: any) => Promise<void>;
+    assigneeFilter: string;
+    setAssigneeFilter: (id: string) => void;
 }
 
 const BoardContext = createContext<BoardContextType | undefined>(undefined);
@@ -16,11 +18,16 @@ const BoardContext = createContext<BoardContextType | undefined>(undefined);
 export const BoardProvider: React.FC<{ projectId: string; children: React.ReactNode }> = ({ projectId, children }) => {
     const [tasks, setTasks] = useState<ITask[]>([]);
     const [loading, setLoading] = useState(true);
+    const [assigneeFilter, setAssigneeFilter] = useState<string>("all");
 
     const refreshTasks = useCallback(async () => {
         try {
             setLoading(true);
-            const res = await fetch(`/api/tasks?project=${projectId}`);
+            let url = `/api/tasks?project=${projectId}`;
+            if (assigneeFilter !== "all") {
+                url += `&assignee=${assigneeFilter}`;
+            }
+            const res = await fetch(url);
             const result = await res.json();
             if (result.data) {
                 setTasks(result.data);
@@ -30,11 +37,11 @@ export const BoardProvider: React.FC<{ projectId: string; children: React.ReactN
         } finally {
             setLoading(false);
         }
-    }, [projectId]);
+    }, [projectId, assigneeFilter]);
 
     useEffect(() => {
         refreshTasks();
-    }, [refreshTasks]);
+    }, [refreshTasks, assigneeFilter]);
 
     const moveTask = async (taskId: string, toStatus: string, order: number) => {
         // Optimistic update
@@ -59,12 +66,12 @@ export const BoardProvider: React.FC<{ projectId: string; children: React.ReactN
             refreshTasks(); // Revert on failure
         }
     };
-    const createTask = async () => {
+    const createTask = async (taskData: any) => {
         await refreshTasks();
     };
 
     return (
-        <BoardContext.Provider value={{ tasks, loading, refreshTasks, moveTask, createTask }}>
+        <BoardContext.Provider value={{ tasks, loading, refreshTasks, moveTask, createTask, assigneeFilter, setAssigneeFilter }}>
             {children}
         </BoardContext.Provider>
     );

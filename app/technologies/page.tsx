@@ -82,8 +82,8 @@ export default function TechnologiesPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-2">
         <div>
-          <h1 className="text-sm font-semibold text-slate-50">Technology Management</h1>
-          <p className="text-xs text-slate-400">Manage the core tech stack used across projects and teams.</p>
+          <h1 className="text-sm font-semibold text-text-primary">Technology Management</h1>
+          <p className="text-xs text-text-secondary">Manage the core tech stack used across projects and teams.</p>
         </div>
         <button
           onClick={openAddModal}
@@ -94,23 +94,23 @@ export default function TechnologiesPage() {
         </button>
       </div>
 
-      <section className="rounded-xl border border-slate-800 bg-card/80 p-4 shadow-card">
+      <section className="rounded-xl border border-border-color bg-card/80 p-4 shadow-card">
         <div className="flex items-center gap-3 mb-4">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary" />
             <input
               type="text"
               placeholder="Search by name or description..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-9 w-full rounded-md border border-slate-700 bg-slate-950/60 pl-9 pr-3 text-sm text-slate-100 outline-none focus:border-accent focus:ring-1 focus:ring-accent/40"
+              className="h-9 w-full rounded-md border border-border-color bg-bg-primary/60 pl-9 pr-3 text-sm text-text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent/40"
             />
           </div>
 
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="rounded-md border border-slate-700 bg-slate-950/60 px-3 py-1.5 text-sm text-slate-100 outline-none focus:border-accent focus:ring-1 focus:ring-accent/40"
+            className="rounded-md border border-border-color bg-bg-primary/60 px-3 py-1.5 text-sm text-text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent/40"
           >
             <option value="all">All Statuses</option>
             <option value="active">Active</option>
@@ -118,10 +118,10 @@ export default function TechnologiesPage() {
           </select>
         </div>
 
-        <div className="overflow-x-auto rounded-lg border border-slate-800/80 bg-slate-950/40">
+        <div className="overflow-x-auto rounded-lg border border-border-color/80 bg-bg-primary/40">
           <table className="min-w-full border-separate border-spacing-0 text-[11px]">
             <thead>
-              <tr className="bg-slate-900/60 text-slate-400">
+              <tr className="bg-bg-secondary/60 text-text-secondary">
                 <th className="px-4 py-2 text-left font-medium">NO</th>
                 <th className="px-4 py-2 text-left font-medium">TECHNOLOGY NAME</th>
                 {/* <th className="px-4 py-2 text-left font-medium">DESCRIPTION</th> */}
@@ -133,51 +133,55 @@ export default function TechnologiesPage() {
             <tbody>
               {loading ? (
                 <>
-                  {[1, 2, 3].map((i) => (
-                    <tr key={i} className="border-t border-slate-800/70">
-                      <td className="px-4 py-2"><div className="h-4 w-6 rounded bg-slate-700/40 animate-pulse" /></td>
-                      <td className="px-4 py-2"><div className="h-4 w-24 rounded bg-slate-700/40 animate-pulse" /></td>
-                      <td className="px-4 py-2"><div className="h-4 w-32 rounded bg-slate-700/40 animate-pulse" /></td>
-                      <td className="px-4 py-2"><div className="h-4 w-16 rounded bg-slate-700/40 animate-pulse" /></td>
-                      <td className="px-4 py-2"><div className="h-4 w-20 rounded bg-slate-700/40 animate-pulse" /></td>
-                      <td className="px-4 py-2"><div className="h-4 w-16 rounded bg-slate-700/40 animate-pulse ml-auto" /></td>
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <tr key={i} className="animate-pulse border-t border-border-color/50 hover:bg-bg-secondary/40 transition-colors">
+                      <td className="px-4 py-3"><div className="h-4 w-4 rounded bg-card-bg" /></td>
+                      <td className="px-4 py-3"><div className="h-4 w-32 rounded bg-card-bg" /></td>
+                      <td className="px-4 py-3"><div className="h-5 w-16 rounded-full bg-card-bg/60" /></td>
+                      <td className="px-4 py-3"><div className="h-4 w-24 rounded bg-card-bg/40" /></td>
+                      <td className="px-4 py-3 text-right">
+                        <div className="inline-flex items-center gap-2">
+                          <div className="h-6 w-6 rounded bg-card-bg" />
+                          <div className="h-6 w-6 rounded bg-card-bg" />
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </>
               ) : paginated.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
+                  <td colSpan={6} className="px-4 py-8 text-center text-text-secondary">
                     No technologies found.
                   </td>
                 </tr>
               ) : (
                 paginated.map((tech, idx) => (
-                  <tr key={tech.id} className="border-t border-slate-800/70 text-slate-200 hover:bg-slate-800/30">
-                    <td className="px-4 py-2 text-slate-400">{(currentPage - 1) * ITEMS_PER_PAGE + idx + 1}</td>
-                    <td className="px-4 py-2 font-medium text-slate-100">{tech.name}</td>
-                    {/* <td className="px-4 py-2 text-slate-400">—</td> */}
+                  <tr key={tech.id} className="border-t border-border-color/70 text-text-primary hover:bg-card-bg/30">
+                    <td className="px-4 py-2 text-text-secondary">{(currentPage - 1) * ITEMS_PER_PAGE + idx + 1}</td>
+                    <td className="px-4 py-2 font-medium text-text-primary">{tech.name}</td>
+                    {/* <td className="px-4 py-2 text-text-secondary">—</td> */}
                     <td className="px-4 py-2">
                       <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${tech.status === "active"
                           ? "bg-emerald-500/10 text-emerald-300"
-                          : "bg-slate-800 text-slate-400"
+                          : "bg-card-bg text-text-secondary"
                         }`}>
                         {tech.status === "active" ? "Active" : "Inactive"}
                       </span>
                     </td>
-                    <td className="px-4 py-2 text-slate-400">
+                    <td className="px-4 py-2 text-text-secondary">
                       {tech.createdAt ? new Date(tech.createdAt).toLocaleDateString() : "—"}
                     </td>
                     <td className="px-4 py-2 text-right">
                       <div className="inline-flex items-center gap-1.5">
                         <button
                           onClick={() => openEditModal(tech)}
-                          className="rounded-md p-1 text-slate-400 hover:text-accent"
+                          className="rounded-md p-1 text-text-secondary hover:text-accent"
                         >
                           <Edit2 className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => void handleDelete(tech.id)}
-                          className="rounded-md p-1 text-slate-400 hover:text-rose-400"
+                          className="rounded-md p-1 text-text-secondary hover:text-rose-400"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -192,23 +196,23 @@ export default function TechnologiesPage() {
 
         {/* Pagination Controls */}
         {!loading && totalPages > 1 && (
-          <div className="flex items-center justify-between mt-4 bg-slate-900/40 px-4 py-3 rounded-xl border border-slate-800/50">
-            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-              Page <span className="text-slate-200 mx-1">{currentPage}</span> of <span className="text-slate-200 mx-1">{totalPages}</span>
-              <span className="ml-4 lowercase text-[10px] text-slate-500 font-normal tracking-normal">- {filtered.length} total technologies</span>
+          <div className="flex items-center justify-between mt-4 bg-bg-secondary/40 px-4 py-3 rounded-xl border border-border-color/50">
+            <p className="text-[11px] font-semibold text-text-secondary uppercase tracking-wider">
+              Page <span className="text-text-primary mx-1">{currentPage}</span> of <span className="text-text-primary mx-1">{totalPages}</span>
+              <span className="ml-4 lowercase text-[10px] text-text-secondary font-normal tracking-normal">- {filtered.length} total technologies</span>
             </p>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                className="px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800/50 text-[11px] font-bold text-slate-300 hover:bg-slate-700 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                className="px-3 py-1.5 rounded-lg border border-border-color bg-card-bg/50 text-[11px] font-bold text-text-secondary hover:bg-hover-bg hover:text-text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all"
               >
                 Prev
               </button>
               <button
                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
-                className="px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800/50 text-[11px] font-bold text-slate-300 hover:bg-slate-700 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                className="px-3 py-1.5 rounded-lg border border-border-color bg-card-bg/50 text-[11px] font-bold text-text-secondary hover:bg-hover-bg hover:text-text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all"
               >
                 Next
               </button>

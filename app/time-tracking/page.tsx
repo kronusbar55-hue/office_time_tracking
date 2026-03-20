@@ -30,8 +30,8 @@ function InnerTimeTracking() {
     <div className="space-y-6 p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Time Tracking</h1>
-          <p className="mt-1 text-sm text-slate-400">
+          <h1 className="text-2xl font-bold text-text-primary">Time Tracking</h1>
+          <p className="mt-1 text-sm text-text-secondary">
             Track your work hours, breaks, and productivity
           </p>
         </div>
@@ -40,7 +40,7 @@ function InnerTimeTracking() {
             onClick={() => setViewMode("list")}
             className={`rounded-lg px-4 py-2 text-sm font-medium transition-all ${viewMode === "list"
                 ? "bg-accent text-slate-900"
-                : "bg-slate-800/60 text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+                : "bg-card-bg/60 text-text-secondary hover:bg-card-bg hover:text-text-primary"
               }`}
           >
             List View
@@ -50,7 +50,7 @@ function InnerTimeTracking() {
             className={`rounded-lg px-4 py-2 text-sm font-medium transition-all ${
               viewMode === "calendar"
                 ? "bg-accent text-slate-900"
-                : "bg-slate-800/60 text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+                : "bg-card-bg/60 text-text-secondary hover:bg-card-bg hover:text-text-primary"
             }`}
           >
             Calendar
@@ -66,7 +66,7 @@ function InnerTimeTracking() {
       )}
 
       {/* Sticky action buttons on mobile */}
-      <div className="sticky top-4 z-10 rounded-xl border border-white/10 bg-slate-900/95 p-4 backdrop-blur-md sm:static sm:rounded-2xl sm:border-white/10 sm:bg-transparent sm:p-0 sm:backdrop-blur-none">
+      <div className="sticky top-4 z-10 rounded-xl border border-border-color bg-bg-secondary/95 p-4 backdrop-blur-md sm:static sm:rounded-2xl sm:border-border-color sm:bg-transparent sm:p-0 sm:backdrop-blur-none">
         <ActionButtons />
       </div>
 
@@ -88,16 +88,16 @@ function InnerTimeTracking() {
           <TrackedHoursPanel />
 
           {/* Graph Analytics */}
-          <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-6 backdrop-blur-sm">
-            <h2 className="mb-6 text-lg font-bold uppercase tracking-wide text-slate-100">
+          <div className="rounded-2xl border border-border-color bg-bg-secondary/40 p-6 backdrop-blur-sm">
+            <h2 className="mb-6 text-lg font-bold uppercase tracking-wide text-text-primary">
               Analytics & Reports
             </h2>
             <TimeTrackingCharts refreshKey={refreshKey} />
           </div>
         </>
       ) : (
-        <div className="flex min-h-[320px] items-center justify-center rounded-2xl border border-white/10 bg-slate-900/40">
-          <p className="text-slate-500">Calendar view coming soon</p>
+        <div className="flex min-h-[320px] items-center justify-center rounded-2xl border border-border-color bg-bg-secondary/40">
+          <p className="text-text-secondary">Calendar view coming soon</p>
         </div>
       )}
     </div>

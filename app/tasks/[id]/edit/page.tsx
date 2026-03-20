@@ -23,7 +23,7 @@ export default function TaskEditPage() {
   const [projectId, setProjectId] = useState<string | null>(null);
   const [assigneeId, setAssigneeId] = useState<string | null>(null);
   const [dueDate, setDueDate] = useState<string | null>(null);
-  const [status, setStatus] = useState("backlog");
+  const [status, setStatus] = useState("todo");
 
   const [projects, setProjects] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
@@ -55,7 +55,7 @@ export default function TaskEditPage() {
         setProjectId(t.project?._id || null);
         setAssigneeId(t.assignee?._id || null);
         setDueDate(t.dueDate ? new Date(t.dueDate).toISOString().slice(0, 10) : null);
-        setStatus(t.status || "backlog");
+        setStatus(t.status || "todo");
       } catch (err) {
         console.error(err);
         toast.error("Failed to load task");
@@ -154,8 +154,8 @@ export default function TaskEditPage() {
     return (
       <div className="p-6">
         <div className="space-y-3">
-          <div className="h-6 w-1/2 animate-pulse rounded bg-slate-800/40" />
-          <div className="mt-6 h-32 animate-pulse rounded bg-slate-800/40" />
+          <div className="h-6 w-1/2 animate-pulse rounded bg-card-bg/40" />
+          <div className="mt-6 h-32 animate-pulse rounded bg-card-bg/40" />
         </div>
       </div>
     );
@@ -164,39 +164,39 @@ export default function TaskEditPage() {
   if (!task) {
     return (
       <div className="p-6">
-        <div className="text-center text-slate-400">Task not found</div>
+        <div className="text-center text-text-secondary">Task not found</div>
       </div>
     );
   }
 
   return (
     <div className="p-6">
-      <button onClick={() => router.back()} className="flex items-center gap-2 text-slate-400 hover:text-slate-200 mb-6">
+      <button onClick={() => router.back()} className="flex items-center gap-2 text-text-secondary hover:text-text-primary mb-6">
         <ChevronLeft className="h-4 w-4" />
         Back
       </button>
 
-      <form onSubmit={handleSubmit} className="max-w-2xl rounded-lg border border-slate-800/40 bg-slate-900/40 p-6">
-        <h1 className="text-2xl font-bold text-slate-50 mb-6">Edit Task</h1>
+      <form onSubmit={handleSubmit} className="max-w-2xl rounded-lg border border-border-color/40 bg-bg-secondary/40 p-6">
+        <h1 className="text-2xl font-bold text-text-primary mb-6">Edit Task</h1>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="text-[11px] text-slate-300 uppercase">Title</label>
+            <label className="text-[11px] text-text-secondary uppercase">Title</label>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
-              className="mt-2 w-full rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100"
+              className="mt-2 w-full rounded-md border border-border-color bg-bg-primary/60 px-3 py-2 text-sm text-text-primary"
             />
           </div>
 
           <div>
-            <label className="text-[11px] text-slate-300 uppercase">Project</label>
+            <label className="text-[11px] text-text-secondary uppercase">Project</label>
             <select
               value={projectId || ""}
               onChange={(e) => setProjectId(e.target.value || null)}
               required
-              className="mt-2 w-full rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100"
+              className="mt-2 w-full rounded-md border border-border-color bg-bg-primary/60 px-3 py-2 text-sm text-text-primary"
             >
               <option value="">Select project</option>
               {loadingMeta ? <option>Loading...</option> : projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -204,11 +204,11 @@ export default function TaskEditPage() {
           </div>
 
           <div>
-            <label className="text-[11px] text-slate-300 uppercase">Type</label>
+            <label className="text-[11px] text-text-secondary uppercase">Type</label>
             <select
               value={type}
               onChange={(e) => setType(e.target.value as any)}
-              className="mt-2 w-full rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100"
+              className="mt-2 w-full rounded-md border border-border-color bg-bg-primary/60 px-3 py-2 text-sm text-text-primary"
             >
               <option value="Task">Task</option>
               <option value="Bug">Bug</option>
@@ -217,11 +217,11 @@ export default function TaskEditPage() {
           </div>
 
           <div>
-            <label className="text-[11px] text-slate-300 uppercase">Assignee</label>
+            <label className="text-[11px] text-text-secondary uppercase">Assignee</label>
             <select
               value={assigneeId || ""}
               onChange={(e) => setAssigneeId(e.target.value || null)}
-              className="mt-2 w-full rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100"
+              className="mt-2 w-full rounded-md border border-border-color bg-bg-primary/60 px-3 py-2 text-sm text-text-primary"
             >
               <option value="">Unassigned</option>
               {loadingMeta ? <option>Loading...</option> : filteredUsers.map((u: any) => <option key={u.id} value={u.id}>{u.firstName} {u.lastName}</option>)}
@@ -229,11 +229,11 @@ export default function TaskEditPage() {
           </div>
 
           <div>
-            <label className="text-[11px] text-slate-300 uppercase">Priority</label>
+            <label className="text-[11px] text-text-secondary uppercase">Priority</label>
             <select
               value={priority}
               onChange={(e) => setPriority(e.target.value as any)}
-              className="mt-2 w-full rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100"
+              className="mt-2 w-full rounded-md border border-border-color bg-bg-primary/60 px-3 py-2 text-sm text-text-primary"
             >
               <option value="Low">Low</option>
               <option value="Medium">Medium</option>
@@ -243,35 +243,36 @@ export default function TaskEditPage() {
           </div>
 
           <div>
-            <label className="text-[11px] text-slate-300 uppercase">Status</label>
+            <label className="text-[11px] text-text-secondary uppercase">Status</label>
             <select
-              value={status}
+              value={status || "todo"}
               onChange={(e) => setStatus(e.target.value)}
-              className="mt-2 w-full rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100"
+              className="mt-2 w-full rounded-md border border-border-color bg-bg-primary/60 px-3 py-2 text-sm text-text-primary"
             >
-              <option value="backlog">Backlog</option>
+              <option value="todo">To Do</option>
               <option value="in_progress">In Progress</option>
+              <option value="qa">QA</option>
               <option value="done">Done</option>
             </select>
           </div>
 
           <div>
-            <label className="text-[11px] text-slate-300 uppercase">Due date</label>
+            <label className="text-[11px] text-text-secondary uppercase">Due date</label>
             <input
               type="date"
               value={dueDate || ""}
               onChange={(e) => setDueDate(e.target.value || null)}
-              className="mt-2 w-full rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100"
+              className="mt-2 w-full rounded-md border border-border-color bg-bg-primary/60 px-3 py-2 text-sm text-text-primary"
             />
           </div>
         </div>
 
         <div className="mt-4">
-          <label className="text-[11px] text-slate-300 uppercase">Description</label>
+          <label className="text-[11px] text-text-secondary uppercase">Description</label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="mt-2 w-full rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100"
+            className="mt-2 w-full rounded-md border border-border-color bg-bg-primary/60 px-3 py-2 text-sm text-text-primary"
             rows={6}
           />
         </div>
@@ -291,7 +292,7 @@ export default function TaskEditPage() {
           <button
             type="button"
             onClick={() => router.back()}
-            className="rounded-md px-4 py-2 text-sm text-slate-300 hover:text-slate-100"
+            className="rounded-md px-4 py-2 text-sm text-text-secondary hover:text-text-primary"
           >
             Cancel
           </button>

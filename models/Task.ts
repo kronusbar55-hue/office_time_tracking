@@ -6,7 +6,7 @@ export type TaskStatus =
   | "backlog"
   | "todo"
   | "in_progress"
-  | "in_review"
+  | "qa"
   | "done";
 
 export interface IAttachment {
@@ -108,7 +108,7 @@ const TaskSchema = new Schema<ITask>(
     },
     status: {
       type: String,
-      enum: ["backlog", "todo", "in_progress", "in_review", "done"],
+      enum: ["backlog", "todo", "in_progress", "qa", "done"],
       default: "backlog",
       index: true
     },

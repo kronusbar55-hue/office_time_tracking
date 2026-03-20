@@ -80,8 +80,8 @@ export default function TrackedHoursChart() {
     const CustomTooltip = ({ active, payload, label }: any) => {
         if (active && payload && payload.length) {
             return (
-                <div className="bg-slate-900 border border-slate-700 p-4 rounded-xl shadow-2xl backdrop-blur-md">
-                    <p className="text-slate-200 font-bold mb-2">{label}</p>
+                <div className="bg-bg-secondary border border-border-color p-4 rounded-xl shadow-2xl backdrop-blur-md">
+                    <p className="text-text-primary font-bold mb-2">{label}</p>
                     <div className="space-y-1">
                         {payload.map((entry: any, index: number) => (
                             <div key={index} className="flex items-center gap-3">
@@ -89,8 +89,8 @@ export default function TrackedHoursChart() {
                                     className="h-2 w-2 rounded-full"
                                     style={{ backgroundColor: entry.color }}
                                 />
-                                <span className="text-xs text-slate-400 capitalize">{entry.name}:</span>
-                                <span className="text-xs font-bold text-white">{entry.value}h</span>
+                                <span className="text-xs text-text-secondary capitalize">{entry.name}:</span>
+                                <span className="text-xs font-bold text-text-primary">{entry.value}h</span>
                             </div>
                         ))}
                     </div>
@@ -104,15 +104,15 @@ export default function TrackedHoursChart() {
         <div className="w-full h-full flex flex-col">
             {/* Tabs */}
             <div className="flex items-center justify-between mb-8">
-                <h3 className="text-lg font-bold text-white">Tracked Hours</h3>
-                <div className="flex p-1 bg-slate-800/50 rounded-xl border border-white/5">
+                <h3 className="text-lg font-bold text-text-primary">Tracked Hours</h3>
+                <div className="flex p-1 bg-card-bg/50 rounded-xl border border-border-color">
                     {["Day", "Week", "Month"].map((tab) => (
                         <button
                             key={tab}
                             onClick={() => setFilter(tab as any)}
                             className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${filter === tab
-                                ? "bg-blue-500 text-white shadow-lg"
-                                : "text-slate-400 hover:text-slate-200"
+                                ? "bg-blue-500 text-text-primary shadow-lg"
+                                : "text-text-secondary hover:text-text-primary"
                                 }`}
                         >
                             {tab}
@@ -130,7 +130,7 @@ export default function TrackedHoursChart() {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="absolute inset-0 flex items-center justify-center bg-slate-900/10 backdrop-blur-[2px] z-10"
+                            className="absolute inset-0 flex items-center justify-center bg-bg-secondary/10 backdrop-blur-[2px] z-10"
                         >
                             <RefreshCcw className="h-8 w-8 text-blue-500 animate-spin" />
                         </motion.div>
@@ -139,7 +139,7 @@ export default function TrackedHoursChart() {
                             key="error"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            className="absolute inset-0 flex flex-col items-center justify-center text-slate-500 gap-2"
+                            className="absolute inset-0 flex flex-col items-center justify-center text-text-secondary gap-2"
                         >
                             <AlertCircle className="h-8 w-8 text-red-500/50" />
                             <p className="text-sm">{error}</p>
@@ -155,7 +155,7 @@ export default function TrackedHoursChart() {
                             key="empty"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            className="absolute inset-0 flex flex-col items-center justify-center text-slate-500"
+                            className="absolute inset-0 flex flex-col items-center justify-center text-text-secondary"
                         >
                             <p className="text-sm font-medium">No tracked hours found for this period</p>
                         </motion.div>

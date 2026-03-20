@@ -12,12 +12,19 @@ const config: Config = {
         display: ["var(--font-playfair)", "serif"],
       },
       colors: {
-        background: "#050816",
-        sidebar: "#0b1020",
-        header: "#0f172a",
-        card: "#0f172a",
-        accent: "#38bdf8",
-        accentSoft: "#0b1220"
+        "bg-primary": "rgb(var(--bg-primary) / <alpha-value>)",
+        "bg-secondary": "rgb(var(--bg-secondary) / <alpha-value>)",
+        "text-primary": "rgb(var(--text-primary) / <alpha-value>)",
+        "text-secondary": "rgb(var(--text-secondary) / <alpha-value>)",
+        "border-color": "rgb(var(--border-color) / <alpha-value>)",
+        "card-bg": "rgb(var(--card-bg) / <alpha-value>)",
+        "hover-bg": "rgb(var(--hover-bg) / <alpha-value>)",
+        background: "rgb(var(--bg-primary) / <alpha-value>)",
+        sidebar: "rgb(var(--bg-secondary) / <alpha-value>)",
+        header: "rgb(var(--bg-secondary) / <alpha-value>)",
+        card: "rgb(var(--card-bg) / <alpha-value>)",
+        accent: "rgb(var(--accent) / <alpha-value>)",
+        accentSoft: "rgb(var(--accent-soft) / <alpha-value>)"
       },
       borderRadius: {
         xl: "1rem"

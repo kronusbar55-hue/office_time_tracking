@@ -24,7 +24,7 @@ export default function WelcomeHeader({ firstName, lastName, progress = 0, showG
         <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600/20 via-indigo-600/20 to-purple-600/20 p-8 border border-white/10">
+            className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600/20 via-indigo-600/20 to-purple-600/20 p-8 border border-border-color">
             {/* Decorative Blur Spheres */}
             <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-blue-500/20 blur-3xl animate-pulse" />
             <div className="absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-purple-500/20 blur-3xl" />
@@ -34,7 +34,7 @@ export default function WelcomeHeader({ firstName, lastName, progress = 0, showG
                     <h2 className="text-sm font-medium text-blue-400 uppercase tracking-wider mb-1">
                         {greeting}
                     </h2>
-                    <h1 className="text-3xl font-bold text-white mb-2">
+                    <h1 className="text-3xl font-bold text-text-primary mb-2">
                         Welcome back, {firstName} {lastName}
                     </h1>
                 </div>

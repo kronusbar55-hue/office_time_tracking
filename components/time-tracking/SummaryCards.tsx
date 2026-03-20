@@ -35,41 +35,41 @@ export default function SummaryCards({
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-      <div className="bg-white rounded-lg border border-slate-200 p-6">
+      <div className="bg-bg-primary rounded-lg border border-slate-200 p-6">
         <div className="flex items-center gap-3 mb-2">
           <div className="h-3 w-3 rounded-full bg-green-500" />
           <span className="text-xs font-semibold text-slate-600">WORKED</span>
         </div>
         <p className="text-3xl font-bold font-mono text-slate-900">{formatHHMMSS(workedMs)}</p>
-        <p className="text-xs text-slate-500 mt-2">{formatDuration(workedMs)} ({workedHours.toFixed(2)}h total)</p>
+        <p className="text-xs text-text-secondary mt-2">{formatDuration(workedMs)} ({workedHours.toFixed(2)}h total)</p>
       </div>
 
-      <div className="bg-white rounded-lg border border-slate-200 p-6">
+      <div className="bg-bg-primary rounded-lg border border-slate-200 p-6">
         <div className="flex items-center gap-3 mb-2">
           <div className="h-3 w-3 rounded-full bg-yellow-500" />
           <span className="text-xs font-semibold text-slate-600">BREAKS</span>
         </div>
         <p className="text-3xl font-bold font-mono text-slate-900">{formatHHMMSS(breakMs)}</p>
-        <p className="text-xs text-slate-500 mt-2">{formatDuration(breakMs)} ({breakHours.toFixed(2)}h total)</p>
+        <p className="text-xs text-text-secondary mt-2">{formatDuration(breakMs)} ({breakHours.toFixed(2)}h total)</p>
       </div>
 
-      <div className="bg-white rounded-lg border border-slate-200 p-6">
+      <div className="bg-bg-primary rounded-lg border border-slate-200 p-6">
         <div className="flex items-center gap-3 mb-2">
           <div className="h-3 w-3 rounded-full bg-red-500" />
           <span className="text-xs font-semibold text-slate-600">OVERTIME</span>
         </div>
         <p className="text-3xl font-bold text-slate-900">{overtimeHours.toFixed(2)}h</p>
-        <p className="text-xs text-slate-500 mt-2">Over {shiftHoursTarget}h target</p>
+        <p className="text-xs text-text-secondary mt-2">Over {shiftHoursTarget}h target</p>
       </div>
 
       {/* {showRemaining && (
-        <div className="bg-white rounded-lg border border-slate-200 p-6">
+        <div className="bg-bg-primary rounded-lg border border-slate-200 p-6">
           <div className="flex items-center gap-3 mb-2">
             <div className="h-3 w-3 rounded-full bg-cyan-500" />
             <span className="text-xs font-semibold text-slate-600">REMAINING</span>
           </div>
           <p className="text-3xl font-bold font-mono text-cyan-600">{formatHHMMSS(remainingMs)}</p>
-          <p className="text-xs text-slate-500 mt-2">Until {shiftHoursTarget}h shift</p>
+          <p className="text-xs text-text-secondary mt-2">Until {shiftHoursTarget}h shift</p>
         </div>
       )} */}
     </div>

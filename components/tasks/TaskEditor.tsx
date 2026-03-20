@@ -29,17 +29,17 @@ const MenuBar = ({ editor }: { editor: any }) => {
     if (!editor) return null;
 
     const btnClass = (active: boolean) =>
-        `p-2 rounded-lg hover:bg-white/10 transition-all ${active ? "text-accent bg-accent/15 border border-accent/20" : "text-slate-400 border border-transparent"}`;
+        `p-2 rounded-lg hover:bg-hover-bg transition-all ${active ? "text-accent bg-accent/15 border border-accent/20" : "text-text-secondary border border-transparent"}`;
 
     return (
-        <div className="flex flex-wrap items-center gap-1 p-1.5 bg-slate-900/60 border-b border-white/10 rounded-t-xl">
+        <div className="flex flex-wrap items-center gap-1 p-1.5 bg-bg-secondary/60 border-b border-border-color rounded-t-xl">
             <div className="flex items-center space-x-0.5 mr-2">
                 <button
                     type="button"
                     title="Undo"
                     onClick={() => editor.chain().focus().undo().run()}
                     disabled={!editor.can().undo()}
-                    className="p-2 rounded-lg hover:bg-white/10 text-slate-400 disabled:opacity-30"
+                    className="p-2 rounded-lg hover:bg-hover-bg text-text-secondary disabled:opacity-30"
                 >
                     <Undo size={15} />
                 </button>
@@ -48,13 +48,13 @@ const MenuBar = ({ editor }: { editor: any }) => {
                     title="Redo"
                     onClick={() => editor.chain().focus().redo().run()}
                     disabled={!editor.can().redo()}
-                    className="p-2 rounded-lg hover:bg-white/10 text-slate-400 disabled:opacity-30"
+                    className="p-2 rounded-lg hover:bg-hover-bg text-text-secondary disabled:opacity-30"
                 >
                     <Redo size={15} />
                 </button>
             </div>
 
-            <div className="w-px h-5 bg-white/10 mx-1" />
+            <div className="w-px h-5 bg-hover-bg mx-1" />
 
             <div className="flex items-center space-x-0.5">
                 <button
@@ -75,7 +75,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
                 </button>
             </div>
 
-            <div className="w-px h-5 bg-white/10 mx-1" />
+            <div className="w-px h-5 bg-hover-bg mx-1" />
 
             <div className="flex items-center space-x-0.5">
                 <button
@@ -112,7 +112,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
                 </button>
             </div>
 
-            <div className="w-px h-5 bg-white/10 mx-1" />
+            <div className="w-px h-5 bg-hover-bg mx-1" />
 
             <div className="flex items-center space-x-0.5">
                 <button
@@ -133,7 +133,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
                 </button>
             </div>
 
-            <div className="w-px h-5 bg-white/10 mx-1" />
+            <div className="w-px h-5 bg-hover-bg mx-1" />
 
             <div className="flex items-center space-x-0.5">
                 <button
@@ -148,7 +148,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
                     type="button"
                     title="Divider"
                     onClick={() => editor.chain().focus().setHorizontalRule().run()}
-                    className="p-2 rounded-lg hover:bg-white/10 text-slate-400"
+                    className="p-2 rounded-lg hover:bg-hover-bg text-text-secondary"
                 >
                     <Minus size={15} />
                 </button>
@@ -183,7 +183,7 @@ export default function TaskEditor({ content, onChange, editable = true }: TaskE
     }, [editor, content]);
 
     return (
-        <div className="w-full border border-white/10 rounded-xl bg-slate-950/40 focus-within:border-accent/40 transition-all">
+        <div className="w-full border border-border-color rounded-xl bg-bg-primary/40 focus-within:border-accent/40 transition-all">
             {editable && <MenuBar editor={editor} />}
             <EditorContent
                 editor={editor}
@@ -193,6 +193,7 @@ export default function TaskEditor({ content, onChange, editable = true }: TaskE
                 .tiptap-editor-content .tiptap {
                     outline: none;
                     min-height: 140px;
+                    color: rgb(var(--text-primary));
                 }
                 .tiptap-editor-content .tiptap p {
                     margin-bottom: 0.75rem;
@@ -202,14 +203,14 @@ export default function TaskEditor({ content, onChange, editable = true }: TaskE
                     font-weight: 800;
                     margin-top: 1rem;
                     margin-bottom: 0.5rem;
-                    color: white;
+                    color: rgb(var(--text-primary));
                 }
                 .tiptap-editor-content .tiptap h2 {
                     font-size: 1.25rem;
                     font-weight: 700;
                     margin-top: 1rem;
                     margin-bottom: 0.5rem;
-                    color: #e2e8f0;
+                    color: rgb(var(--text-primary));
                 }
                 .tiptap-editor-content .tiptap ul {
                     list-style-type: disc;
@@ -222,19 +223,19 @@ export default function TaskEditor({ content, onChange, editable = true }: TaskE
                     margin-bottom: 1rem;
                 }
                 .tiptap-editor-content .tiptap blockquote {
-                    border-left: 3px solid #38bdf8;
+                    border-left: 3px solid rgb(var(--accent));
                     padding-left: 1rem;
                     font-style: italic;
-                    color: #94a3b8;
+                    color: rgb(var(--text-secondary));
                     margin-bottom: 1rem;
                 }
                 .tiptap-editor-content .tiptap hr {
                     border: none;
-                    border-top: 1px solid rgba(255,255,255,0.1);
+                    border-top: 1px solid rgb(var(--border-color));
                     margin: 1.5rem 0;
                 }
                 .tiptap-editor-content .tiptap code {
-                    background: rgba(255,255,255,0.1);
+                    background: rgb(var(--hover-bg));
                     padding: 0.1rem 0.3rem;
                     border-radius: 0.25rem;
                     font-size: 0.9em;

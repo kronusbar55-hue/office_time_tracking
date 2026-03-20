@@ -87,25 +87,25 @@ export default function ColumnSettingsModal({ open, onClose, projectId, onUpdate
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
-            <div className="z-10 w-full max-w-md bg-slate-900 border border-white/10 rounded-[2rem] p-8 shadow-2xl">
+            <div className="z-10 w-full max-w-md bg-bg-secondary border border-border-color rounded-[2rem] p-8 shadow-2xl">
                 <div className="flex items-center justify-between mb-8">
                     <div>
-                        <h3 className="text-xl font-black text-white uppercase tracking-tighter">Board Columns</h3>
-                        <p className="text-[10px] text-slate-500 uppercase font-bold tracking-[0.2em]">Manage your workflow status</p>
+                        <h3 className="text-xl font-black text-text-primary uppercase tracking-tighter">Board Columns</h3>
+                        <p className="text-[10px] text-text-secondary uppercase font-bold tracking-[0.2em]">Manage your workflow status</p>
                     </div>
-                    <button onClick={onClose} className="p-2 rounded-xl hover:bg-white/5 text-slate-400 hover:text-white">
+                    <button onClick={onClose} className="p-2 rounded-xl hover:bg-hover-bg text-text-secondary hover:text-text-primary">
                         <X size={24} />
                     </button>
                 </div>
 
                 <div className="space-y-4 mb-8 max-h-[40vh] overflow-y-auto pr-2 custom-scrollbar">
                     {columns.map((c) => (
-                        <div key={c._id} className="flex items-center gap-3 p-4 bg-black/20 border border-white/5 rounded-2xl">
+                        <div key={c._id} className="flex items-center gap-3 p-4 bg-black/20 border border-border-color rounded-2xl">
                             <GripVertical className="text-slate-600 shrink-0" size={18} />
                             <input 
                                 defaultValue={c.name} 
                                 onBlur={(e) => handleUpdate(c._id, e.target.value)}
-                                className="bg-transparent text-sm font-bold text-white focus:outline-none flex-1"
+                                className="bg-transparent text-sm font-bold text-text-primary focus:outline-none flex-1"
                             />
                             <button onClick={() => handleDelete(c._id)} className="p-1.5 hover:bg-rose-500/10 text-slate-600 hover:text-rose-500 rounded-lg">
                                 <Trash2 size={16} />
@@ -119,7 +119,7 @@ export default function ColumnSettingsModal({ open, onClose, projectId, onUpdate
                         placeholder="New column name..." 
                         value={newName}
                         onChange={(e) => setNewName(e.target.value)}
-                        className="flex-1 h-12 bg-black/40 border border-white/5 rounded-2xl px-4 text-sm font-bold text-white focus:border-accent/40 focus:outline-none"
+                        className="flex-1 h-12 bg-black/40 border border-border-color rounded-2xl px-4 text-sm font-bold text-text-primary focus:border-accent/40 focus:outline-none"
                     />
                     <button 
                         onClick={handleAdd}
@@ -132,7 +132,7 @@ export default function ColumnSettingsModal({ open, onClose, projectId, onUpdate
 
                 <button 
                     onClick={() => { onUpdated(); onClose(); }}
-                    className="w-full mt-8 h-12 bg-white/5 border border-white/10 rounded-2xl text-xs font-black uppercase tracking-widest text-white hover:bg-white/10 transition-all"
+                    className="w-full mt-8 h-12 bg-hover-bg border border-border-color rounded-2xl text-xs font-black uppercase tracking-widest text-text-primary hover:bg-hover-bg transition-all"
                 >
                     Done
                 </button>

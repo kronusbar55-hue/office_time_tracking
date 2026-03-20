@@ -243,26 +243,26 @@ export default function EmployeesPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-2">
         <div>
-          <h1 className="text-sm font-semibold text-slate-50">
+          <h1 className="text-sm font-semibold text-text-primary">
             Team Management
           </h1>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-text-secondary">
             Manage employees, roles, and technology assignments.
           </p>
         </div>
         {/* <button
           type="button"
           onClick={resetForm}
-          className="rounded-md border border-slate-700 bg-slate-900 px-3 py-1.5 text-[11px] font-medium text-slate-100 hover:border-accent hover:text-accent"
+          className="rounded-md border border-border-color bg-bg-secondary px-3 py-1.5 text-[11px] font-medium text-text-primary hover:border-accent hover:text-accent"
         >
           New member
         </button> */}
       </div>
 
       <div className="grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1.3fr)]">
-        <section className="rounded-xl border border-slate-800 bg-card/70 p-3 shadow-card">
+        <section className="rounded-xl border border-border-color bg-card/70 p-3 shadow-card">
           <div className="flex items-center justify-between">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-text-secondary">
               Team members
             </p>
             <div className="flex items-center gap-3">
@@ -272,10 +272,10 @@ export default function EmployeesPage() {
                   placeholder="Search employees..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="h-7 w-48 rounded-md border border-slate-800 bg-slate-950/50 pl-7 pr-2 text-[10px] text-slate-300 outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20"
+                  className="h-7 w-48 rounded-md border border-border-color bg-bg-primary/50 pl-7 pr-2 text-[10px] text-text-secondary outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20"
                 />
                 <svg
-                  className="absolute left-2.5 top-1/2 h-3 w-3 -translate-y-1/2 text-slate-500"
+                  className="absolute left-2.5 top-1/2 h-3 w-3 -translate-y-1/2 text-text-secondary"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -289,15 +289,15 @@ export default function EmployeesPage() {
                 </svg>
               </div>
               {loading && (
-                <p className="text-[11px] text-slate-500">Loading...</p>
+                <p className="text-[11px] text-text-secondary">Loading...</p>
               )}
             </div>
           </div>
 
-          <div className="mt-3 overflow-x-auto rounded-lg border border-slate-800/80 bg-slate-950/40">
+          <div className="mt-3 overflow-x-auto rounded-lg border border-border-color/80 bg-bg-primary/40">
             <table className="min-w-full border-separate border-spacing-0 text-[11px]">
               <thead>
-                <tr className="bg-slate-900/60 text-slate-400">
+                <tr className="bg-bg-secondary/60 text-text-secondary">
                   <th className="px-3 py-2 text-left font-medium">Employee</th>
                   <th className="px-3 py-2 text-left font-medium">Role</th>
                   <th className="px-3 py-2 text-left font-medium">
@@ -311,22 +311,27 @@ export default function EmployeesPage() {
               <tbody>
                 {loading ? (
                   <>
-                    {[1, 2, 3].map((i) => (
-                      <tr key={i} className="border-t border-slate-800/70">
-                        <td className="px-3 py-2">
-                          <div className="flex items-center gap-2">
-                            <div className="h-7 w-7 rounded-full bg-slate-700/40 animate-pulse" />
-                            <div className="flex flex-col gap-1">
-                              <div className="h-3 w-20 rounded bg-slate-700/40 animate-pulse" />
-                              <div className="h-2 w-32 rounded bg-slate-700/40 animate-pulse" />
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <tr key={i} className="animate-pulse border-t border-border-color/60 hover:bg-bg-secondary/40 transition-colors">
+                        <td className="px-3 py-3">
+                          <div className="flex items-center gap-2.5">
+                            <div className="h-8 w-8 rounded-full bg-card-bg" />
+                            <div className="space-y-1.5">
+                              <div className="h-3 w-20 rounded bg-card-bg" />
+                              <div className="h-2 w-32 rounded bg-card-bg/40" />
                             </div>
                           </div>
                         </td>
-                        <td className="px-3 py-2"><div className="h-4 w-16 rounded bg-slate-700/40 animate-pulse" /></td>
-                        <td className="px-3 py-2"><div className="h-4 w-20 rounded bg-slate-700/40 animate-pulse" /></td>
-                        <td className="px-3 py-2"><div className="h-4 w-20 rounded bg-slate-700/40 animate-pulse" /></td>
-                        <td className="px-3 py-2"><div className="h-4 w-16 rounded bg-slate-700/40 animate-pulse" /></td>
-                        <td className="px-3 py-2"><div className="h-4 w-20 rounded bg-slate-700/40 animate-pulse ml-auto" /></td>
+                        <td className="px-3 py-3"><div className="h-4 w-16 rounded bg-card-bg/60" /></td>
+                        <td className="px-3 py-3"><div className="h-4 w-20 rounded bg-card-bg/40" /></td>
+                        <td className="px-3 py-3"><div className="h-4 w-20 rounded bg-card-bg/40" /></td>
+                        <td className="px-3 py-3"><div className="h-6 w-16 rounded-full bg-card-bg/60" /></td>
+                        <td className="px-3 py-3 text-right">
+                          <div className="inline-flex items-center gap-1.5">
+                             <div className="h-6 w-10 rounded-md bg-card-bg" />
+                             <div className="h-6 w-12 rounded-md bg-card-bg" />
+                          </div>
+                        </td>
                       </tr>
                     ))}
                   </>
@@ -334,7 +339,7 @@ export default function EmployeesPage() {
                   <tr>
                     <td
                       colSpan={6}
-                      className="px-3 py-6 text-center text-[11px] text-slate-500"
+                      className="px-3 py-6 text-center text-[11px] text-text-secondary"
                     >
                       No team members yet. Use the form on the right to add
                       your first employee.
@@ -344,11 +349,11 @@ export default function EmployeesPage() {
                   users.map((user) => (
                     <tr
                       key={user.id}
-                      className="border-t border-slate-800/70 text-slate-200"
+                      className="border-t border-border-color/70 text-text-primary"
                     >
                       <td className="px-3 py-2">
                         <div className="flex items-center gap-2">
-                          <div className="h-7 w-7 overflow-hidden rounded-full bg-slate-800">
+                          <div className="h-7 w-7 overflow-hidden rounded-full bg-card-bg">
                             {user.avatarUrl ? (
                               <img
                                 src={user.avatarUrl}
@@ -356,29 +361,29 @@ export default function EmployeesPage() {
                                 className="h-full w-full object-cover"
                               />
                             ) : (
-                              <div className="flex h-full w-full items-center justify-center text-[10px] text-slate-400">
+                              <div className="flex h-full w-full items-center justify-center text-[10px] text-text-secondary">
                                 {user.firstName.charAt(0)}
                                 {user.lastName.charAt(0)}
                               </div>
                             )}
                           </div>
                           <div className="flex flex-col">
-                            <span className="font-medium text-slate-100">
+                            <span className="font-medium text-text-primary">
                               {user.firstName} {user.lastName}
                             </span>
-                            <span className="text-[10px] text-slate-400">
+                            <span className="text-[10px] text-text-secondary">
                               {user.email}
                             </span>
                           </div>
                         </div>
                       </td>
-                      <td className="px-3 py-2 capitalize text-slate-300">
+                      <td className="px-3 py-2 capitalize text-text-secondary">
                         {user.role}
                       </td>
-                      <td className="px-3 py-2 text-slate-300">
+                      <td className="px-3 py-2 text-text-secondary">
                         {user.technology?.name || "—"}
                       </td>
-                      <td className="px-3 py-2 text-slate-300">
+                      <td className="px-3 py-2 text-text-secondary">
                         {user.joinDate
                           ? new Date(user.joinDate).toLocaleDateString()
                           : "—"}
@@ -389,7 +394,7 @@ export default function EmployeesPage() {
                           onClick={() => void toggleActive(user)}
                           className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-medium ${user.isActive
                             ? "bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-500/40"
-                            : "bg-slate-800 text-slate-400 ring-1 ring-slate-600"
+                            : "bg-card-bg text-text-secondary ring-1 ring-slate-600"
                             }`}
                         >
                           {user.isActive ? "Active" : "Inactive"}
@@ -400,7 +405,7 @@ export default function EmployeesPage() {
                           <button
                             type="button"
                             onClick={() => startEdit(user)}
-                            className="rounded-md border border-slate-700 px-2 py-0.5 text-[10px] text-slate-200 hover:border-accent hover:text-accent"
+                            className="rounded-md border border-border-color px-2 py-0.5 text-[10px] text-text-primary hover:border-accent hover:text-accent"
                           >
                             Edit
                           </button>
@@ -423,18 +428,18 @@ export default function EmployeesPage() {
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="mt-4 flex items-center justify-between px-1">
-              <p className="text-[10px] text-slate-500">
-                Showing <span className="text-slate-300">{(currentPage - 1) * limit + 1}</span> to{" "}
-                <span className="text-slate-300">
+              <p className="text-[10px] text-text-secondary">
+                Showing <span className="text-text-secondary">{(currentPage - 1) * limit + 1}</span> to{" "}
+                <span className="text-text-secondary">
                   {Math.min(currentPage * limit, totalUsers)}
                 </span>{" "}
-                of <span className="text-slate-300">{totalUsers}</span> results
+                of <span className="text-text-secondary">{totalUsers}</span> results
               </p>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => void loadUsers(currentPage - 1)}
                   disabled={currentPage === 1}
-                  className="rounded border border-slate-800 bg-slate-900/50 px-2 py-1 text-[10px] text-slate-400 hover:text-slate-200 disabled:opacity-50"
+                  className="rounded border border-border-color bg-bg-secondary/50 px-2 py-1 text-[10px] text-text-secondary hover:text-text-primary disabled:opacity-50"
                 >
                   Previous
                 </button>
@@ -445,7 +450,7 @@ export default function EmployeesPage() {
                       onClick={() => void loadUsers(i + 1)}
                       className={`h-6 w-6 rounded text-[10px] ${currentPage === i + 1
                         ? "bg-accent text-slate-950 font-semibold"
-                        : "text-slate-400 hover:bg-slate-800"
+                        : "text-text-secondary hover:bg-card-bg"
                         }`}
                     >
                       {i + 1}
@@ -455,7 +460,7 @@ export default function EmployeesPage() {
                 <button
                   onClick={() => void loadUsers(currentPage + 1)}
                   disabled={currentPage === totalPages}
-                  className="rounded border border-slate-800 bg-slate-900/50 px-2 py-1 text-[10px] text-slate-400 hover:text-slate-200 disabled:opacity-50"
+                  className="rounded border border-border-color bg-bg-secondary/50 px-2 py-1 text-[10px] text-text-secondary hover:text-text-primary disabled:opacity-50"
                 >
                   Next
                 </button>
@@ -465,11 +470,11 @@ export default function EmployeesPage() {
         </section>
 
 
-        <section className="rounded-xl border border-slate-800 bg-card/70 p-3 shadow-card">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+        <section className="rounded-xl border border-border-color bg-card/70 p-3 shadow-card">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-text-secondary">
             {editingId ? "Edit member" : "Add member"}
           </p>
-          <p className="mt-1 text-[11px] text-slate-500">
+          <p className="mt-1 text-[11px] text-text-secondary">
             {editingId
               ? "Update details, role, and technology. Leave password blank to keep current."
               : "Create a new employee account. Password is required."}
@@ -484,47 +489,47 @@ export default function EmployeesPage() {
           <form onSubmit={(e) => void handleSubmit(e)} className="mt-3 space-y-2.5 text-[11px]">
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="mb-1 block text-slate-300">First name</label>
+                <label className="mb-1 block text-text-secondary">First name</label>
                 <input
                   name="firstName"
                   value={form.firstName}
                   onChange={handleChange}
-                  className="h-8 w-full cursor-pointer rounded-md border border-slate-700 bg-slate-950/60 px-2 text-[11px] text-slate-100 outline-none transition-all hover:border-slate-600 focus:border-accent focus:ring-1 focus:ring-accent/40"
+                  className="h-8 w-full cursor-pointer rounded-md border border-border-color bg-bg-primary/60 px-2 text-[11px] text-text-primary outline-none transition-all hover:border-border-color focus:border-accent focus:ring-1 focus:ring-accent/40"
                   required
                 />
               </div>
               <div>
-                <label className="mb-1 block text-slate-300">Last name</label>
+                <label className="mb-1 block text-text-secondary">Last name</label>
                 <input
                   name="lastName"
                   value={form.lastName}
                   onChange={handleChange}
-                  className="h-8 w-full rounded-md border border-slate-700 bg-slate-950/60 px-2 text-[11px] text-slate-100 outline-none focus:border-accent focus:ring-1 focus:ring-accent/40"
+                  className="h-8 w-full rounded-md border border-border-color bg-bg-primary/60 px-2 text-[11px] text-text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent/40"
                   required
                 />
               </div>
             </div>
 
             <div>
-              <label className="mb-1 block text-slate-300">Work email</label>
+              <label className="mb-1 block text-text-secondary">Work email</label>
               <input
                 type="email"
                 name="email"
                 value={form.email}
                 onChange={handleChange}
-                className="h-8 w-full rounded-md border border-slate-700 bg-slate-950/60 px-2 text-[11px] text-slate-100 outline-none focus:border-accent focus:ring-1 focus:ring-accent/40"
+                className="h-8 w-full rounded-md border border-border-color bg-bg-primary/60 px-2 text-[11px] text-text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent/40"
                 required
               />
             </div>
 
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="mb-1 block text-slate-300">Role</label>
+                <label className="mb-1 block text-text-secondary">Role</label>
                 <select
                   name="role"
                   value={form.role}
                   onChange={handleChange}
-                  className="h-8 w-full rounded-md border border-slate-700 bg-slate-950/60 px-2 text-[11px] text-slate-100 outline-none focus:border-accent focus:ring-1 focus:ring-accent/40"
+                  className="h-8 w-full rounded-md border border-border-color bg-bg-primary/60 px-2 text-[11px] text-text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent/40"
                 >
                   <option value="admin">Admin</option>
                   <option value="manager">Manager</option>
@@ -533,16 +538,16 @@ export default function EmployeesPage() {
                 </select>
               </div>
               <div>
-                <label className="mb-1 block text-slate-300">Technology</label>
+                <label className="mb-1 block text-text-secondary">Technology</label>
                 {techsLoading ? (
-                  <div className="h-8 w-full rounded-md border border-slate-700 bg-slate-950/60 animate-pulse" />
+                  <div className="h-8 w-full rounded-md border border-border-color bg-bg-primary/60 animate-pulse" />
                 ) : (
                   <select
                     name="technology"
                     value={form.technology}
                     onChange={handleChange}
                     disabled={technologies.length === 0}
-                    className={`h-8 w-full rounded-md border border-slate-700 bg-slate-950/60 px-2 text-[11px] text-slate-100 outline-none focus:border-accent focus:ring-1 focus:ring-accent/40 ${technologies.length === 0 ? "opacity-60 cursor-not-allowed" : ""
+                    className={`h-8 w-full rounded-md border border-border-color bg-bg-primary/60 px-2 text-[11px] text-text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent/40 ${technologies.length === 0 ? "opacity-60 cursor-not-allowed" : ""
                       }`}
                   >
                     <option value="">Select technology</option>
@@ -558,17 +563,17 @@ export default function EmployeesPage() {
 
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="mb-1 block text-slate-300">Join date</label>
+                <label className="mb-1 block text-text-secondary">Join date</label>
                 <input
                   type="date"
                   name="joinDate"
                   value={form.joinDate}
                   onChange={handleChange}
-                  className="h-8 w-full rounded-md border border-slate-700 bg-slate-950/60 px-2 text-[11px] text-slate-100 outline-none focus:border-accent focus:ring-1 focus:ring-accent/40"
+                  className="h-8 w-full rounded-md border border-border-color bg-bg-primary/60 px-2 text-[11px] text-text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent/40"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-slate-300">
+                <label className="mb-1 block text-text-secondary">
                   {editingId ? "New password" : "Password"}
                 </label>
                 <input
@@ -576,7 +581,7 @@ export default function EmployeesPage() {
                   name="password"
                   value={form.password}
                   onChange={handleChange}
-                  className="h-8 w-full rounded-md border border-slate-700 bg-slate-950/60 px-2 text-[11px] text-slate-100 outline-none focus:border-accent focus:ring-1 focus:ring-accent/40"
+                  className="h-8 w-full rounded-md border border-border-color bg-bg-primary/60 px-2 text-[11px] text-text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent/40"
                   placeholder={editingId ? "Leave blank to keep current" : ""}
                   required={!editingId}
                 />
@@ -584,7 +589,7 @@ export default function EmployeesPage() {
             </div>
 
             <div>
-              <label className="mb-1 block text-slate-300">Profile image</label>
+              <label className="mb-1 block text-text-secondary">Profile image</label>
               <input
                 type="file"
                 accept="image/*"
@@ -592,7 +597,7 @@ export default function EmployeesPage() {
                   const file = e.target.files?.[0];
                   setAvatarFile(file ?? null);
                 }}
-                className="block w-full text-[11px] text-slate-400 file:mr-3 file:rounded-md file:border-0 file:bg-slate-800 file:px-3 file:py-1 file:text-[11px] file:font-medium file:text-slate-100 hover:file:bg-slate-700"
+                className="block w-full text-[11px] text-text-secondary file:mr-3 file:rounded-md file:border-0 file:bg-card-bg file:px-3 file:py-1 file:text-[11px] file:font-medium file:text-text-primary hover:file:bg-slate-700"
               />
             </div>
 
@@ -600,7 +605,7 @@ export default function EmployeesPage() {
               <button
                 type="button"
                 onClick={resetForm}
-                className="rounded-md border border-slate-700 px-3 py-1 text-[11px] text-slate-200 hover:border-slate-500"
+                className="rounded-md border border-border-color px-3 py-1 text-[11px] text-text-primary hover:border-slate-500"
               >
                 Cancel
               </button>

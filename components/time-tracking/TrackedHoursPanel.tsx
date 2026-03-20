@@ -52,34 +52,34 @@ export default function TrackedHoursPanel() {
   const maxHeight = stats.length ? Math.max(8, ...stats.map((s) => s.workedMinutes / 60)) : 12;
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-slate-900/60 to-slate-900/40 p-6 backdrop-blur-sm shadow-xl">
+    <div className="rounded-2xl border border-border-color bg-gradient-to-b from-slate-900/60 to-slate-900/40 p-6 backdrop-blur-sm shadow-xl">
       <div className="mb-6">
-        <h2 className="text-lg font-bold uppercase tracking-wide text-slate-100">Tracked Hours</h2>
+        <h2 className="text-lg font-bold uppercase tracking-wide text-text-primary">Tracked Hours</h2>
       </div>
 
       <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
         <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 transition-shadow hover:shadow-lg">
           <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-emerald-400">Worked</p>
-          <p className="text-2xl font-bold text-white">{formatDuration(totalWorked)}</p>
+          <p className="text-2xl font-bold text-text-primary">{formatDuration(totalWorked)}</p>
         </div>
         <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 transition-shadow hover:shadow-lg">
           <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-amber-400">Breaks</p>
-          <p className="text-2xl font-bold text-white">{formatDuration(totalBreaks)}</p>
+          <p className="text-2xl font-bold text-text-primary">{formatDuration(totalBreaks)}</p>
         </div>
         <div className="rounded-xl border border-rose-500/20 bg-rose-500/5 p-4 transition-shadow hover:shadow-lg">
           <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-rose-400">Overtime</p>
-          <p className="text-2xl font-bold text-white">{formatDuration(totalOvertime)}</p>
+          <p className="text-2xl font-bold text-text-primary">{formatDuration(totalOvertime)}</p>
         </div>
       </div>
 
-      <div className="mb-6 flex gap-2 border-b border-slate-700/50 pb-2">
+      <div className="mb-6 flex gap-2 border-b border-border-color/50 pb-2">
         {(["day", "week", "month"] as ViewMode[]).map((mode) => (
           <button
             key={mode}
             onClick={() => setViewMode(mode)}
             className={`rounded-lg px-4 py-2 text-sm font-medium transition-all ${viewMode === mode
               ? "bg-accent text-slate-900"
-              : "text-slate-400 hover:bg-slate-800/60 hover:text-slate-200"
+              : "text-text-secondary hover:bg-card-bg/60 hover:text-text-primary"
               }`}
           >
             {mode.charAt(0).toUpperCase() + mode.slice(1)}
@@ -88,9 +88,9 @@ export default function TrackedHoursPanel() {
       </div>
 
       {loading ? (
-        <div className="flex h-64 items-center justify-center text-slate-500">Loading...</div>
+        <div className="flex h-64 items-center justify-center text-text-secondary">Loading...</div>
       ) : stats.length === 0 ? (
-        <div className="flex h-64 items-center justify-center rounded-lg bg-slate-800/30 text-slate-500">
+        <div className="flex h-64 items-center justify-center rounded-lg bg-card-bg/30 text-text-secondary">
           No data available
         </div>
       ) : (
@@ -109,7 +109,7 @@ export default function TrackedHoursPanel() {
                     className="w-full max-w-[40px] rounded-t bg-gradient-to-t from-emerald-600 to-emerald-400 transition-all duration-300 group-hover:from-emerald-500 group-hover:to-emerald-300"
                     style={{ height: `${Math.max(4, workPercent)}%` }}
                   />
-                  <span className="text-xs text-slate-400">
+                  <span className="text-xs text-text-secondary">
                     {viewMode === "month"
                       ? new Date(stat.date + "T00:00:00").getDate()
                       : new Date(stat.date + "T00:00:00").toLocaleDateString("en-US", { weekday: "short" })}
@@ -118,7 +118,7 @@ export default function TrackedHoursPanel() {
               );
             })}
           </div>
-          <p className="text-xs text-slate-500">Hover bars for breakdown</p>
+          <p className="text-xs text-text-secondary">Hover bars for breakdown</p>
         </div>
       )}
     </div>

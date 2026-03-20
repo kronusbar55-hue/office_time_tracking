@@ -235,8 +235,8 @@ export default function ProjectsPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-sm font-semibold text-slate-50">Projects</h1>
-          <p className="text-xs text-slate-400">
+          <h1 className="text-sm font-semibold text-text-primary">Projects</h1>
+          <p className="text-xs text-text-secondary">
             Manage internal projects and team assignments.
           </p>
         </div>
@@ -257,7 +257,7 @@ export default function ProjectsPage() {
 
       {/* Project Search Bar */}
       <div className="relative max-w-sm">
-        <svg className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
         <input
@@ -265,22 +265,47 @@ export default function ProjectsPage() {
           placeholder="Search projects by name, key, or client..."
           value={projectSearch}
           onChange={(e) => setProjectSearch(e.target.value)}
-          className="w-full rounded-xl border border-slate-800 bg-card/80 py-2.5 pl-9 pr-4 text-xs text-slate-100 outline-none transition-all placeholder:text-slate-500 hover:border-slate-700 focus:border-accent focus:ring-1 focus:ring-accent/40 shadow-sm"
+          className="w-full rounded-xl border border-border-color bg-card/80 py-2.5 pl-9 pr-4 text-xs text-text-primary outline-none transition-all placeholder:text-text-secondary hover:border-border-color focus:border-accent focus:ring-1 focus:ring-accent/40 shadow-sm"
         />
       </div>
 
       <section className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         {loading && (
-          <div className="col-span-12 text-[11px] text-slate-500 py-12 text-center">
-            Loading projects...
-          </div>
+          <>
+            {Array.from({ length: 10 }).map((_, i) => (
+              <div key={i} className="flex flex-col rounded-xl border border-border-color bg-bg-secondary/40 p-4 animate-pulse">
+                <div className="mb-3 flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-lg bg-card-bg" />
+                    <div className="space-y-1.5">
+                      <div className="h-3 w-20 rounded bg-card-bg" />
+                      <div className="h-2 w-12 rounded bg-card-bg/60" />
+                    </div>
+                  </div>
+                  <div className="h-6 w-6 rounded-md bg-card-bg/60" />
+                </div>
+                <div className="space-y-2 mb-4">
+                  <div className="h-2.5 w-full rounded bg-card-bg/40" />
+                  <div className="h-2.5 w-3/4 rounded bg-card-bg/40" />
+                </div>
+                <div className="mt-auto pt-3 flex items-center justify-between">
+                  <div className="flex items-center -space-x-1.5">
+                    {Array.from({ length: 3 }).map((_, j) => (
+                      <div key={j} className="h-5 w-5 rounded-full border border-slate-900 bg-card-bg" />
+                    ))}
+                  </div>
+                  <div className="h-4 w-16 rounded bg-card-bg/60" />
+                </div>
+              </div>
+            ))}
+          </>
         )}
         {!loading && paginatedProjects.length === 0 && (
-          <div className="col-span-12 rounded-xl border border-dashed border-slate-800 bg-slate-950/40 px-4 py-12 flex flex-col items-center justify-center text-center">
+          <div className="col-span-12 rounded-xl border border-dashed border-border-color bg-bg-primary/40 px-4 py-12 flex flex-col items-center justify-center text-center">
             <svg className="h-10 w-10 text-slate-700 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
             </svg>
-            <p className="text-sm font-semibold text-slate-400">No projects found</p>
+            <p className="text-sm font-semibold text-text-secondary">No projects found</p>
           </div>
         )}
         {paginatedProjects.map((project) => {
@@ -291,7 +316,7 @@ export default function ProjectsPage() {
             <Link
               key={project.id}
               href={`/dashboard/kanban/${project.id}`}
-              className="group flex flex-col rounded-xl border border-slate-800/60 bg-card/40 p-3 shadow-sm hover:border-accent/40 hover:bg-slate-900/60 transition-all duration-300 relative overflow-hidden"
+              className="group flex flex-col rounded-xl border border-border-color/60 bg-card/40 p-3 shadow-sm hover:border-accent/40 hover:bg-bg-secondary/60 transition-all duration-300 relative overflow-hidden"
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2.5">
@@ -304,10 +329,10 @@ export default function ProjectsPage() {
                     ) : initials}
                   </div>
                   <div className="flex flex-col min-w-0">
-                    <span className="truncate text-[11px] font-bold text-slate-100 group-hover:text-accent transition-colors">
+                    <span className="truncate text-[11px] font-bold text-text-primary group-hover:text-accent transition-colors">
                       {project.name}
                     </span>
-                    <span className="text-[9px] font-black text-slate-500 uppercase tracking-tighter">
+                    <span className="text-[9px] font-black text-text-secondary uppercase tracking-tighter">
                       {(project as any).key}
                     </span>
                   </div>
@@ -321,7 +346,7 @@ export default function ProjectsPage() {
                         e.stopPropagation();
                         startView(project);
                     }}
-                    className="h-6 w-6 rounded-md flex items-center justify-center bg-slate-800/50 text-slate-400 hover:text-white"
+                    className="h-6 w-6 rounded-md flex items-center justify-center bg-card-bg/50 text-text-secondary hover:text-text-primary"
                    >
                      <Layout size={12} />
                    </button>
@@ -332,7 +357,7 @@ export default function ProjectsPage() {
                         e.stopPropagation();
                         startEdit(project);
                     }}
-                    className="h-6 w-6 rounded-md flex items-center justify-center bg-slate-800/50 text-slate-400 hover:text-accent"
+                    className="h-6 w-6 rounded-md flex items-center justify-center bg-card-bg/50 text-text-secondary hover:text-accent"
                    >
                      <MoreVertical size={12} />
                    </button>
@@ -340,7 +365,7 @@ export default function ProjectsPage() {
               </div>
 
               {project.description && (
-                <p className="mt-2 line-clamp-2 text-[10px] text-slate-400/80 leading-relaxed">
+                <p className="mt-2 line-clamp-2 text-[10px] text-text-secondary/80 leading-relaxed">
                   {project.description}
                 </p>
               )}
@@ -348,18 +373,18 @@ export default function ProjectsPage() {
               <div className="mt-auto pt-3 flex items-center justify-between">
                 <div className="flex items-center -space-x-1.5">
                   {project.members.slice(0, 3).map((m) => (
-                    <div key={m.id} className="h-5 w-5 rounded-full border border-slate-900 bg-slate-800 ring-1 ring-white/5">
+                    <div key={m.id} className="h-5 w-5 rounded-full border border-slate-900 bg-card-bg ring-1 ring-border-color">
                       {m.avatarUrl ? (
                         <img src={m.avatarUrl} alt="" className="h-full w-full rounded-full object-cover" />
                       ) : (
-                        <div className="flex h-full w-full items-center justify-center text-[7px] font-bold text-slate-400 capitalize">
+                        <div className="flex h-full w-full items-center justify-center text-[7px] font-bold text-text-secondary capitalize">
                           {m.name.charAt(0)}
                         </div>
                       )}
                     </div>
                   ))}
                   {project.members.length > 3 && (
-                    <div className="flex h-5 w-5 items-center justify-center rounded-full border border-slate-900 bg-slate-800 text-[7px] font-black text-slate-300 ring-1 ring-white/5">
+                    <div className="flex h-5 w-5 items-center justify-center rounded-full border border-slate-900 bg-card-bg text-[7px] font-black text-text-secondary ring-1 ring-border-color">
                       +{project.members.length - 3}
                     </div>
                   )}
@@ -367,7 +392,7 @@ export default function ProjectsPage() {
 
                 <div className="flex items-center gap-1">
                   <span className={`rounded-md px-1.5 py-0.5 text-[8px] font-black uppercase tracking-widest border border-current opacity-70 ${
-                    project.status === "active" ? "text-emerald-400 bg-emerald-400/5" : "text-slate-500 bg-slate-500/5"
+                    project.status === "active" ? "text-emerald-400 bg-emerald-400/5" : "text-text-secondary bg-slate-500/5"
                   }`}>
                     {statusLabel}
                   </span>
@@ -384,23 +409,23 @@ export default function ProjectsPage() {
 
       {/* Pagination Controls */}
       {!loading && totalPages > 1 && (
-        <div className="flex items-center justify-between mt-6 bg-card/50 px-4 py-3 rounded-xl border border-slate-800/50">
-          <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-            Page <span className="text-slate-300 mx-1">{projectPage}</span> of <span className="text-slate-300 mx-1">{totalPages}</span>
+        <div className="flex items-center justify-between mt-6 bg-card/50 px-4 py-3 rounded-xl border border-border-color/50">
+          <p className="text-[11px] font-semibold text-text-secondary uppercase tracking-wider">
+            Page <span className="text-text-secondary mx-1">{projectPage}</span> of <span className="text-text-secondary mx-1">{totalPages}</span>
             <span className="ml-4 lowercase text-[10px] text-slate-600 font-normal tracking-normal">- {filteredProjects.length} total projects</span>
           </p>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setProjectPage(p => Math.max(1, p - 1))}
               disabled={projectPage === 1}
-              className="px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800/50 text-[11px] font-bold text-slate-300 hover:bg-slate-700 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+              className="px-3 py-1.5 rounded-lg border border-border-color bg-card-bg/50 text-[11px] font-bold text-text-secondary hover:bg-hover-bg hover:text-text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all"
             >
               Prev
             </button>
             <button
               onClick={() => setProjectPage(p => Math.min(totalPages, p + 1))}
               disabled={projectPage === totalPages}
-              className="px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800/50 text-[11px] font-bold text-slate-300 hover:bg-slate-700 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+              className="px-3 py-1.5 rounded-lg border border-border-color bg-card-bg/50 text-[11px] font-bold text-text-secondary hover:bg-hover-bg hover:text-text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all"
             >
               Next
             </button>
@@ -410,20 +435,20 @@ export default function ProjectsPage() {
 
       {showForm && (
         <div className="fixed inset-0 z-30 flex items-center justify-end bg-black/40">
-          <div className="h-full w-full max-w-md border-l border-slate-800 bg-slate-950/95 p-4 shadow-2xl">
+          <div className="h-full w-full max-w-md border-l border-border-color bg-bg-primary/95 p-4 shadow-2xl">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold text-slate-50">
+                <p className="text-xs font-semibold text-text-primary">
                   {isViewing ? "Project details" : (editingId ? "Edit project" : "New project")}
                 </p>
-                <p className="text-[11px] text-slate-500">
+                <p className="text-[11px] text-text-secondary">
                   {isViewing ? "Overview of project settings." : "Set basic details and assign team members."}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setShowForm(false)}
-                className="rounded-full px-2 py-1 text-[11px] text-slate-400 hover:bg-slate-800 hover:text-slate-100"
+                className="rounded-full px-2 py-1 text-[11px] text-text-secondary hover:bg-card-bg hover:text-text-primary"
               >
                 ✕
               </button>
@@ -434,7 +459,7 @@ export default function ProjectsPage() {
               className="mt-4 space-y-3 text-[11px]"
             >
               <div>
-                <label className="mb-1 block text-slate-300">Project name</label>
+                <label className="mb-1 block text-text-secondary">Project name</label>
                 <input
                   value={form.name}
                   disabled={isViewing}
@@ -442,12 +467,12 @@ export default function ProjectsPage() {
                     setForm((prev) => ({ ...prev, name: e.target.value }))
                   }
                   required
-                  className="h-8 w-full cursor-pointer rounded-md border border-slate-700 bg-slate-950/60 px-2 text-[11px] text-slate-100 outline-none transition-all hover:border-slate-600 focus:border-accent focus:ring-1 focus:ring-accent/40 disabled:opacity-70 disabled:cursor-default"
+                  className="h-8 w-full cursor-pointer rounded-md border border-border-color bg-bg-primary/60 px-2 text-[11px] text-text-primary outline-none transition-all hover:border-border-color focus:border-accent focus:ring-1 focus:ring-accent/40 disabled:opacity-70 disabled:cursor-default"
                 />
               </div>
 
               <div>
-                <label className="mb-1 block text-slate-300">Project Key</label>
+                <label className="mb-1 block text-text-secondary">Project Key</label>
                 <input
                   value={form.key}
                   disabled={isViewing}
@@ -455,28 +480,28 @@ export default function ProjectsPage() {
                     setForm((prev) => ({ ...prev, key: e.target.value.toUpperCase() }))
                   }
                   placeholder="e.g. PRJ"
-                  className="h-8 w-full cursor-pointer rounded-md border border-slate-700 bg-slate-950/60 px-2 text-[11px] text-slate-100 outline-none transition-all hover:border-slate-600 focus:border-accent focus:ring-1 focus:ring-accent/40 disabled:opacity-70 disabled:cursor-default"
+                  className="h-8 w-full cursor-pointer rounded-md border border-border-color bg-bg-primary/60 px-2 text-[11px] text-text-primary outline-none transition-all hover:border-border-color focus:border-accent focus:ring-1 focus:ring-accent/40 disabled:opacity-70 disabled:cursor-default"
                 />
-                <p className="mt-0.5 text-[9px] text-slate-500">
+                <p className="mt-0.5 text-[9px] text-text-secondary">
                   Short unique code for tasks (e.g., PROJ-123). Generated automatically if blank.
                 </p>
               </div>
 
 
               <div>
-                <label className="mb-1 block text-slate-300">Client</label>
+                <label className="mb-1 block text-text-secondary">Client</label>
                 <input
                   value={form.clientName}
                   onChange={(e) =>
                     setForm((prev) => ({ ...prev, clientName: e.target.value }))
                   }
-                  className="h-8 w-full cursor-pointer rounded-md border border-slate-700 bg-slate-950/60 px-2 text-[11px] text-slate-100 outline-none transition-all hover:border-slate-600 focus:border-accent focus:ring-1 focus:ring-accent/40"
+                  className="h-8 w-full cursor-pointer rounded-md border border-border-color bg-bg-primary/60 px-2 text-[11px] text-text-primary outline-none transition-all hover:border-border-color focus:border-accent focus:ring-1 focus:ring-accent/40"
                   placeholder="Internal or client name"
                 />
               </div>
 
               <div>
-                <label className="mb-1 block text-slate-300">
+                <label className="mb-1 block text-text-secondary">
                   Description
                 </label>
                 <textarea
@@ -489,13 +514,13 @@ export default function ProjectsPage() {
                       description: e.target.value
                     }))
                   }
-                  className="w-full rounded-md border border-slate-700 bg-slate-950/60 px-2 py-1.5 text-[11px] text-slate-100 outline-none focus:border-accent focus:ring-1 focus:ring-accent/40 disabled:opacity-70 disabled:cursor-default"
+                  className="w-full rounded-md border border-border-color bg-bg-primary/60 px-2 py-1.5 text-[11px] text-text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent/40 disabled:opacity-70 disabled:cursor-default"
                   placeholder="Optional short summary"
                 />
               </div>
 
               <div>
-                <label className="mb-1 block text-slate-300">
+                <label className="mb-1 block text-text-secondary">
                   Project status
                 </label>
                 <select
@@ -507,7 +532,7 @@ export default function ProjectsPage() {
                       status: e.target.value as Project["status"]
                     }))
                   }
-                  className="h-8 w-full cursor-pointer rounded-md border border-slate-700 bg-slate-950/60 px-2 text-[11px] text-slate-100 outline-none transition-all hover:border-slate-600 focus:border-accent focus:ring-1 focus:ring-accent/40 disabled:opacity-70"
+                  className="h-8 w-full cursor-pointer rounded-md border border-border-color bg-bg-primary/60 px-2 text-[11px] text-text-primary outline-none transition-all hover:border-border-color focus:border-accent focus:ring-1 focus:ring-accent/40 disabled:opacity-70"
                 >
                   <option value="active">Active</option>
                   <option value="on_hold">On hold</option>
@@ -516,7 +541,7 @@ export default function ProjectsPage() {
               </div>
 
               <div>
-                <label className="mb-1 block text-slate-300">
+                <label className="mb-1 block text-text-secondary">
                   Project logo
                 </label>
                 <input
@@ -526,24 +551,24 @@ export default function ProjectsPage() {
                     const file = e.target.files?.[0];
                     setLogoFile(file ?? null);
                   }}
-                  className="block w-full text-[11px] text-slate-400 file:mr-3 file:rounded-md file:border-0 file:bg-slate-800 file:px-3 file:py-1 file:text-[11px] file:font-medium file:text-slate-100 hover:file:bg-slate-700"
+                  className="block w-full text-[11px] text-text-secondary file:mr-3 file:rounded-md file:border-0 file:bg-card-bg file:px-3 file:py-1 file:text-[11px] file:font-medium file:text-text-primary hover:file:bg-slate-700"
                 />
               </div>
 
               <div>
-                <label className="mb-2 block text-slate-300">
+                <label className="mb-2 block text-text-secondary">
                   Assign team members
                 </label>
 
                 {/* Selected Members Chips */}
                 {selectedMembers.length > 0 && (
-                  <div className="mb-3 flex flex-wrap gap-1.5 rounded-lg border border-slate-800/50 bg-slate-900/30 p-2">
+                  <div className="mb-3 flex flex-wrap gap-1.5 rounded-lg border border-border-color/50 bg-bg-secondary/30 p-2">
                     {selectedMembers.map(id => {
                       const user = users.find(u => u.id === id);
                       if (!user) return null;
                       return (
                         <div key={id} className="flex items-center gap-1.5 rounded-full bg-accent/10 border border-accent/20 pl-1 pr-2 py-0.5 animate-in fade-in zoom-in duration-200">
-                          <div className="h-4 w-4 rounded-full bg-slate-800 overflow-hidden">
+                          <div className="h-4 w-4 rounded-full bg-card-bg overflow-hidden">
                             {user.avatarUrl ? (
                               <img src={user.avatarUrl} alt="" className="h-full w-full object-cover" />
                             ) : (
@@ -576,16 +601,16 @@ export default function ProjectsPage() {
                             placeholder="Search employees..."
                             value={memberSearch}
                             onChange={(e) => setMemberSearch(e.target.value)}
-                            className="h-8 w-full rounded-md border border-slate-700 bg-slate-950/60 pl-8 pr-2 text-[11px] text-slate-100 outline-none focus:border-accent focus:ring-1 focus:ring-accent/40"
+                            className="h-8 w-full rounded-md border border-border-color bg-bg-primary/60 pl-8 pr-2 text-[11px] text-text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent/40"
                         />
-                        <svg className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                         </div>
 
-                        <div className="max-h-48 overflow-y-auto rounded-md border border-slate-700 bg-slate-950/60 custom-scrollbar">
+                        <div className="max-h-48 overflow-y-auto rounded-md border border-border-color bg-bg-primary/60 custom-scrollbar">
                         {users.filter(u => u.name.toLowerCase().includes(memberSearch.toLowerCase())).length === 0 ? (
-                            <p className="px-3 py-6 text-center text-[10px] text-slate-500 italic">
+                            <p className="px-3 py-6 text-center text-[10px] text-text-secondary italic">
                             {users.length === 0 ? "No employees available yet." : "No matching employees found."}
                             </p>
                         ) : (
@@ -598,11 +623,11 @@ export default function ProjectsPage() {
                                     <div
                                     key={u.id}
                                     onClick={() => toggleMember(u.id)}
-                                    className={`flex cursor-pointer items-center justify-between px-3 py-2 text-[11px] transition-colors hover:bg-slate-800/40 ${isSelected ? "bg-accent/5" : ""
+                                    className={`flex cursor-pointer items-center justify-between px-3 py-2 text-[11px] transition-colors hover:bg-card-bg/40 ${isSelected ? "bg-accent/5" : ""
                                         }`}
                                     >
                                     <div className="flex items-center gap-2.5">
-                                        <div className={`relative h-7 w-7 rounded-full bg-slate-800 overflow-hidden ring-1 ${isSelected ? "ring-accent" : "ring-slate-700"}`}>
+                                        <div className={`relative h-7 w-7 rounded-full bg-card-bg overflow-hidden ring-1 ${isSelected ? "ring-accent" : "ring-slate-700"}`}>
                                         {u.avatarUrl ? (
                                             <img
                                             src={u.avatarUrl}
@@ -610,7 +635,7 @@ export default function ProjectsPage() {
                                             className="h-full w-full object-cover"
                                             />
                                         ) : (
-                                            <div className="flex h-full w-full items-center justify-center text-[9px] text-slate-400 font-medium">
+                                            <div className="flex h-full w-full items-center justify-center text-[9px] text-text-secondary font-medium">
                                             {u.name.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2)}
                                             </div>
                                         )}
@@ -623,12 +648,12 @@ export default function ProjectsPage() {
                                         )}
                                         </div>
                                         <div className="flex flex-col">
-                                        <span className={`font-medium ${isSelected ? "text-accent" : "text-slate-200"}`}>
+                                        <span className={`font-medium ${isSelected ? "text-accent" : "text-text-primary"}`}>
                                             {u.name}
                                         </span>
                                         </div>
                                     </div>
-                                    <div className={`h-4 w-4 rounded border flex items-center justify-center transition-all ${isSelected ? "bg-accent border-accent" : "border-slate-600 bg-transparent"
+                                    <div className={`h-4 w-4 rounded border flex items-center justify-center transition-all ${isSelected ? "bg-accent border-accent" : "border-border-color bg-transparent"
                                         }`}>
                                         {isSelected && (
                                         <svg className="h-2.5 w-2.5 text-slate-950" fill="currentColor" viewBox="0 0 20 20">
@@ -651,7 +676,7 @@ export default function ProjectsPage() {
                 <button
                   type="button"
                   onClick={() => setShowForm(false)}
-                  className="rounded-md border border-slate-700 px-3 py-1 text-[11px] text-slate-200 hover:border-slate-500"
+                  className="rounded-md border border-border-color px-3 py-1 text-[11px] text-text-primary hover:border-slate-500"
                 >
                   Cancel
                 </button>

@@ -283,25 +283,25 @@ export default function TaskModal({ open, onClose, onSaved, initial }: Props) {
                 <Layout size={20} />
              </div>
              <div>
-                <h3 className="text-sm font-black text-white uppercase tracking-tighter">
+                <h3 className="text-sm font-black text-text-primary uppercase tracking-tighter">
                   {initial?._id || initial?.id ? `Task: ${initial.key}` : "Create Task"}
                 </h3>
-                <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">
+                <p className="text-[10px] text-text-secondary uppercase font-bold tracking-widest">
                   {initial?._id || initial?.id ? initial.title : "New Task Item"}
                 </p>
              </div>
           </div>
-          <button type="button" onClick={onClose} className="p-2 rounded-lg hover:bg-white/5 text-slate-400 hover:text-white transition-colors">
+          <button type="button" onClick={onClose} className="p-2 rounded-lg hover:bg-hover-bg text-text-secondary hover:text-text-primary transition-colors">
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {initial?._id || initial?.id ? (
-          <div className="flex items-center gap-1 mb-6 p-1 bg-slate-900/50 border border-white/5 rounded-xl w-fit">
+          <div className="flex items-center gap-1 mb-6 p-1 bg-bg-secondary/50 border border-border-color rounded-xl w-fit">
             <button
                type="button"
                onClick={() => setActiveTab("overview")}
-               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === "overview" ? "bg-accent text-slate-950 shadow-lg shadow-accent/20" : "text-slate-400 hover:text-white"}`}
+               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === "overview" ? "bg-accent text-slate-950 shadow-lg shadow-accent/20" : "text-text-secondary hover:text-text-primary"}`}
             >
                <Layout size={14} />
                <span>Overview</span>
@@ -309,7 +309,7 @@ export default function TaskModal({ open, onClose, onSaved, initial }: Props) {
             <button
                type="button"
                onClick={() => setActiveTab("activity")}
-               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === "activity" ? "bg-accent text-slate-950 shadow-lg shadow-accent/20" : "text-slate-400 hover:text-white"}`}
+               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === "activity" ? "bg-accent text-slate-950 shadow-lg shadow-accent/20" : "text-text-secondary hover:text-text-primary"}`}
             >
                <Activity size={14} />
                <span>Activity</span>
@@ -317,7 +317,7 @@ export default function TaskModal({ open, onClose, onSaved, initial }: Props) {
             <button
                type="button"
                onClick={() => setActiveTab("comments")}
-               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === "comments" ? "bg-accent text-slate-950 shadow-lg shadow-accent/20" : "text-slate-400 hover:text-white"}`}
+               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === "comments" ? "bg-accent text-slate-950 shadow-lg shadow-accent/20" : "text-text-secondary hover:text-text-primary"}`}
             >
                <MessageSquare size={14} />
                <span>Comments</span>
@@ -337,18 +337,18 @@ export default function TaskModal({ open, onClose, onSaved, initial }: Props) {
         {/* Grid of fields */}
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div>
-            <label className="text-[11px] text-slate-300 uppercase">Title</label>
-            <input value={title} onChange={(e) => setTitle(e.target.value)} required className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100 focus:border-slate-600 focus:outline-none" />
+            <label className="text-[11px] text-text-secondary uppercase">Title</label>
+            <input value={title} onChange={(e) => setTitle(e.target.value)} required className="mt-1 w-full rounded-md border border-border-color bg-bg-primary/60 px-3 py-2 text-sm text-text-primary focus:border-border-color focus:outline-none" />
           </div>
 
           <div>
-            <label className="text-[11px] text-slate-300 uppercase">Project</label>
+            <label className="text-[11px] text-text-secondary uppercase">Project</label>
             <select 
               value={projectId || ""} 
               onChange={(e) => setProjectId(e.target.value || null)} 
               required 
               disabled={loadingMeta || (!!initial?.project && !(initial?._id || initial?.id))}
-              className={`mt-1 w-full rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100 focus:border-slate-600 focus:outline-none transition-opacity ${loadingMeta || (!!initial?.project && !(initial?._id || initial?.id)) ? "opacity-60 cursor-not-allowed" : ""}`}
+              className={`mt-1 w-full rounded-md border border-border-color bg-bg-primary/60 px-3 py-2 text-sm text-text-primary focus:border-border-color focus:outline-none transition-opacity ${loadingMeta || (!!initial?.project && !(initial?._id || initial?.id)) ? "opacity-60 cursor-not-allowed" : ""}`}
             >
               <option value="">Select project</option>
               {loadingMeta ? <option>Loading...</option> : projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -356,8 +356,8 @@ export default function TaskModal({ open, onClose, onSaved, initial }: Props) {
           </div>
 
           <div>
-            <label className="text-[11px] text-slate-300 uppercase">Type</label>
-            <select value={type} onChange={(e) => setType(e.target.value as any)} className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100 focus:border-slate-600 focus:outline-none">
+            <label className="text-[11px] text-text-secondary uppercase">Type</label>
+            <select value={type} onChange={(e) => setType(e.target.value as any)} className="mt-1 w-full rounded-md border border-border-color bg-bg-primary/60 px-3 py-2 text-sm text-text-primary focus:border-border-color focus:outline-none">
               <option value="Task">Task</option>
               <option value="Bug">Bug</option>
               <option value="Improvement">Improvement</option>
@@ -365,16 +365,16 @@ export default function TaskModal({ open, onClose, onSaved, initial }: Props) {
           </div>
 
           <div>
-            <label className="text-[11px] text-slate-300 uppercase">Assignee</label>
-            <select value={assigneeId || ""} onChange={(e) => setAssigneeId(e.target.value || null)} className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100 focus:border-slate-600 focus:outline-none">
+            <label className="text-[11px] text-text-secondary uppercase">Assignee</label>
+            <select value={assigneeId || ""} onChange={(e) => setAssigneeId(e.target.value || null)} className="mt-1 w-full rounded-md border border-border-color bg-bg-primary/60 px-3 py-2 text-sm text-text-primary focus:border-border-color focus:outline-none">
               <option value="">Unassigned</option>
               {loadingMeta ? <option>Loading...</option> : filteredUsers.map((u:any) => <option key={u.id} value={u.id}>{u.firstName} {u.lastName}</option>)}
             </select>
           </div>
 
           <div>
-            <label className="text-[11px] text-slate-300 uppercase">Priority</label>
-            <select value={priority} onChange={(e) => setPriority(e.target.value as any)} className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100 focus:border-slate-600 focus:outline-none">
+            <label className="text-[11px] text-text-secondary uppercase">Priority</label>
+            <select value={priority} onChange={(e) => setPriority(e.target.value as any)} className="mt-1 w-full rounded-md border border-border-color bg-bg-primary/60 px-3 py-2 text-sm text-text-primary focus:border-border-color focus:outline-none">
               <option value="Low">Low</option>
               <option value="Medium">Medium</option>
               <option value="High">High</option>
@@ -383,20 +383,20 @@ export default function TaskModal({ open, onClose, onSaved, initial }: Props) {
           </div>
 
           <div>
-            <label className="text-[11px] text-slate-300 uppercase">Due date</label>
-            <input type="date" value={dueDate || ""} onChange={(e) => setDueDate(e.target.value || null)} className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100 focus:border-slate-600 focus:outline-none" />
+            <label className="text-[11px] text-text-secondary uppercase">Due date</label>
+            <input type="date" value={dueDate || ""} onChange={(e) => setDueDate(e.target.value || null)} className="mt-1 w-full rounded-md border border-border-color bg-bg-primary/60 px-3 py-2 text-sm text-text-primary focus:border-border-color focus:outline-none" />
           </div>
         </div>
 
         {/* Description */}
         <div className="mb-4">
-          <label className="text-[11px] text-slate-300 uppercase block mb-1">Description</label>
+          <label className="text-[11px] text-text-secondary uppercase block mb-1">Description</label>
           <TaskEditor content={description} onChange={(json) => setDescription(json)} />
         </div>
 
         {/* Image Attachments Section */}
         <div className="mb-4">
-          <label className="text-[11px] text-slate-300 uppercase mb-2 block">Attachments (Images)</label>
+          <label className="text-[11px] text-text-secondary uppercase mb-2 block">Attachments (Images)</label>
           
           {/* Drag and Drop Zone */}
           <div
@@ -407,8 +407,8 @@ export default function TaskModal({ open, onClose, onSaved, initial }: Props) {
             onDrop={handleDrop}
             className={`relative rounded-lg border-2 border-dashed transition-colors p-6 text-center cursor-pointer ${
               dragActive
-                ? "border-slate-400 bg-slate-800/40"
-                : "border-slate-700 bg-slate-900/20 hover:border-slate-600"
+                ? "border-slate-400 bg-card-bg/40"
+                : "border-border-color bg-bg-secondary/20 hover:border-border-color"
             }`}
             onClick={() => fileInputRef.current?.click()}
           >
@@ -422,12 +422,12 @@ export default function TaskModal({ open, onClose, onSaved, initial }: Props) {
             />
             
             <div className="flex flex-col items-center gap-2">
-              <Upload className="h-5 w-5 text-slate-400" />
+              <Upload className="h-5 w-5 text-text-secondary" />
               <div>
-                <p className="text-sm font-medium text-slate-300">
+                <p className="text-sm font-medium text-text-secondary">
                   Drag images here or click to select
                 </p>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-text-secondary mt-1">
                   Supports JPG, PNG, WebP • Max 5MB per file
                 </p>
               </div>
@@ -439,14 +439,14 @@ export default function TaskModal({ open, onClose, onSaved, initial }: Props) {
             <div className="mt-4">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <p className="text-xs text-slate-400 uppercase font-medium">
+                  <p className="text-xs text-text-secondary uppercase font-medium">
                     Selected Files
                   </p>
                   <span className="inline-flex items-center gap-1 rounded-full bg-accent/20 px-2 py-1 text-xs font-semibold text-accent">
                     {attachments.length}
                   </span>
                 </div>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-text-secondary">
                   {(attachments.reduce((acc, f) => acc + f.size, 0) / (1024 * 1024)).toFixed(2)} MB total
                 </p>
               </div>
@@ -454,7 +454,7 @@ export default function TaskModal({ open, onClose, onSaved, initial }: Props) {
                 {attachments.map((file, index) => (
                   <div
                     key={index}
-                    className="relative group rounded-lg border border-slate-700 overflow-hidden bg-slate-900/40"
+                    className="relative group rounded-lg border border-border-color overflow-hidden bg-bg-secondary/40"
                   >
                     <img
                       src={getFilePreview(file)}
@@ -463,7 +463,7 @@ export default function TaskModal({ open, onClose, onSaved, initial }: Props) {
                     />
                     
                     {/* File Index Badge */}
-                    <div className="absolute top-1 left-1 bg-slate-900/80 rounded px-1.5 py-0.5 text-xs font-semibold text-slate-300">
+                    <div className="absolute top-1 left-1 bg-bg-secondary/80 rounded px-1.5 py-0.5 text-xs font-semibold text-text-secondary">
                       {index + 1}
                     </div>
 
@@ -471,13 +471,13 @@ export default function TaskModal({ open, onClose, onSaved, initial }: Props) {
                       <button
                         type="button"
                         onClick={() => removeAttachment(index)}
-                        className="rounded-lg p-1.5 bg-red-600 hover:bg-red-700 text-white transition"
+                        className="rounded-lg p-1.5 bg-red-600 hover:bg-red-700 text-text-primary transition"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
                     <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-1">
-                      <p className="text-xs text-white truncate">{file.name}</p>
+                      <p className="text-xs text-text-primary truncate">{file.name}</p>
                       <p className="text-xs text-gray-300">
                         {(file.size / 1024).toFixed(1)} KB
                       </p>
@@ -529,7 +529,7 @@ export default function TaskModal({ open, onClose, onSaved, initial }: Props) {
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md px-4 py-2 text-sm text-slate-300 hover:text-slate-100 transition"
+            className="rounded-md px-4 py-2 text-sm text-text-secondary hover:text-text-primary transition"
           >
             Cancel
           </button>

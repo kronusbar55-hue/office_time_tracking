@@ -131,6 +131,18 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       }
     }
 
+    // Auto-transition status based on assignment if status is NOT being explicitly changed
+    if (!update.status) {
+      const currentStatus = (update.status || existing.status);
+      const newAssignee = (update.hasOwnProperty("assignee") ? update.assignee : existing.assignee);
+      
+      if (newAssignee && currentStatus === "backlog") {
+        update.status = "todo";
+      } else if (!newAssignee && currentStatus === "todo") {
+        update.status = "backlog";
+      }
+    }
+
     // Merge new attachments if any
     if (attachments.length > 0) {
       update.attachments = [...(existing.attachments || []), ...attachments];

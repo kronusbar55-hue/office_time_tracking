@@ -78,7 +78,7 @@ export default function TaskComments({ taskId }: { taskId: string }) {
                         value={newComment}
                         onChange={(e) => setNewComment(e.target.value)}
                         placeholder="Add a comment..."
-                        className="w-full rounded-xl bg-slate-900/50 border border-white/10 p-3 text-sm focus:outline-none focus:ring-1 focus:ring-accent/40 min-h-[80px]"
+                        className="w-full rounded-xl bg-bg-secondary/50 border border-border-color p-3 text-sm focus:outline-none focus:ring-1 focus:ring-accent/40 min-h-[80px]"
                     />
                     <button
                         onClick={handlePost}
@@ -94,35 +94,35 @@ export default function TaskComments({ taskId }: { taskId: string }) {
                 {loading && comments.length === 0 ? (
                     <div className="text-center py-8">
                          <div className="animate-spin h-5 w-5 border-2 border-accent border-t-transparent rounded-full mx-auto" />
-                         <p className="mt-2 text-xs text-slate-500 font-black uppercase tracking-widest">Loading Conversation...</p>
+                         <p className="mt-2 text-xs text-text-secondary font-black uppercase tracking-widest">Loading Conversation...</p>
                     </div>
                 ) : comments.length === 0 ? (
-                    <div className="text-center py-10 rounded-xl border border-dashed border-white/5 bg-slate-900/10">
+                    <div className="text-center py-10 rounded-xl border border-dashed border-border-color bg-bg-secondary/10">
                         <MessageSquare className="h-8 w-8 text-slate-700 mx-auto mb-2 opacity-30" />
-                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">No messages yet</p>
+                        <p className="text-[10px] font-black text-text-secondary uppercase tracking-widest">No messages yet</p>
                     </div>
                 ) : (
                     comments.map((comment) => (
                         <div key={comment._id} className="flex gap-4 group">
-                            <div className="h-9 w-9 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center shrink-0 overflow-hidden ring-1 ring-transparent group-hover:ring-accent/40 transition-all">
+                            <div className="h-9 w-9 rounded-xl bg-bg-primary border border-border-color flex items-center justify-center shrink-0 overflow-hidden ring-1 ring-transparent group-hover:ring-accent/40 transition-all">
                                 {comment.author?.avatarUrl ? (
                                     <img src={comment.author.avatarUrl} alt="" className="w-full h-full object-cover" />
                                 ) : (
-                                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-tighter">
+                                    <span className="text-[10px] font-black text-text-secondary uppercase tracking-tighter">
                                         {(comment.author?.firstName || "U")[0]}
                                     </span>
                                 )}
                             </div>
                             <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-1">
-                                    <span className="text-[11px] font-black text-slate-100 uppercase tracking-tighter group-hover:text-accent transition-colors">
+                                    <span className="text-[11px] font-black text-text-primary uppercase tracking-tighter group-hover:text-accent transition-colors">
                                         {comment.author ? `${comment.author.firstName} ${comment.author.lastName}` : "Unknown User"}
                                     </span>
                                     <span className="text-[9px] font-bold text-slate-600">
                                         {comment.createdAt ? formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true }) : "just now"}
                                     </span>
                                 </div>
-                                <div className="text-[13px] text-slate-300 bg-slate-900/30 rounded-2xl p-4 border border-white/5 leading-relaxed">
+                                <div className="text-[13px] text-text-secondary bg-bg-secondary/30 rounded-2xl p-4 border border-border-color leading-relaxed">
                                     {comment.content}
                                 </div>
                             </div>

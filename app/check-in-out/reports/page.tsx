@@ -116,52 +116,52 @@ export default function CheckInOutReportsPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-slate-100">Check-In/Out Reports</h1>
-            <p className="mt-1 text-slate-400">
+            <h1 className="text-3xl font-bold text-text-primary">Check-In/Out Reports</h1>
+            <p className="mt-1 text-text-secondary">
               Comprehensive attendance and work hour analytics with role-based insights
             </p>
           </div>
           <button
             onClick={exportReport}
-            className="px-4 py-2 rounded-lg bg-green-600 text-white font-medium hover:bg-green-700 transition-colors"
+            className="px-4 py-2 rounded-lg bg-green-600 text-text-primary font-medium hover:bg-green-700 transition-colors"
           >
             📊 Export CSV
           </button>
         </div>
 
         {/* Report Controls */}
-        <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+        <div className="rounded-lg border border-border-color bg-card-bg/50 p-4">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
             {/* Date Range */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">Start Date</label>
+              <label className="block text-sm font-medium text-text-secondary mb-2">Start Date</label>
               <input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full px-3 py-2 rounded border border-slate-600 bg-slate-900 text-slate-100"
+                className="w-full px-3 py-2 rounded border border-border-color bg-bg-secondary text-text-primary"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">End Date</label>
+              <label className="block text-sm font-medium text-text-secondary mb-2">End Date</label>
               <input
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full px-3 py-2 rounded border border-slate-600 bg-slate-900 text-slate-100"
+                className="w-full px-3 py-2 rounded border border-border-color bg-bg-secondary text-text-primary"
               />
             </div>
 
             {/* Role Filter */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">Filter by Role</label>
+              <label className="block text-sm font-medium text-text-secondary mb-2">Filter by Role</label>
               <select
                 value={selectedRole}
                 onChange={(e) =>
                   setSelectedRole(e.target.value as "all" | "admin" | "hr" | "manager" | "employee")
                 }
-                className="w-full px-3 py-2 rounded border border-slate-600 bg-slate-900 text-slate-100"
+                className="w-full px-3 py-2 rounded border border-border-color bg-bg-secondary text-text-primary"
               >
                 <option value="all">All Roles</option>
                 <option value="admin">Admin</option>
@@ -173,11 +173,11 @@ export default function CheckInOutReportsPage() {
 
             {/* Report Type */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">Report Type</label>
+              <label className="block text-sm font-medium text-text-secondary mb-2">Report Type</label>
               <select
                 value={reportType}
                 onChange={(e) => setReportType(e.target.value as any)}
-                className="w-full px-3 py-2 rounded border border-slate-600 bg-slate-900 text-slate-100"
+                className="w-full px-3 py-2 rounded border border-border-color bg-bg-secondary text-text-primary"
               >
                 <option value="summary">Summary</option>
                 <option value="detailed">Detailed</option>
@@ -194,15 +194,15 @@ export default function CheckInOutReportsPage() {
             {loading ? (
               <div className="grid gap-4 md:grid-cols-4">
                 {[...Array(4)].map((_, i) => (
-                  <div key={i} className="h-24 rounded-lg border border-slate-700 bg-slate-800/50 animate-pulse" />
+                  <div key={i} className="h-24 rounded-lg border border-border-color bg-card-bg/50 animate-pulse" />
                 ))}
               </div>
             ) : (
               report && (
                 <div className="grid gap-4 md:grid-cols-4">
-                  <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-4">
-                    <p className="text-sm text-slate-400">Total Employees</p>
-                    <p className="mt-2 text-3xl font-bold text-slate-100">
+                  <div className="rounded-lg border border-border-color bg-card-bg/50 p-4">
+                    <p className="text-sm text-text-secondary">Total Employees</p>
+                    <p className="mt-2 text-3xl font-bold text-text-primary">
                       {report.summary.totalEmployees}
                     </p>
                   </div>
@@ -233,29 +233,29 @@ export default function CheckInOutReportsPage() {
 
             {/* Role Statistics Table */}
             {report && (
-              <div className="rounded-lg border border-slate-700 bg-slate-800/50 overflow-hidden">
-                <div className="p-4 border-b border-slate-700">
-                  <h2 className="text-lg font-semibold text-slate-200">By Role</h2>
+              <div className="rounded-lg border border-border-color bg-card-bg/50 overflow-hidden">
+                <div className="p-4 border-b border-border-color">
+                  <h2 className="text-lg font-semibold text-text-primary">By Role</h2>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead className="bg-slate-900/50 border-b border-slate-700">
+                    <thead className="bg-bg-secondary/50 border-b border-border-color">
                       <tr>
-                        <th className="px-4 py-2 text-left font-medium text-slate-300">Role</th>
-                        <th className="px-4 py-2 text-center font-medium text-slate-300">Records</th>
-                        <th className="px-4 py-2 text-center font-medium text-slate-300">Total Hours</th>
-                        <th className="px-4 py-2 text-center font-medium text-slate-300">Avg Hours</th>
+                        <th className="px-4 py-2 text-left font-medium text-text-secondary">Role</th>
+                        <th className="px-4 py-2 text-center font-medium text-text-secondary">Records</th>
+                        <th className="px-4 py-2 text-center font-medium text-text-secondary">Total Hours</th>
+                        <th className="px-4 py-2 text-center font-medium text-text-secondary">Avg Hours</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-700">
                       {Object.entries(report.roleStats || {}).map(([role, stats]: [string, any]) => (
-                        <tr key={role} className="hover:bg-slate-700/50">
-                          <td className="px-4 py-2 capitalize font-medium text-slate-100">{role}</td>
-                          <td className="px-4 py-2 text-center text-slate-300">{stats.count}</td>
-                          <td className="px-4 py-2 text-center text-slate-300">
+                        <tr key={role} className="hover:bg-hover-bg/50">
+                          <td className="px-4 py-2 capitalize font-medium text-text-primary">{role}</td>
+                          <td className="px-4 py-2 text-center text-text-secondary">{stats.count}</td>
+                          <td className="px-4 py-2 text-center text-text-secondary">
                             {stats.totalHours?.toFixed(1) || "0"}h
                           </td>
-                          <td className="px-4 py-2 text-center text-slate-300">
+                          <td className="px-4 py-2 text-center text-text-secondary">
                             {stats.count > 0
                               ? ((stats.totalHours || 0) / stats.count).toFixed(1)
                               : "0"}h
@@ -274,7 +274,7 @@ export default function CheckInOutReportsPage() {
         {reportType === "detailed" && (
           <div className="space-y-6">
             <div>
-              <h2 className="mb-4 text-lg font-semibold text-slate-200">Detailed Records</h2>
+              <h2 className="mb-4 text-lg font-semibold text-text-primary">Detailed Records</h2>
               <CheckInOutTable
                 role={selectedRole !== "all" ? selectedRole : undefined}
                 startDate={startDate}
@@ -289,7 +289,7 @@ export default function CheckInOutReportsPage() {
         {reportType === "comparison" && (
           <div className="space-y-6">
             <div>
-              <h2 className="mb-4 text-lg font-semibold text-slate-200">Analytics & Trends</h2>
+              <h2 className="mb-4 text-lg font-semibold text-text-primary">Analytics & Trends</h2>
               <CheckInOutCharts
                 period={
                   period === "month"

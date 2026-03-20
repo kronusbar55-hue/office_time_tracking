@@ -119,14 +119,14 @@ export default function TimeTrackingCharts({ refreshKey }: { refreshKey?: number
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="flex h-64 animate-pulse items-center justify-center rounded-xl border border-white/10 bg-slate-900/40">
-          <p className="text-slate-400">Loading charts...</p>
+        <div className="flex h-64 animate-pulse items-center justify-center rounded-xl border border-border-color bg-bg-secondary/40">
+          <p className="text-text-secondary">Loading charts...</p>
         </div>
-        <div className="flex h-64 animate-pulse items-center justify-center rounded-xl border border-white/10 bg-slate-900/40">
-          <p className="text-slate-400">Loading productivity data...</p>
+        <div className="flex h-64 animate-pulse items-center justify-center rounded-xl border border-border-color bg-bg-secondary/40">
+          <p className="text-text-secondary">Loading productivity data...</p>
         </div>
-        <div className="flex h-56 animate-pulse items-center justify-center rounded-xl border border-white/10 bg-slate-900/40">
-          <p className="text-slate-400">Loading distribution...</p>
+        <div className="flex h-56 animate-pulse items-center justify-center rounded-xl border border-border-color bg-bg-secondary/40">
+          <p className="text-text-secondary">Loading distribution...</p>
         </div>
       </div>
     );
@@ -143,8 +143,8 @@ export default function TimeTrackingCharts({ refreshKey }: { refreshKey?: number
   return (
     <div className="space-y-6">
       {/* Graph 1: Daily Work vs Break (Bar) */}
-      <div className="rounded-xl border border-white/10 bg-slate-900/40 p-6 backdrop-blur-sm">
-        <h3 className="mb-4 text-lg font-semibold text-slate-100">Daily Work vs Break</h3>
+      <div className="rounded-xl border border-border-color bg-bg-secondary/40 p-6 backdrop-blur-sm">
+        <h3 className="mb-4 text-lg font-semibold text-text-primary">Daily Work vs Break</h3>
         <div className="h-64">
           {weeklyData.length === 0 ? (
             <EmptyChart message="No time logs this week. Clock in to start tracking." />
@@ -174,8 +174,8 @@ export default function TimeTrackingCharts({ refreshKey }: { refreshKey?: number
       </div>
 
       {/* Graph 2: Monthly Productivity Trend (Line) */}
-      <div className="rounded-xl border border-white/10 bg-slate-900/40 p-6 backdrop-blur-sm">
-        <h3 className="mb-4 text-lg font-semibold text-slate-100">Monthly Productivity Trend</h3>
+      <div className="rounded-xl border border-border-color bg-bg-secondary/40 p-6 backdrop-blur-sm">
+        <h3 className="mb-4 text-lg font-semibold text-text-primary">Monthly Productivity Trend</h3>
         <div className="h-64">
           {monthlyData.length === 0 ? (
             <EmptyChart message="No time logs this month." />
@@ -208,8 +208,8 @@ export default function TimeTrackingCharts({ refreshKey }: { refreshKey?: number
       </div>
 
       {/* Graph 3: Work Distribution (Pie) */}
-      {/* <div className="rounded-xl border border-white/10 bg-slate-900/40 p-6 backdrop-blur-sm">
-        <h3 className="mb-4 text-lg font-semibold text-slate-100">Work Distribution (This Week)</h3>
+      {/* <div className="rounded-xl border border-border-color bg-bg-secondary/40 p-6 backdrop-blur-sm">
+        <h3 className="mb-4 text-lg font-semibold text-text-primary">Work Distribution (This Week)</h3>
         <div className="flex flex-col items-center gap-4 md:flex-row md:justify-center">
           <div className="h-56 w-56">
             <ResponsiveContainer width="100%" height="100%">
@@ -263,8 +263,8 @@ export default function TimeTrackingCharts({ refreshKey }: { refreshKey?: number
 
 function EmptyChart({ message }: { message: string }) {
   return (
-    <div className="flex h-full items-center justify-center rounded-lg border border-dashed border-white/10 bg-slate-900/20">
-      <p className="text-center text-sm text-slate-500">{message}</p>
+    <div className="flex h-full items-center justify-center rounded-lg border border-dashed border-border-color bg-bg-secondary/20">
+      <p className="text-center text-sm text-text-secondary">{message}</p>
     </div>
   );
 }

@@ -180,25 +180,25 @@ export default async function AdminDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <DashboardCard delay={0.8}>
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-bold text-white flex items-center gap-2">
+            <h3 className="text-xl font-bold text-text-primary flex items-center gap-2">
               <LogIn className="h-5 w-5 text-green-400" />
               Recent Logins
             </h3>
           </div>
           <div className="space-y-4">
             {recentLogins.map((log: any) => (
-              <div key={log._id} className="flex items-center justify-between p-3 rounded-xl bg-slate-800/30 border border-white/5">
+              <div key={log._id} className="flex items-center justify-between p-3 rounded-xl bg-card-bg/30 border border-border-color">
                 <div className="flex items-center gap-3">
                   <div className="h-8 w-8 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-[10px] font-bold text-blue-400">
                     {log.user?.firstName?.[0]}{log.user?.lastName?.[0]}
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-white">{log.user?.firstName}</h4>
-                    <p className="text-[10px] text-slate-500">{formatDistanceToNow(new Date(log.createdAt), { addSuffix: true })}</p>
+                    <h4 className="text-xs font-bold text-text-primary">{log.user?.firstName}</h4>
+                    <p className="text-[10px] text-text-secondary">{formatDistanceToNow(new Date(log.createdAt), { addSuffix: true })}</p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-[10px] text-slate-400 font-mono">{log.ipAddress?.slice(0, 12)}</p>
+                  <p className="text-[10px] text-text-secondary font-mono">{log.ipAddress?.slice(0, 12)}</p>
                 </div>
               </div>
             ))}
@@ -210,23 +210,23 @@ export default async function AdminDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <DashboardCard delay={1.0} className="lg:col-span-2">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-bold text-white flex items-center gap-2">
+            <h3 className="text-xl font-bold text-text-primary flex items-center gap-2">
               <ShieldCheck className="h-5 w-5 text-purple-400" />
               Latest Leaves
             </h3>
-            <Link href="/leaves" className="text-xs text-slate-400 hover:text-white transition-colors">View All</Link>
+            <Link href="/leaves" className="text-xs text-text-secondary hover:text-text-primary transition-colors">View All</Link>
           </div>
           <div className="overflow-hidden">
             <div className="space-y-3">
               {latestLeaves.map((leave: any) => (
-                <div key={leave._id} className="flex items-center justify-between p-4 rounded-2xl bg-slate-800/30 border border-white/5 hover:bg-slate-800/50 transition-all">
+                <div key={leave._id} className="flex items-center justify-between p-4 rounded-2xl bg-card-bg/30 border border-border-color hover:bg-card-bg/50 transition-all">
                   <div className="flex items-center gap-4">
                     <div className="h-10 w-10 rounded-full bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 font-bold text-xs">
                       {leave.user?.firstName?.[0]}{leave.user?.lastName?.[0]}
                     </div>
                     <div>
-                      <h4 className="text-sm font-bold text-white">{leave.user?.firstName} {leave.user?.lastName}</h4>
-                      <p className="text-[10px] text-slate-500 uppercase tracking-widest">{leave.leaveType?.name}</p>
+                      <h4 className="text-sm font-bold text-text-primary">{leave.user?.firstName} {leave.user?.lastName}</h4>
+                      <p className="text-[10px] text-text-secondary uppercase tracking-widest">{leave.leaveType?.name}</p>
                     </div>
                   </div>
                   <div className="text-right">

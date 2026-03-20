@@ -24,7 +24,7 @@ const COLUMNS: { id: TaskStatus; title: string }[] = [
     { id: "backlog", title: "Backlog" },
     { id: "todo", title: "To Do" },
     { id: "in_progress", title: "In Progress" },
-    { id: "in_review", title: "Review" },
+    { id: "qa", title: "QA" },
     { id: "done", title: "Done" },
 ];
 

@@ -50,7 +50,7 @@ export default function LeaveCard({
     : [];
 
   return (
-    <article className="rounded-xl border border-white/10 bg-gradient-to-br from-slate-900/60 to-slate-900/30 p-5 transition-all hover:border-emerald-500/20 hover:shadow-lg">
+    <article className="rounded-xl border border-border-color bg-gradient-to-br from-slate-900/60 to-slate-900/30 p-5 transition-all hover:border-emerald-500/20 hover:shadow-lg">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0 flex-1">
           {/* Header: Avatar + User + Status */}
@@ -63,13 +63,13 @@ export default function LeaveCard({
                   className="h-12 w-12 rounded-full object-cover"
                 />
               ) : (
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 text-sm font-semibold text-white">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 text-sm font-semibold text-text-primary">
                   {getInitials(name)}
                 </div>
               )}
               <div>
-                <h3 className="font-semibold text-slate-100">{name}</h3>
-                <p className="text-sm text-slate-500">{email || leaveTypeName}</p>
+                <h3 className="font-semibold text-text-primary">{name}</h3>
+                <p className="text-sm text-text-secondary">{email || leaveTypeName}</p>
               </div>
             </div>
             <LeaveStatusBadge status={leave.status} />
@@ -78,30 +78,30 @@ export default function LeaveCard({
           {/* Details grid */}
           <div className="mb-4 grid grid-cols-2 gap-4">
             <div>
-              <label className="text-xs font-medium uppercase tracking-wider text-slate-500">
+              <label className="text-xs font-medium uppercase tracking-wider text-text-secondary">
                 Leave Type
               </label>
-              <p className="font-medium text-slate-200">{leaveTypeName}</p>
+              <p className="font-medium text-text-primary">{leaveTypeName}</p>
             </div>
             <div>
-              <label className="text-xs font-medium uppercase tracking-wider text-slate-500">
+              <label className="text-xs font-medium uppercase tracking-wider text-text-secondary">
                 Duration
               </label>
-              <p className="font-medium text-slate-200">
+              <p className="font-medium text-text-primary">
                 {formatDuration(leave.duration)}
               </p>
             </div>
             <div>
-              <label className="text-xs font-medium uppercase tracking-wider text-slate-500">
+              <label className="text-xs font-medium uppercase tracking-wider text-text-secondary">
                 Start Date
               </label>
-              <p className="font-medium text-slate-200">{leave.startDate}</p>
+              <p className="font-medium text-text-primary">{leave.startDate}</p>
             </div>
             <div>
-              <label className="text-xs font-medium uppercase tracking-wider text-slate-500">
+              <label className="text-xs font-medium uppercase tracking-wider text-text-secondary">
                 End Date
               </label>
-              <p className="font-medium text-slate-200">{leave.endDate}</p>
+              <p className="font-medium text-text-primary">{leave.endDate}</p>
             </div>
           </div>
 
@@ -112,7 +112,7 @@ export default function LeaveCard({
 
           {/* CC */}
           {ccEmails.length > 0 && (
-            <p className="mb-2 text-xs text-slate-500">
+            <p className="mb-2 text-xs text-text-secondary">
               CC: {ccEmails.join(", ")}
             </p>
           )}

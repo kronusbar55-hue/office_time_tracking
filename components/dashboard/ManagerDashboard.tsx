@@ -177,7 +177,7 @@ export default async function ManagerDashboard({ userId }: Props) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <DashboardCard className="lg:col-span-2" delay={0.5}>
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-bold text-white flex items-center gap-2">
+            <h3 className="text-xl font-bold text-text-primary flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-indigo-400" />
               Team Task Distribution
             </h3>
@@ -195,9 +195,9 @@ export default async function ManagerDashboard({ userId }: Props) {
                         key === 'inProgress' ? 'bg-yellow-400' :
                           key === 'inReview' ? 'bg-orange-400' : 'bg-green-400'
                       }`} />
-                    <span className="text-sm font-medium text-slate-400 capitalize">{key.replace(/([A-Z])/g, ' $1')}</span>
+                    <span className="text-sm font-medium text-text-secondary capitalize">{key.replace(/([A-Z])/g, ' $1')}</span>
                   </div>
-                  <span className="text-sm font-bold text-white">{value as number}</span>
+                  <span className="text-sm font-bold text-text-primary">{value as number}</span>
                 </div>
               ))}
             </div>
@@ -205,7 +205,7 @@ export default async function ManagerDashboard({ userId }: Props) {
         </DashboardCard>
 
         <DashboardCard delay={0.6}>
-          <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+          <h3 className="text-xl font-bold text-text-primary mb-6 flex items-center gap-2">
             <UserCheck className="h-5 w-5 text-green-400" />
             Live Team Activity
           </h3>
@@ -214,20 +214,20 @@ export default async function ManagerDashboard({ userId }: Props) {
               team.slice(0, 5).map((member: any) => {
                 const attendance = attendanceMap[member._id.toString()];
                 return (
-                  <div key={member._id} className="flex items-center justify-between p-3 rounded-xl bg-slate-800/30 border border-white/5">
+                  <div key={member._id} className="flex items-center justify-between p-3 rounded-xl bg-card-bg/30 border border-border-color">
                     <div className="flex items-center gap-3">
                       <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold border ${attendance.status === 'active' ? 'bg-green-500/10 border-green-500/20 text-green-400' :
                         attendance.status === 'on-break' ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-500' :
                         attendance.status === 'checked-out' ? 'bg-blue-500/10 border-blue-500/20 text-blue-400' :
-                          'bg-slate-500/10 border-slate-500/20 text-slate-500'
+                          'bg-slate-500/10 border-slate-500/20 text-text-secondary'
                         }`}>
                         {member.firstName[0]}{member.lastName[0]}
                       </div>
-                      <span className="text-sm font-medium text-slate-200">{member.firstName}</span>
+                      <span className="text-sm font-medium text-text-primary">{member.firstName}</span>
                     </div>
                     <span className={`text-[10px] font-bold uppercase tracking-wider ${attendance.status === 'active' ? 'text-green-500' :
                       attendance.status === 'on-break' ? 'text-yellow-500' :
-                      attendance.status === 'checked-out' ? 'text-blue-500' : 'text-slate-500'
+                      attendance.status === 'checked-out' ? 'text-blue-500' : 'text-text-secondary'
                       }`}>
                       {attendance.status}
                     </span>
@@ -235,10 +235,10 @@ export default async function ManagerDashboard({ userId }: Props) {
                 );
               })
             ) : (
-              <p className="text-slate-500 text-sm">No team members assigned.</p>
+              <p className="text-text-secondary text-sm">No team members assigned.</p>
             )}
           </div>
-          <Link href="/attendance" className="w-full mt-6 block text-center py-2 text-xs font-bold text-blue-400 hover:text-white transition-colors">
+          <Link href="/attendance" className="w-full mt-6 block text-center py-2 text-xs font-bold text-blue-400 hover:text-text-primary transition-colors">
             View All Team Activity
           </Link>
         </DashboardCard>
@@ -247,11 +247,11 @@ export default async function ManagerDashboard({ userId }: Props) {
       {/* Row 4: Pending Approvals */}
       <DashboardCard delay={0.7}>
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-bold text-white flex items-center gap-2">
+          <h3 className="text-xl font-bold text-text-primary flex items-center gap-2">
             <Calendar className="h-5 w-5 text-yellow-400" />
             Pending Team Approvals
           </h3>
-          <Link href="/leaves" className="text-sm font-medium text-slate-400 hover:text-white transition-colors">
+          <Link href="/leaves" className="text-sm font-medium text-text-secondary hover:text-text-primary transition-colors">
             View All
           </Link>
         </div>
@@ -259,32 +259,32 @@ export default async function ManagerDashboard({ userId }: Props) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {pendingLeaveRequests.length > 0 ? (
             pendingLeaveRequests.map((req: any) => (
-              <div key={req._id} className="flex flex-col p-5 rounded-2xl bg-slate-800/30 border border-white/5 hover:border-yellow-500/30 transition-all">
+              <div key={req._id} className="flex flex-col p-5 rounded-2xl bg-card-bg/30 border border-border-color hover:border-yellow-500/30 transition-all">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="h-10 w-10 rounded-full bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center text-yellow-500 font-bold">
                     {req.user?.firstName?.[0]}{req.user?.lastName?.[0]}
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold text-white">{req.user?.firstName} {req.user?.lastName}</h4>
-                    <p className="text-[10px] text-slate-500 uppercase tracking-widest">{req.leaveType?.name}</p>
+                    <h4 className="text-sm font-bold text-text-primary">{req.user?.firstName} {req.user?.lastName}</h4>
+                    <p className="text-[10px] text-text-secondary uppercase tracking-widest">{req.leaveType?.name}</p>
                   </div>
                 </div>
                 <div className="space-y-2 mb-4">
-                  <p className="text-xs text-slate-300 line-clamp-2">{req.reason}</p>
-                  <p className="text-[10px] text-slate-500">{req.startDate} to {req.endDate}</p>
+                  <p className="text-xs text-text-secondary line-clamp-2">{req.reason}</p>
+                  <p className="text-[10px] text-text-secondary">{req.startDate} to {req.endDate}</p>
                 </div>
                 <div className="flex gap-2 mt-auto">
-                  <button className="flex-1 py-2 rounded-xl bg-green-500/10 text-green-500 border border-green-500/20 text-xs font-bold hover:bg-green-500 hover:text-white transition-all">
+                  <button className="flex-1 py-2 rounded-xl bg-green-500/10 text-green-500 border border-green-500/20 text-xs font-bold hover:bg-green-500 hover:text-text-primary transition-all">
                     Approve
                   </button>
-                  <button className="flex-1 py-2 rounded-xl bg-red-500/10 text-red-500 border border-red-500/20 text-xs font-bold hover:bg-red-500 hover:text-white transition-all">
+                  <button className="flex-1 py-2 rounded-xl bg-red-500/10 text-red-500 border border-red-500/20 text-xs font-bold hover:bg-red-500 hover:text-text-primary transition-all">
                     Reject
                   </button>
                 </div>
               </div>
             ))
           ) : (
-            <div className="col-span-full py-12 flex flex-col items-center justify-center text-slate-500">
+            <div className="col-span-full py-12 flex flex-col items-center justify-center text-text-secondary">
               <CheckSquare className="h-12 w-12 mb-4 opacity-10" />
               <p>No pending approvals. Your team is all caught up!</p>
             </div>

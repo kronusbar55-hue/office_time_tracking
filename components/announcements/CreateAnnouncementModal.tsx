@@ -54,48 +54,48 @@ export function CreateAnnouncementModal({ isOpen, onClose, onSuccess, announceme
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <div className="w-full max-w-xl rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
+            <div className="w-full max-w-xl rounded-2xl border border-border-color bg-bg-secondary p-6 shadow-2xl">
                 <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-bold text-white">
+                    <h2 className="text-xl font-bold text-text-primary">
                         {announcement ? 'Edit Announcement' : 'Publish New Update'}
                     </h2>
-                    <button onClick={onClose} className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white transition-colors">
+                    <button onClick={onClose} className="rounded-lg p-1 text-text-secondary hover:bg-card-bg hover:text-text-primary transition-colors">
                         <X size={20} />
                     </button>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-slate-400 mb-1.5">Title</label>
+                        <label className="block text-sm font-medium text-text-secondary mb-1.5">Title</label>
                         <input
                             type="text"
                             required
                             value={formData.title}
                             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                            className="w-full rounded-xl border border-slate-700 bg-slate-800/50 px-4 py-2.5 text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            className="w-full rounded-xl border border-border-color bg-card-bg/50 px-4 py-2.5 text-text-primary placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                             placeholder="Enter announcement title"
                         />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-slate-400 mb-1.5">Description</label>
+                        <label className="block text-sm font-medium text-text-secondary mb-1.5">Description</label>
                         <textarea
                             required
                             rows={4}
                             value={formData.description}
                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                            className="w-full rounded-xl border border-slate-700 bg-slate-800/50 px-4 py-2.5 text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            className="w-full rounded-xl border border-border-color bg-card-bg/50 px-4 py-2.5 text-text-primary placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                             placeholder="What's the update? (Min 20 characters)"
                         />
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-slate-400 mb-1.5">Category</label>
+                            <label className="block text-sm font-medium text-text-secondary mb-1.5">Category</label>
                             <select
                                 value={formData.category}
                                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                                className="w-full rounded-xl border border-slate-700 bg-slate-800/50 px-4 py-2.5 text-white focus:outline-none"
+                                className="w-full rounded-xl border border-border-color bg-card-bg/50 px-4 py-2.5 text-text-primary focus:outline-none"
                             >
                                 <option value="General">General</option>
                                 <option value="HR">HR</option>
@@ -105,12 +105,12 @@ export function CreateAnnouncementModal({ isOpen, onClose, onSuccess, announceme
                             </select>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-slate-400 mb-1.5">Expiry Date (Optional)</label>
+                            <label className="block text-sm font-medium text-text-secondary mb-1.5">Expiry Date (Optional)</label>
                             <input
                                 type="date"
                                 value={formData.expiresAt}
                                 onChange={(e) => setFormData({ ...formData, expiresAt: e.target.value })}
-                                className="w-full rounded-xl border border-slate-700 bg-slate-800/50 px-4 py-2.5 text-white focus:outline-none"
+                                className="w-full rounded-xl border border-border-color bg-card-bg/50 px-4 py-2.5 text-text-primary focus:outline-none"
                             />
                         </div>
                     </div>
@@ -121,23 +121,23 @@ export function CreateAnnouncementModal({ isOpen, onClose, onSuccess, announceme
                             id="isPinned"
                             checked={formData.isPinned}
                             onChange={(e) => setFormData({ ...formData, isPinned: e.target.checked })}
-                            className="h-4 w-4 rounded border-slate-700 bg-slate-800 text-blue-600 focus:ring-blue-500"
+                            className="h-4 w-4 rounded border-border-color bg-card-bg text-blue-600 focus:ring-blue-500"
                         />
-                        <label htmlFor="isPinned" className="text-sm font-medium text-slate-300">Pin to top (Max 3)</label>
+                        <label htmlFor="isPinned" className="text-sm font-medium text-text-secondary">Pin to top (Max 3)</label>
                     </div>
 
                     <div className="pt-4 flex gap-3">
                         <button
                             type="button"
                             onClick={onClose}
-                            className="flex-1 rounded-xl bg-slate-800 py-3 text-sm font-bold text-slate-300 hover:bg-slate-700 transition-colors"
+                            className="flex-1 rounded-xl bg-card-bg py-3 text-sm font-bold text-text-secondary hover:bg-hover-bg transition-colors"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={loading}
-                            className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-blue-600 py-3 text-sm font-bold text-white hover:bg-blue-500 transition-colors disabled:opacity-50"
+                            className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-blue-600 py-3 text-sm font-bold text-text-primary hover:bg-blue-500 transition-colors disabled:opacity-50"
                         >
                             {loading && <Loader2 size={16} className="animate-spin" />}
                             {announcement ? 'Update' : 'Publish'}

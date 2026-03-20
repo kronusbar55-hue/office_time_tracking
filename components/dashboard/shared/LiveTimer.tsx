@@ -31,9 +31,9 @@ export default function LiveTimer({ initialSeconds = 0, isActive = false }: Live
     };
 
     return (
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/50 border border-slate-700/50">
-            {/* <Clock className={`h-4 w-4 ${isActive ? 'text-emerald-400 animate-pulse' : 'text-slate-500'}`} />
-            <span className="text-lg font-bold tabular-nums tracking-tight text-white">
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-card-bg/50 border border-border-color/50">
+            {/* <Clock className={`h-4 w-4 ${isActive ? 'text-emerald-400 animate-pulse' : 'text-text-secondary'}`} />
+            <span className="text-lg font-bold tabular-nums tracking-tight text-text-primary">
                 {formatTime(seconds)}
             </span> */}
         </div>

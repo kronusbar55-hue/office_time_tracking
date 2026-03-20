@@ -7,13 +7,13 @@ export default function LeaveHeader({ name, avatarUrl, leaveTypeName, leaveId, a
         <img src={avatarUrl || '/avatar-placeholder.png'} alt={`${name} avatar`} className="h-10 w-10 rounded-full object-cover" />
         <div className="min-w-0">
           <div className="text-sm font-semibold truncate">{name}</div>
-          <div className="text-xs text-slate-400 truncate">{leaveTypeName || 'Leave'}</div>
+          <div className="text-xs text-text-secondary truncate">{leaveTypeName || 'Leave'}</div>
         </div>
       </div>
 
-      <div className="text-right text-xs text-slate-400">
-        {leaveId && <div className="truncate">Leave ID: <span className="text-slate-300">{leaveId}</span></div>}
-        {appliedAt && <div className="truncate">Applied on: <span className="text-slate-300">{appliedAt}</span></div>}
+      <div className="text-right text-xs text-text-secondary">
+        {leaveId && <div className="truncate">Leave ID: <span className="text-text-secondary">{leaveId}</span></div>}
+        {appliedAt && <div className="truncate">Applied on: <span className="text-text-secondary">{appliedAt}</span></div>}
       </div>
     </div>
   );

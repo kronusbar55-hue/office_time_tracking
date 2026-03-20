@@ -156,14 +156,14 @@ export default function ApplyLeaveModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border border-white/10 bg-slate-950 p-6 shadow-2xl">
+      <div className="relative z-10 w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border border-border-color bg-bg-primary p-6 shadow-2xl">
         <div className="mb-6 flex items-center justify-between">
           <h3 className="font-display text-xl font-semibold text-emerald-400">
             Apply for Leave
           </h3>
           <button
             onClick={onClose}
-            className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+            className="rounded-lg p-1 text-text-secondary hover:bg-card-bg hover:text-text-primary"
           >
             <X className="h-5 w-5" />
           </button>
@@ -171,12 +171,12 @@ export default function ApplyLeaveModal({
 
         <div className="space-y-5">
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-300">
+            <label className="mb-2 block text-sm font-medium text-text-secondary">
               Leave Type <span className="text-rose-400">*</span>
             </label>
             <input
               list="leave-types"
-              className="w-full rounded-lg border border-white/10 bg-slate-900/60 px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:border-emerald-500/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+              className="w-full rounded-lg border border-border-color bg-bg-secondary/60 px-4 py-2.5 text-text-primary placeholder-slate-500 focus:border-emerald-500/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
               value={form.leaveTypeName}
               onChange={(e) => setForm((s) => ({ ...s, leaveTypeName: e.target.value }))}
               placeholder="Select or type leave type"
@@ -189,13 +189,13 @@ export default function ApplyLeaveModal({
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-300">
+            <label className="mb-2 block text-sm font-medium text-text-secondary">
               Date Range <span className="text-rose-400">*</span>
             </label>
             <div className="grid grid-cols-2 gap-4">
               <input
                 type="date"
-                className="w-full rounded-lg border border-white/10 bg-slate-900/60 px-4 py-2.5 text-slate-100 focus:border-emerald-500/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                className="w-full rounded-lg border border-border-color bg-bg-secondary/60 px-4 py-2.5 text-text-primary focus:border-emerald-500/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                 value={form.startDate}
                 min={today}
                 onChange={(e) => {
@@ -207,7 +207,7 @@ export default function ApplyLeaveModal({
               />
               <input
                 type="date"
-                className="w-full rounded-lg border border-white/10 bg-slate-900/60 px-4 py-2.5 text-slate-100 focus:border-emerald-500/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                className="w-full rounded-lg border border-border-color bg-bg-secondary/60 px-4 py-2.5 text-text-primary focus:border-emerald-500/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                 value={form.endDate}
                 min={form.startDate || today}
                 onChange={(e) => setForm((s) => ({ ...s, endDate: e.target.value }))}
@@ -216,7 +216,7 @@ export default function ApplyLeaveModal({
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-300">
+            <label className="mb-2 block text-sm font-medium text-text-secondary">
               Duration <span className="text-rose-400">*</span>
             </label>
             <div className="grid grid-cols-3 gap-2">
@@ -228,7 +228,7 @@ export default function ApplyLeaveModal({
                   className={`rounded-lg border px-3 py-2.5 text-sm font-medium transition ${
                     form.duration === d
                       ? "border-emerald-500/50 bg-emerald-500/20 text-emerald-400"
-                      : "border-white/10 bg-slate-900/60 text-slate-400 hover:border-white/20 hover:text-slate-200"
+                      : "border-border-color bg-bg-secondary/60 text-text-secondary hover:border-border-color hover:text-text-primary"
                   }`}
                 >
                   {d === "full-day" ? "Full Day" : d === "half-first" ? "First Half" : "Second Half"}
@@ -238,11 +238,11 @@ export default function ApplyLeaveModal({
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-300">
+            <label className="mb-2 block text-sm font-medium text-text-secondary">
               Reason <span className="text-rose-400">*</span>
             </label>
             <textarea
-              className="w-full min-h-[100px] rounded-lg border border-white/10 bg-slate-900/60 px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:border-emerald-500/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+              className="w-full min-h-[100px] rounded-lg border border-border-color bg-bg-secondary/60 px-4 py-2.5 text-text-primary placeholder-slate-500 focus:border-emerald-500/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
               value={form.reason}
               onChange={(e) => setForm((s) => ({ ...s, reason: e.target.value }))}
               placeholder="Please provide a reason for your leave..."
@@ -250,14 +250,14 @@ export default function ApplyLeaveModal({
           </div>
 
           <div ref={dropdownRef} className="relative">
-            <label className="mb-2 block text-sm font-medium text-slate-300">
+            <label className="mb-2 block text-sm font-medium text-text-secondary">
               CC (Optional)
             </label>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary" />
               <input
                 type="text"
-                className="w-full rounded-lg border border-white/10 bg-slate-900/60 py-2.5 pl-10 pr-4 text-slate-100 placeholder-slate-500 focus:border-emerald-500/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                className="w-full rounded-lg border border-border-color bg-bg-secondary/60 py-2.5 pl-10 pr-4 text-text-primary placeholder-slate-500 focus:border-emerald-500/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                 value={ccSearch}
                 onChange={(e) => {
                   setCcSearch(e.target.value);
@@ -268,21 +268,21 @@ export default function ApplyLeaveModal({
               />
             </div>
             {ccDropdownOpen && (
-              <div className="absolute top-full left-0 right-0 z-20 mt-1 max-h-48 overflow-y-auto rounded-lg border border-white/10 bg-slate-900 shadow-xl">
+              <div className="absolute top-full left-0 right-0 z-20 mt-1 max-h-48 overflow-y-auto rounded-lg border border-border-color bg-bg-secondary shadow-xl">
                 {filteredUsers.length === 0 ? (
-                  <div className="px-4 py-3 text-sm text-slate-500">No users found</div>
+                  <div className="px-4 py-3 text-sm text-text-secondary">No users found</div>
                 ) : (
                   filteredUsers.map((u) => (
                     <button
                       key={u.id}
                       type="button"
                       onClick={() => addCC(u)}
-                      className="w-full px-4 py-3 text-left text-sm hover:bg-slate-800/80"
+                      className="w-full px-4 py-3 text-left text-sm hover:bg-card-bg/80"
                     >
-                      <div className="font-medium text-slate-200">
+                      <div className="font-medium text-text-primary">
                         {u.firstName} {u.lastName}
                       </div>
-                      <div className="text-xs text-slate-500">{u.email}</div>
+                      <div className="text-xs text-text-secondary">{u.email}</div>
                     </button>
                   ))
                 )}
@@ -310,11 +310,11 @@ export default function ApplyLeaveModal({
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-300">
+            <label className="mb-2 block text-sm font-medium text-text-secondary">
               Attachment (Optional)
             </label>
-            <label className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-white/10 py-6 transition hover:border-emerald-500/30 hover:bg-slate-900/40">
-              <span className="text-sm text-slate-400">📎 Choose file</span>
+            <label className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-border-color py-6 transition hover:border-emerald-500/30 hover:bg-bg-secondary/40">
+              <span className="text-sm text-text-secondary">📎 Choose file</span>
               <input
                 type="file"
                 accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
@@ -322,7 +322,7 @@ export default function ApplyLeaveModal({
                 onChange={(e) => setAttachment(e.target.files?.[0] ?? null)}
               />
               {attachment && (
-                <span className="mt-2 text-xs text-slate-500">Selected: {attachment.name}</span>
+                <span className="mt-2 text-xs text-text-secondary">Selected: {attachment.name}</span>
               )}
             </label>
           </div>
@@ -338,7 +338,7 @@ export default function ApplyLeaveModal({
           </button>
           <button
             onClick={resetForm}
-            className="w-full rounded-xl border border-white/10 bg-transparent py-2.5 text-slate-400 hover:bg-slate-800/60 hover:text-slate-200"
+            className="w-full rounded-xl border border-border-color bg-transparent py-2.5 text-text-secondary hover:bg-card-bg/60 hover:text-text-primary"
           >
             Clear Form
           </button>

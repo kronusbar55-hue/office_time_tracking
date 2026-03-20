@@ -22,12 +22,20 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const forCurrentUser = url.searchParams.get("forCurrentUser") === "true";
 
-  const query: Record<string, any> = { status: { $ne: "archived" } };
-  
+  const query: Record<string, any> = { 
+    status: { $ne: "archived" },
+    name: { $nin: ["Other", "other", "OTHER"] }
+  };
+
+  const userId = payload.sub;
+  const userRecord = await User.findById(userId).select("role").lean() as any;
+  if (!userRecord) return NextResponse.json({ error: "User not found" }, { status: 401 });
+  const userRole = String(userRecord.role || "").toLowerCase();
+
   // Enforce filtering for managers and employees
   // Admins and HR still see everything unless they explicitly request forCurrentUser
-  if (forCurrentUser || payload.role === "manager" || payload.role === "employee") {
-    query.members = payload.sub;
+  if (forCurrentUser || userRole === "employee" || userRole === "manager") {
+    query.members = userId;
   }
 
   const projects = await Project.find(query)

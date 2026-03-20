@@ -115,11 +115,11 @@ export default async function HRDashboard() {
         {/* Pending Requests */}
         <DashboardCard className="lg:col-span-2" delay={0.5}>
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-bold text-white flex items-center gap-2">
+            <h3 className="text-xl font-bold text-text-primary flex items-center gap-2">
               <Clock4 className="h-5 w-5 text-yellow-400" />
               Pending Leave Requests
             </h3>
-            <Link href="/leaves" className="text-sm font-medium text-slate-400 hover:text-white transition-colors">
+            <Link href="/leaves" className="text-sm font-medium text-text-secondary hover:text-text-primary transition-colors">
               View All
             </Link>
           </div>
@@ -127,23 +127,23 @@ export default async function HRDashboard() {
           <div className="space-y-4">
             {pendingLeaveRequests.length > 0 ? (
               pendingLeaveRequests.map((req: any) => (
-                <div key={req._id} className="group flex items-center justify-between p-4 rounded-2xl bg-slate-800/30 border border-white/5 hover:bg-slate-800/50 hover:border-blue-500/30 transition-all">
+                <div key={req._id} className="group flex items-center justify-between p-4 rounded-2xl bg-card-bg/30 border border-border-color hover:bg-card-bg/50 hover:border-blue-500/30 transition-all">
                   <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-full border border-slate-700 bg-slate-800 flex items-center justify-center text-blue-400 font-bold">
+                    <div className="h-12 w-12 rounded-full border border-border-color bg-card-bg flex items-center justify-center text-blue-400 font-bold">
                       {req.user?.firstName?.[0]}{req.user?.lastName?.[0]}
                     </div>
                     <div>
-                      <h4 className="text-sm font-bold text-white group-hover:text-blue-400 transition-colors">
+                      <h4 className="text-sm font-bold text-text-primary group-hover:text-blue-400 transition-colors">
                         {req.user?.firstName} {req.user?.lastName}
                       </h4>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-text-secondary">
                         {req.leaveType?.name} • {req.duration.replace("-", " ")}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-6">
                     <div className="hidden md:block text-right">
-                      <p className="text-xs text-slate-400">Status</p>
+                      <p className="text-xs text-text-secondary">Status</p>
                       <p className="text-[10px] font-bold uppercase tracking-wider text-yellow-500">Pending</p>
                     </div>
                     <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -153,7 +153,7 @@ export default async function HRDashboard() {
                 </div>
               ))
             ) : (
-              <div className="flex flex-col items-center justify-center py-12 text-slate-500">
+              <div className="flex flex-col items-center justify-center py-12 text-text-secondary">
                 <CheckCircle2 className="h-12 w-12 mb-4 text-green-500/20" />
                 <p>All clear! No pending requests.</p>
               </div>
@@ -163,7 +163,7 @@ export default async function HRDashboard() {
 
         {/* Recent Activity/Approvals */}
         <DashboardCard delay={0.6}>
-          <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+          <h3 className="text-xl font-bold text-text-primary mb-6 flex items-center gap-2">
             <CheckCircle2 className="h-5 w-5 text-green-400" />
             Recent Approvals
           </h3>
@@ -173,19 +173,19 @@ export default async function HRDashboard() {
                 <div key={req._id} className="flex gap-4">
                   <div className="h-2 w-2 rounded-full bg-green-500 mt-2 shrink-0" />
                   <div>
-                    <h4 className="text-sm font-bold text-white">{req.user?.firstName} {req.user?.lastName}</h4>
-                    <p className="text-xs text-slate-400 mb-1">{req.leaveType?.name}</p>
-                    <p className="text-[10px] text-slate-500">
+                    <h4 className="text-sm font-bold text-text-primary">{req.user?.firstName} {req.user?.lastName}</h4>
+                    <p className="text-xs text-text-secondary mb-1">{req.leaveType?.name}</p>
+                    <p className="text-[10px] text-text-secondary">
                       {formatDistanceToNow(new Date(req.updatedAt), { addSuffix: true })}
                     </p>
                   </div>
                 </div>
               ))
             ) : (
-              <p className="text-slate-500 text-sm">No recent approvals found.</p>
+              <p className="text-text-secondary text-sm">No recent approvals found.</p>
             )}
           </div>
-          <Link href="/employees" className="w-full mt-8 block text-center py-3 rounded-xl bg-slate-800 border border-slate-700 text-white font-bold text-sm hover:bg-slate-700 transition-colors">
+          <Link href="/employees" className="w-full mt-8 block text-center py-3 rounded-xl bg-card-bg border border-border-color text-text-primary font-bold text-sm hover:bg-hover-bg transition-colors">
             Manage Employees
           </Link>
         </DashboardCard>
@@ -194,7 +194,7 @@ export default async function HRDashboard() {
       {/* Employee Quick View */}
       <DashboardCard delay={0.7}>
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-bold text-white flex items-center gap-2">
+          <h3 className="text-xl font-bold text-text-primary flex items-center gap-2">
             <Users className="h-5 w-5 text-blue-400" />
             Employee Overview
           </h3>
@@ -202,39 +202,39 @@ export default async function HRDashboard() {
             <div className="px-3 py-1 rounded-full bg-green-500/10 border border-green-500/20 text-[10px] font-bold text-green-500 uppercase">
               {activeEmployees} Active
             </div>
-            <div className="px-3 py-1 rounded-full bg-slate-500/10 border border-slate-500/20 text-[10px] font-bold text-slate-500 uppercase">
+            <div className="px-3 py-1 rounded-full bg-slate-500/10 border border-slate-500/20 text-[10px] font-bold text-text-secondary uppercase">
               {inactiveEmployees} Inactive
             </div>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div className="p-4 rounded-2xl bg-slate-800/30 border border-white/5 space-y-3">
+          <div className="p-4 rounded-2xl bg-card-bg/30 border border-border-color space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-xs text-slate-500 uppercase font-bold">Attendance Today</span>
+              <span className="text-xs text-text-secondary uppercase font-bold">Attendance Today</span>
               <span className="text-xs font-bold text-blue-400">{attendanceRate}%</span>
             </div>
-            <div className="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden">
+            <div className="h-1.5 w-full bg-bg-secondary rounded-full overflow-hidden">
               <div className="h-full bg-blue-500" style={{ width: `${attendanceRate}%` }} />
             </div>
           </div>
 
-          <div className="p-4 rounded-2xl bg-slate-800/30 border border-white/5 space-y-3">
+          <div className="p-4 rounded-2xl bg-card-bg/30 border border-border-color space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-xs text-slate-500 uppercase font-bold">Leave Requests Rate</span>
+              <span className="text-xs text-text-secondary uppercase font-bold">Leave Requests Rate</span>
               <span className="text-xs font-bold text-yellow-400">14%</span>
             </div>
-            <div className="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden">
+            <div className="h-1.5 w-full bg-bg-secondary rounded-full overflow-hidden">
               <div className="h-full bg-yellow-500" style={{ width: '14%' }} />
             </div>
           </div>
 
-          <div className="p-4 rounded-2xl bg-slate-800/30 border border-white/5 space-y-3">
+          <div className="p-4 rounded-2xl bg-card-bg/30 border border-border-color space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-xs text-slate-500 uppercase font-bold">Hiring Progress</span>
+              <span className="text-xs text-text-secondary uppercase font-bold">Hiring Progress</span>
               <span className="text-xs font-bold text-purple-400">65%</span>
             </div>
-            <div className="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden">
+            <div className="h-1.5 w-full bg-bg-secondary rounded-full overflow-hidden">
               <div className="h-full bg-purple-500" style={{ width: '65%' }} />
             </div>
           </div>

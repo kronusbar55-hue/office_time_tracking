@@ -232,13 +232,13 @@ export default function CheckoutModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-      <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border border-slate-800 bg-slate-950 p-6 shadow-xl">
+      <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border border-border-color bg-bg-primary p-6 shadow-xl">
         <div className="mb-4 flex items-start justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-slate-100">
+            <h2 className="text-lg font-semibold text-text-primary">
               Clock Out & Log Today&apos;s Work
             </h2>
-            <p className="mt-1 text-xs text-slate-400">
+            <p className="mt-1 text-xs text-text-secondary">
               Your worked hours are auto-calculated. Distribute them across projects,
               add descriptions, and include any general notes.
             </p>
@@ -246,7 +246,7 @@ export default function CheckoutModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full p-1 text-slate-400 hover:bg-slate-800 hover:text-slate-100"
+            className="rounded-full p-1 text-text-secondary hover:bg-card-bg hover:text-text-primary"
             disabled={submitting}
           >
             <X className="h-4 w-4" />
@@ -257,7 +257,7 @@ export default function CheckoutModal({
           {/* Section 1 — Project Work Logs */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-text-secondary">
                 Project Work Logs
               </h3>
               <button
@@ -275,24 +275,24 @@ export default function CheckoutModal({
               {rows.map((row) => (
                 <div
                   key={row.id}
-                  className="rounded-xl border border-slate-800 bg-slate-900/70 p-3 space-y-2"
+                  className="rounded-xl border border-border-color bg-bg-secondary/70 p-3 space-y-2"
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                    <label className="text-[11px] font-semibold uppercase tracking-wide text-text-secondary">
                       Project
                     </label>
                     <button
                       type="button"
                       onClick={() => removeRow(row.id)}
                       disabled={submitting}
-                      className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] text-slate-400 hover:bg-slate-800 disabled:opacity-40"
+                      className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] text-text-secondary hover:bg-card-bg disabled:opacity-40"
                     >
                       <Trash2 className="h-3 w-3" />
                       Remove
                     </button>
                   </div>
                   <select
-                    className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 focus:border-emerald-500 focus:outline-none"
+                    className="w-full rounded-lg border border-border-color bg-bg-secondary px-3 py-2 text-sm text-text-primary focus:border-emerald-500 focus:outline-none"
                     value={row.projectId}
                     onChange={(e) =>
                       updateRows((prev) =>
@@ -318,11 +318,11 @@ export default function CheckoutModal({
                   </select>
 
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                    <label className="text-[11px] font-semibold uppercase tracking-wide text-text-secondary">
                       Work Description
                     </label>
                     <textarea
-                      className="min-h-[72px] w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
+                      className="min-h-[72px] w-full rounded-lg border border-border-color bg-bg-secondary px-3 py-2 text-sm text-text-primary placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
                       placeholder="Describe what you worked on for this project…"
                       value={row.description}
                       onChange={(e) =>
@@ -334,20 +334,20 @@ export default function CheckoutModal({
                       }
                       disabled={submitting}
                     />
-                    <p className="text-[10px] text-slate-500">
+                    <p className="text-[10px] text-text-secondary">
                       Minimum 10 characters. Include key tasks and outcomes.
                     </p>
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                    <label className="text-[11px] font-semibold uppercase tracking-wide text-text-secondary">
                       Worked Hours (HH:MM)
                     </label>
                     <div className="flex items-center gap-2">
                       <input
                         type="number"
                         min={0}
-                        className="w-20 rounded-lg border border-slate-700 bg-slate-900 px-2 py-1 text-sm text-slate-100 focus:border-emerald-500 focus:outline-none"
+                        className="w-20 rounded-lg border border-border-color bg-bg-secondary px-2 py-1 text-sm text-text-primary focus:border-emerald-500 focus:outline-none"
                         value={row.hours}
                         onChange={(e) =>
                           updateRows((prev) =>
@@ -358,12 +358,12 @@ export default function CheckoutModal({
                         }
                         disabled={submitting}
                       />
-                      <span className="text-xs text-slate-400">:</span>
+                      <span className="text-xs text-text-secondary">:</span>
                       <input
                         type="number"
                         min={0}
                         max={59}
-                        className="w-20 rounded-lg border border-slate-700 bg-slate-900 px-2 py-1 text-sm text-slate-100 focus:border-emerald-500 focus:outline-none"
+                        className="w-20 rounded-lg border border-border-color bg-bg-secondary px-2 py-1 text-sm text-text-primary focus:border-emerald-500 focus:outline-none"
                         value={row.minutes}
                         onChange={(e) =>
                           updateRows((prev) =>
@@ -383,11 +383,11 @@ export default function CheckoutModal({
 
           {/* Section 2 — General Notes */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-semibold uppercase tracking-wide text-slate-400">
+            <label className="block text-xs font-semibold uppercase tracking-wide text-text-secondary">
               General Work Notes (optional)
             </label>
             <textarea
-              className="min-h-[72px] w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
+              className="min-h-[72px] w-full rounded-lg border border-border-color bg-bg-secondary px-3 py-2 text-sm text-text-primary placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
               placeholder="Meetings, research, learning, internal discussions…"
               value={generalNotes}
               onChange={(e) => handleGeneralNotesChange(e.target.value)}
@@ -397,19 +397,19 @@ export default function CheckoutModal({
 
           {/* Section 3 — Auto Summary */}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="rounded-lg border border-slate-800 bg-slate-900/80 p-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+            <div className="rounded-lg border border-border-color bg-bg-secondary/80 p-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">
                 Total Worked Hours
               </p>
               <p className="mt-1 text-lg font-mono font-semibold text-emerald-400">
                 {formatDuration(workedMsSnapshot)}
               </p>
             </div>
-            <div className="rounded-lg border border-slate-800 bg-slate-900/80 p-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+            <div className="rounded-lg border border-border-color bg-bg-secondary/80 p-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">
                 Total Break Time
               </p>
-              <p className="mt-1 text-lg font-mono font-semibold text-slate-200">
+              <p className="mt-1 text-lg font-mono font-semibold text-text-primary">
                 {formatDuration(breakMsSnapshot)}
               </p>
             </div>
@@ -422,7 +422,7 @@ export default function CheckoutModal({
           )}
 
           <div className="mt-4 flex items-center justify-between gap-3">
-            <p className="text-[11px] text-slate-500">
+            <p className="text-[11px] text-text-secondary">
               You must submit today&apos;s work summary before completing clock out.
             </p>
             <div className="flex gap-2">
@@ -430,14 +430,14 @@ export default function CheckoutModal({
                 type="button"
                 onClick={onClose}
                 disabled={submitting}
-                className="rounded-lg border border-slate-700 px-4 py-2 text-xs font-medium text-slate-200 hover:bg-slate-800 disabled:opacity-50"
+                className="rounded-lg border border-border-color px-4 py-2 text-xs font-medium text-text-primary hover:bg-card-bg disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={submitting}
-                className="rounded-lg bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-emerald-500 disabled:opacity-50"
+                className="rounded-lg bg-emerald-600 px-4 py-2 text-xs font-semibold text-text-primary shadow-sm hover:bg-emerald-500 disabled:opacity-50"
               >
                 {submitting ? "Saving..." : "Submit & Clock Out"}
               </button>

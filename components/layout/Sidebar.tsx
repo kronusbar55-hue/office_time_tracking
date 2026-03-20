@@ -44,14 +44,14 @@ export function Sidebar() {
   if (!isAuthenticated) return null;
 
   return (
-    <aside className="sticky top-0 h-screen hidden w-64 flex-col border-r border-slate-800 bg-sidebar/95 px-4 pb-4 pt-6 shadow-2xl shadow-black/60 md:flex">
+    <aside className="sticky top-0 h-screen hidden w-64 flex-col border-r border-border-color bg-sidebar/95 px-4 pb-4 pt-6 shadow-2xl shadow-black/60 md:flex">
       <div className="mb-8 flex items-center gap-2 px-2">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-slate-950">
           <Clock3 className="h-5 w-5" />
         </div>
         <div>
           <p className="text-sm font-semibold tracking-tight">Technotoil WorkPortal</p>
-          <p className="text-[11px] text-slate-400">Work Portal</p>
+          <p className="text-[11px] text-text-secondary">Work Portal</p>
         </div>
       </div>
 
@@ -60,8 +60,8 @@ export function Sidebar() {
           const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
 
           return (
-            <Link key={item.href} href={item.href} className={`group flex items-center gap-2 rounded-lg px-2 py-2 text-slate-300 transition-colors ${active ? "bg-accent/15 text-accent" : "hover:bg-slate-800/60 hover:text-slate-100"}`}>
-              <span className="flex h-7 w-7 items-center justify-center rounded-md bg-slate-900/40 text-slate-400 group-hover:bg-slate-900/70 group-hover:text-slate-100">
+            <Link key={item.href} href={item.href} className={`group flex items-center gap-2 rounded-lg px-2 py-2 text-text-secondary transition-colors ${active ? "bg-accent/15 text-accent" : "hover:bg-card-bg/60 hover:text-text-primary"}`}>
+              <span className="flex h-7 w-7 items-center justify-center rounded-md bg-bg-secondary/40 text-text-secondary group-hover:bg-bg-secondary/70 group-hover:text-text-primary">
                 {ICON_MAP[item.icon || 'dashboard']}
               </span>
               <span className="truncate text-xs font-medium">{item.label}</span>
@@ -70,17 +70,17 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="mt-4 border-t border-slate-800 pt-4 space-y-3">
+      <div className="mt-4 border-t border-border-color pt-4 space-y-3">
         {user && (
           <div className="flex items-center gap-3 px-2 py-1 mb-2">
             <div className="h-9 w-9 rounded-full bg-accent/20 border border-accent/20 flex items-center justify-center text-accent text-xs font-bold uppercase">
               {user.firstName?.charAt(0)}{user.lastName?.charAt(0)}
             </div>
             <div className="flex-1 overflow-hidden">
-              <p className="text-[11px] font-semibold text-slate-100 truncate">
+              <p className="text-[11px] font-semibold text-text-primary truncate">
                 {user.firstName} {user.lastName}
               </p>
-              <p className="text-[10px] text-slate-400 capitalize truncate">
+              <p className="text-[10px] text-text-secondary capitalize truncate">
                 {user.role}
               </p>
             </div>
@@ -90,7 +90,7 @@ export function Sidebar() {
         <button
           onClick={logout}
           type="button"
-          className="w-full flex items-center justify-center gap-2 rounded-lg bg-slate-900/60 border border-slate-800 px-3 py-2 text-[11px] font-semibold text-slate-100 hover:bg-red-950/40 hover:border-red-800 hover:text-red-300 transition-colors"
+          className="w-full flex items-center justify-center gap-2 rounded-lg bg-bg-secondary/60 border border-border-color px-3 py-2 text-[11px] font-semibold text-text-primary hover:bg-red-950/40 hover:border-red-800 hover:text-red-300 transition-colors"
         >
           <LogOut className="h-4 w-4" />
           Logout

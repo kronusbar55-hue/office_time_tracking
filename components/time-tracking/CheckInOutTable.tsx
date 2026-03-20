@@ -100,7 +100,7 @@ export default function CheckInOutTable({
       );
     }
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-slate-600/50 px-3 py-1 text-xs font-medium text-slate-300">
+      <span className="inline-flex items-center gap-1 rounded-full bg-slate-600/50 px-3 py-1 text-xs font-medium text-text-secondary">
         Checked Out
       </span>
     );
@@ -124,7 +124,7 @@ export default function CheckInOutTable({
             setFilterRole(e.target.value);
             setCurrentPage(1);
           }}
-          className="px-3 py-2 rounded border border-slate-600 bg-slate-800 text-sm text-slate-100"
+          className="px-3 py-2 rounded border border-border-color bg-card-bg text-sm text-text-primary"
         >
           <option value="">All Roles</option>
           <option value="admin">Admin</option>
@@ -139,7 +139,7 @@ export default function CheckInOutTable({
             setFilterStatus(e.target.value as any);
             setCurrentPage(1);
           }}
-          className="px-3 py-2 rounded border border-slate-600 bg-slate-800 text-sm text-slate-100"
+          className="px-3 py-2 rounded border border-border-color bg-card-bg text-sm text-text-primary"
         >
           <option value="all">All Status</option>
           <option value="checked-in">Checked In</option>
@@ -149,7 +149,7 @@ export default function CheckInOutTable({
         <select
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value)}
-          className="px-3 py-2 rounded border border-slate-600 bg-slate-800 text-sm text-slate-100"
+          className="px-3 py-2 rounded border border-border-color bg-card-bg text-sm text-text-primary"
         >
           <option value="date">Sort by Date</option>
           <option value="workMinutes">Sort by Hours</option>
@@ -158,17 +158,17 @@ export default function CheckInOutTable({
 
         <button
           onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
-          className="px-3 py-2 rounded border border-slate-600 bg-slate-800 text-sm text-slate-100 hover:bg-slate-700"
+          className="px-3 py-2 rounded border border-border-color bg-card-bg text-sm text-text-primary hover:bg-hover-bg"
         >
           {sortOrder === "asc" ? "↑ Ascending" : "↓ Descending"}
         </button>
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto rounded-lg border border-slate-700 bg-slate-800/50">
+      <div className="overflow-x-auto rounded-lg border border-border-color bg-card-bg/50">
         {loading ? (
           <div className="h-64 flex items-center justify-center">
-            <div className="text-slate-400">Loading records...</div>
+            <div className="text-text-secondary">Loading records...</div>
           </div>
         ) : !Array.isArray(records) ? (
           <div className="h-64 flex items-center justify-center">
@@ -176,28 +176,28 @@ export default function CheckInOutTable({
           </div>
         ) : records.length === 0 ? (
           <div className="h-64 flex items-center justify-center">
-            <div className="text-slate-400">No records found</div>
+            <div className="text-text-secondary">No records found</div>
           </div>
         ) : (
           <table className="w-full">
-            <thead className="border-b border-slate-700 bg-slate-900/50">
+            <thead className="border-b border-border-color bg-bg-secondary/50">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-300">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary">
                   Employee
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-300">Date</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-300">Clock In</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-300">Clock Out</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-slate-300">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary">Date</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary">Clock In</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary">Clock Out</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-text-secondary">
                   Work Hours
                 </th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-slate-300">
+                <th className="px-4 py-3 text-center text-xs font-semibold text-text-secondary">
                   Attendance %
                 </th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-slate-300">
+                <th className="px-4 py-3 text-center text-xs font-semibold text-text-secondary">
                   Status
                 </th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-slate-300">
+                <th className="px-4 py-3 text-center text-xs font-semibold text-text-secondary">
                   Issues
                 </th>
               </tr>
@@ -206,26 +206,26 @@ export default function CheckInOutTable({
               {records.map((record) => (
                 <tr
                   key={record._id}
-                  className="hover:bg-slate-800/50 transition-colors"
+                  className="hover:bg-card-bg/50 transition-colors"
                 >
                   <td className="px-4 py-3">
                     <div>
-                      <p className="font-medium text-slate-100">
+                      <p className="font-medium text-text-primary">
                         {record.user.firstName} {record.user.lastName}
                       </p>
-                      <p className="text-xs text-slate-500">{record.user.email}</p>
+                      <p className="text-xs text-text-secondary">{record.user.email}</p>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-sm text-slate-300">
+                  <td className="px-4 py-3 text-sm text-text-secondary">
                     {formatDate(record.date)}
                   </td>
-                  <td className="px-4 py-3 text-sm text-slate-300">
+                  <td className="px-4 py-3 text-sm text-text-secondary">
                     {formatTime(record.clockIn)}
                   </td>
-                  <td className="px-4 py-3 text-sm text-slate-300">
+                  <td className="px-4 py-3 text-sm text-text-secondary">
                     {record.clockOut ? formatTime(record.clockOut) : "—"}
                   </td>
-                  <td className="px-4 py-3 text-center text-sm font-medium text-slate-100">
+                  <td className="px-4 py-3 text-center text-sm font-medium text-text-primary">
                     {(Number(record.workMinutes || 0) / 60).toFixed(2)}h
                   </td>
                   <td className="px-4 py-3 text-center">
@@ -275,17 +275,17 @@ export default function CheckInOutTable({
           <button
             onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
             disabled={currentPage === 1}
-            className="px-3 py-2 rounded border border-slate-600 bg-slate-800 text-sm text-slate-100 disabled:opacity-50"
+            className="px-3 py-2 rounded border border-border-color bg-card-bg text-sm text-text-primary disabled:opacity-50"
           >
             Previous
           </button>
-          <div className="text-sm text-slate-400">
+          <div className="text-sm text-text-secondary">
             Page {currentPage} of {totalPages}
           </div>
           <button
             onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
             disabled={currentPage === totalPages}
-            className="px-3 py-2 rounded border border-slate-600 bg-slate-800 text-sm text-slate-100 disabled:opacity-50"
+            className="px-3 py-2 rounded border border-border-color bg-card-bg text-sm text-text-primary disabled:opacity-50"
           >
             Next
           </button>

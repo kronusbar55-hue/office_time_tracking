@@ -19,14 +19,14 @@ export default function RealTimeTimer() {
 
   return (
     <div className="text-center py-6">
-      <p className="text-xs uppercase text-slate-500 font-semibold mb-2">{label}</p>
+      <p className="text-xs uppercase text-text-secondary font-semibold mb-2">{label}</p>
       <p className="text-5xl font-bold font-mono text-orange-600 mb-4">
         {formatHHMMSS(displayMs)}
       </p>
 
       {showCountdown && (
-        <div className="mx-auto max-w-sm rounded-lg border border-slate-700/60 bg-slate-900/40 px-4 py-3 mb-4">
-          <p className="text-[10px] uppercase text-slate-400 font-semibold mb-1">Remaining to {shiftHoursTarget}h</p>
+        <div className="mx-auto max-w-sm rounded-lg border border-border-color/60 bg-bg-secondary/40 px-4 py-3 mb-4">
+          <p className="text-[10px] uppercase text-text-secondary font-semibold mb-1">Remaining to {shiftHoursTarget}h</p>
           <p className="font-mono text-xl font-bold text-cyan-400">{formatHHMMSS(remainingMs)}</p>
         </div>
       )}

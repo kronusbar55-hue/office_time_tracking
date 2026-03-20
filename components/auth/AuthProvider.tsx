@@ -96,6 +96,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (mounted) {
           setUser(data?.user ?? null);
           setLoading(false);
+
+          // Sync theme preference from DB
+          if (data?.user?.themePreference) {
+             const { themePreference } = data.user;
+             const currentTheme = localStorage.getItem("theme");
+             if (currentTheme !== themePreference) {
+                 localStorage.setItem("theme", themePreference);
+                 window.dispatchEvent(new Event("storage"));
+                 if (themePreference === "dark") {
+                    document.documentElement.classList.add("dark");
+                 } else if (themePreference === "light") {
+                    document.documentElement.classList.remove("dark");
+                 } else {
+                    if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+                       document.documentElement.classList.add("dark");
+                    } else {
+                       document.documentElement.classList.remove("dark");
+                    }
+                 }
+             }
+          }
         }
       } catch {
         if (mounted) {

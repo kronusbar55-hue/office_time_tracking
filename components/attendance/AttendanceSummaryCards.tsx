@@ -95,10 +95,10 @@ export function AttendanceSummaryCards({
                   {card.icon}
                 </div>
                 <div className="text-left flex-1">
-                  <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400">
+                  <p className="text-[11px] font-medium uppercase tracking-wide text-text-secondary">
                     {card.label}
                   </p>
-                  <p className="mt-1 text-2xl font-semibold text-slate-50">
+                  <p className="mt-1 text-2xl font-semibold text-text-primary">
                     {count}
                   </p>
                 </div>

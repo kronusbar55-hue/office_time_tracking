@@ -65,14 +65,14 @@ export default function TrackedHours() {
   const maxHeight = getMaxHours();
 
   return (
-    <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
+    <div className="bg-bg-primary rounded-2xl p-8 shadow-sm border border-slate-200">
       <div className="mb-8">
         <h2 className="text-lg font-bold text-slate-900 uppercase tracking-wide">Tracked Hours</h2>
       </div>
 
       {/* Stats Cards */}
       <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="rounded-lg border border-slate-200 bg-slate-50 p-6 hover:bg-slate-100 transition">
+        <div className="rounded-lg border border-slate-200 bg-bg-secondary p-6 hover:bg-slate-100 transition">
           <div className="flex items-center gap-3 mb-4">
             <div className="h-3 w-3 rounded-full bg-green-500" />
             <span className="text-xs text-slate-600 uppercase font-semibold tracking-wide">Worked Hours</span>
@@ -82,7 +82,7 @@ export default function TrackedHours() {
           </p>
         </div>
 
-        <div className="rounded-lg border border-slate-200 bg-slate-50 p-6 hover:bg-slate-100 transition">
+        <div className="rounded-lg border border-slate-200 bg-bg-secondary p-6 hover:bg-slate-100 transition">
           <div className="flex items-center gap-3 mb-4">
             <div className="h-3 w-3 rounded-full bg-yellow-500" />
             <span className="text-xs text-slate-600 uppercase font-semibold tracking-wide">Breaks</span>
@@ -92,7 +92,7 @@ export default function TrackedHours() {
           </p>
         </div>
 
-        {/* <div className="rounded-lg border border-slate-200 bg-slate-50 p-6 hover:bg-slate-100 transition">
+        {/* <div className="rounded-lg border border-slate-200 bg-bg-secondary p-6 hover:bg-slate-100 transition">
           <div className="flex items-center gap-3 mb-4">
             <div className="h-3 w-3 rounded-full bg-red-500" />
             <span className="text-xs text-slate-600 uppercase font-semibold tracking-wide">Overtime Hours</span>
@@ -123,11 +123,11 @@ export default function TrackedHours() {
 
       {/* Chart */}
       {loading ? (
-        <div className="flex h-80 items-center justify-center text-slate-500">
+        <div className="flex h-80 items-center justify-center text-text-secondary">
           <p className="text-sm">Loading...</p>
         </div>
       ) : stats.length === 0 ? (
-        <div className="flex h-80 items-center justify-center text-slate-500">
+        <div className="flex h-80 items-center justify-center text-text-secondary">
           <p className="text-sm">No data available</p>
         </div>
       ) : (

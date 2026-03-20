@@ -12,7 +12,7 @@ export default function LeaveDateBlock({ startDate, endDate, duration }: { start
         <div className="text-xl">📅</div>
         <div>
           <div className="text-sm font-medium">{startDate} → {endDate}</div>
-          <div className="text-xs text-slate-400">Duration: {duration} ({days} {days === 1 ? 'day' : 'days'})</div>
+          <div className="text-xs text-text-secondary">Duration: {duration} ({days} {days === 1 ? 'day' : 'days'})</div>
         </div>
       </div>
     </div>

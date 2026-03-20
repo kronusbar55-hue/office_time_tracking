@@ -28,16 +28,16 @@ export default function UnauthorizedPage() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background">
-      <div className="rounded-xl border border-slate-800 bg-card/70 p-8 text-center shadow-card">
+      <div className="rounded-xl border border-border-color bg-card/70 p-8 text-center shadow-card">
         <div className="text-6xl mb-4">🚫</div>
-        <h1 className="text-2xl font-bold text-slate-50 mb-2">Access Denied</h1>
-        <p className="text-slate-400 mb-6">
+        <h1 className="text-2xl font-bold text-text-primary mb-2">Access Denied</h1>
+        <p className="text-text-secondary mb-6">
           You don&apos;t have permission to access this page.
         </p>
         <div className="flex gap-3 justify-center">
           <button
             onClick={() => router.back()}
-            className="rounded-lg border border-slate-700 bg-slate-900/50 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 transition-colors"
+            className="rounded-lg border border-border-color bg-bg-secondary/50 px-4 py-2 text-sm text-text-secondary hover:bg-card-bg transition-colors"
           >
             Go Back
           </button>

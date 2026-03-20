@@ -18,13 +18,13 @@ export function AnnouncementCard({ announcement, onEdit, onDelete, onPinChange, 
         Policy: 'bg-indigo-500/20 text-indigo-400',
         Event: 'bg-emerald-500/20 text-emerald-400',
         Urgent: 'bg-rose-500/20 text-rose-400',
-    }[announcement.category as string] || 'bg-slate-500/20 text-slate-400';
+    }[announcement.category as string] || 'bg-slate-500/20 text-text-secondary';
 
     const canEdit = currentUserRole === 'admin' || currentUserRole === 'hr';
     const canDelete = currentUserRole === 'admin';
 
     return (
-        <div className={`group relative flex flex-col gap-4 rounded-2xl border ${isPinned ? 'border-blue-500/30 bg-blue-500/[0.02]' : 'border-slate-800/60 bg-slate-900/40'} p-5 backdrop-blur-sm transition-all hover:border-slate-700 hover:bg-slate-800/50 hover:shadow-2xl hover:shadow-black/20`}>
+        <div className={`group relative flex flex-col gap-4 rounded-2xl border ${isPinned ? 'border-blue-500/30 bg-blue-500/[0.02]' : 'border-border-color/60 bg-bg-secondary/40'} p-5 backdrop-blur-sm transition-all hover:border-border-color hover:bg-card-bg/50 hover:shadow-2xl hover:shadow-black/20`}>
             {isPinned && (
                 <div className="absolute right-5 top-5 flex items-center gap-1.5 rounded-full bg-blue-500/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-blue-400 ring-1 ring-inset ring-blue-500/30">
                     <Pin size={10} className="rotate-45" />
@@ -37,7 +37,7 @@ export function AnnouncementCard({ announcement, onEdit, onDelete, onPinChange, 
                     <span className={`rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${categoryColor} ring-1 ring-inset ring-current/20`}>
                         {announcement.category}
                     </span>
-                    <span className="flex items-center gap-1.5 text-xs text-slate-500">
+                    <span className="flex items-center gap-1.5 text-xs text-text-secondary">
                         <Clock size={12} />
                         {formatDistanceToNow(new Date(announcement.createdAt), { addSuffix: true })}
                     </span>
@@ -45,28 +45,28 @@ export function AnnouncementCard({ announcement, onEdit, onDelete, onPinChange, 
             </div>
 
             <div className="space-y-1">
-                <h3 className="text-lg font-bold text-slate-50 transition-colors group-hover:text-white">
+                <h3 className="text-lg font-bold text-text-primary transition-colors group-hover:text-text-primary">
                     {announcement.title}
                 </h3>
-                <p className="line-clamp-3 text-sm leading-relaxed text-slate-400">
+                <p className="line-clamp-3 text-sm leading-relaxed text-text-secondary">
                     {announcement.description}
                 </p>
             </div>
 
-            <div className="mt-auto flex items-center justify-between pt-4 border-t border-slate-800/50">
+            <div className="mt-auto flex items-center justify-between pt-4 border-t border-border-color/50">
                 <div className="flex items-center gap-2.5">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-800 ring-1 ring-slate-700 overflow-hidden">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-card-bg ring-1 ring-slate-700 overflow-hidden">
                         {announcement.createdBy?.avatarUrl ? (
                             <img src={announcement.createdBy.avatarUrl} alt="avatar" className="h-full w-full object-cover" />
                         ) : (
-                            <UserIcon size={14} className="text-slate-500" />
+                            <UserIcon size={14} className="text-text-secondary" />
                         )}
                     </div>
                     <div>
-                        <p className="text-xs font-semibold text-slate-300">
+                        <p className="text-xs font-semibold text-text-secondary">
                             {announcement.createdBy?.firstName} {announcement.createdBy?.lastName}
                         </p>
-                        <p className="text-[10px] text-slate-500">
+                        <p className="text-[10px] text-text-secondary">
                             {announcement.createdBy?.technology?.name || 'Support Team'}
                         </p>
 

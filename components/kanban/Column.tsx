@@ -25,20 +25,20 @@ export default function Column({ id, title, tasks, onTaskClick }: ColumnProps) {
     return (
         <div
             ref={setNodeRef}
-            className="flex h-full w-80 min-w-[320px] flex-col rounded-xl bg-slate-900/40 border border-white/5 backdrop-blur-sm"
+            className="flex h-full w-80 min-w-[320px] flex-col rounded-xl bg-bg-secondary/40 border border-border-color backdrop-blur-sm"
         >
-            <div className="flex items-center justify-between p-4 bg-slate-900/20 rounded-t-xl border-b border-white/5">
+            <div className="flex items-center justify-between p-4 bg-bg-secondary/20 rounded-t-xl border-b border-border-color">
                 <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-black text-white uppercase tracking-widest">{title}</h3>
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-800 text-[10px] font-bold text-slate-400">
+                    <h3 className="text-sm font-black text-text-primary uppercase tracking-widest">{title}</h3>
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-card-bg text-[10px] font-bold text-text-secondary">
                         {tasks.length}
                     </span>
                 </div>
                 <div className="flex items-center gap-1">
-                    <button className="h-8 w-8 rounded-lg hover:bg-white/5 flex items-center justify-center text-slate-400 transition-colors">
+                    <button className="h-8 w-8 rounded-lg hover:bg-hover-bg flex items-center justify-center text-text-secondary transition-colors">
                         <Plus className="h-4 w-4" />
                     </button>
-                    <button className="h-8 w-8 rounded-lg hover:bg-white/5 flex items-center justify-center text-slate-400 transition-colors">
+                    <button className="h-8 w-8 rounded-lg hover:bg-hover-bg flex items-center justify-center text-text-secondary transition-colors">
                         <MoreHorizontal className="h-4 w-4" />
                     </button>
                 </div>
@@ -52,8 +52,8 @@ export default function Column({ id, title, tasks, onTaskClick }: ColumnProps) {
                 </SortableContext>
 
                 {tasks.length === 0 && (
-                    <div className="h-20 rounded-xl border-2 border-dashed border-white/5 flex items-center justify-center opacity-20">
-                        <span className="text-[10px] font-bold text-white uppercase tracking-widest">Empty</span>
+                    <div className="h-20 rounded-xl border-2 border-dashed border-border-color flex items-center justify-center opacity-20">
+                        <span className="text-[10px] font-bold text-text-primary uppercase tracking-widest">Empty</span>
                     </div>
                 )}
             </div>

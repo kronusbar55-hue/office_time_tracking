@@ -18,8 +18,8 @@ export default function LiveTimerDisplay() {
   const label = ongoingBreak ? "Break" : "Work";
 
   return (
-    <div className="flex items-center gap-2 rounded-lg border border-slate-700/60 bg-slate-900/60 px-3 py-1.5">
-      <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">{label}</span>
+    <div className="flex items-center gap-2 rounded-lg border border-border-color/60 bg-bg-secondary/60 px-3 py-1.5">
+      <span className="text-[10px] font-semibold uppercase tracking-wider text-text-secondary">{label}</span>
       <span className={`font-mono text-sm font-bold tabular-nums ${ongoingBreak ? 'text-amber-400' : 'text-emerald-400'}`}>
         {formatHHMMSS(displayMs)}
       </span>

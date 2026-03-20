@@ -94,16 +94,16 @@ export default function WorkHistory({ taskId }: { taskId: string }) {
   if (loading) {
     return (
       <div className="space-y-3">
-        <div className="h-6 w-1/3 animate-pulse rounded bg-slate-800/40" />
-        <div className="h-4 w-2/3 animate-pulse rounded bg-slate-800/40" />
+        <div className="h-6 w-1/3 animate-pulse rounded bg-card-bg/40" />
+        <div className="h-4 w-2/3 animate-pulse rounded bg-card-bg/40" />
       </div>
     );
   }
 
   if (changes.length === 0) {
     return (
-      <div className="flex items-center justify-center rounded-md border border-slate-800/40 bg-slate-900/20 p-6">
-        <p className="text-sm text-slate-400">No change history</p>
+      <div className="flex items-center justify-center rounded-md border border-border-color/40 bg-bg-secondary/20 p-6">
+        <p className="text-sm text-text-secondary">No change history</p>
       </div>
     );
   }
@@ -111,59 +111,59 @@ export default function WorkHistory({ taskId }: { taskId: string }) {
   return (
     <div className="space-y-3">
       {changes.map((change, index) => (
-        <div key={change._id} className="rounded-md border border-slate-800/40 bg-slate-900/30">
+        <div key={change._id} className="rounded-md border border-border-color/40 bg-bg-secondary/30">
           <button
             onClick={() => setExpanded({ ...expanded, [change._id]: !expanded[change._id] })}
-            className="w-full px-4 py-3 text-left hover:bg-slate-800/20 transition-colors flex items-center justify-between"
+            className="w-full px-4 py-3 text-left hover:bg-card-bg/20 transition-colors flex items-center justify-between"
           >
             <div className="flex items-center gap-3 flex-1">
               <span className="text-lg">{getActionIcon(change.actionType)}</span>
               <div className="flex-1">
-                <div className="text-sm font-medium text-slate-100">
+                <div className="text-sm font-medium text-text-primary">
                   {getActionLabel(change.actionType)}
-                  {change.fieldName && <span className="text-slate-400 ml-2">({formatFieldName(change.fieldName)})</span>}
+                  {change.fieldName && <span className="text-text-secondary ml-2">({formatFieldName(change.fieldName)})</span>}
                 </div>
-                <div className="text-xs text-slate-400 mt-1">
-                  By <span className="font-medium text-slate-300">{change.changedBy?.firstName} {change.changedBy?.lastName}</span>
+                <div className="text-xs text-text-secondary mt-1">
+                  By <span className="font-medium text-text-secondary">{change.changedBy?.firstName} {change.changedBy?.lastName}</span>
                   {" "}
-                  <span className="inline-block bg-slate-800/40 rounded px-1.5 py-0.5 ml-2 text-xs">
+                  <span className="inline-block bg-card-bg/40 rounded px-1.5 py-0.5 ml-2 text-xs">
                     {change.changedBy?.role?.toUpperCase()}
                   </span>
                 </div>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <time className="text-xs text-slate-400">
+              <time className="text-xs text-text-secondary">
                 {new Date(change.createdAt).toLocaleDateString()} {new Date(change.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
               </time>
               {expanded[change._id] ? (
-                <ChevronUp className="h-4 w-4 text-slate-400" />
+                <ChevronUp className="h-4 w-4 text-text-secondary" />
               ) : (
-                <ChevronDown className="h-4 w-4 text-slate-400" />
+                <ChevronDown className="h-4 w-4 text-text-secondary" />
               )}
             </div>
           </button>
 
           {expanded[change._id] && (
-            <div className="border-t border-slate-800/40 px-4 py-3 bg-slate-950/40 space-y-2">
+            <div className="border-t border-border-color/40 px-4 py-3 bg-bg-primary/40 space-y-2">
               {change.actionType === "TASK_CREATED" ? (
-                <div className="text-sm text-slate-300">
-                  <p className="font-medium text-slate-200 mb-2">Initial task data:</p>
-                  <div className="bg-slate-900/60 rounded p-2 text-xs space-y-1 max-h-48 overflow-y-auto">
+                <div className="text-sm text-text-secondary">
+                  <p className="font-medium text-text-primary mb-2">Initial task data:</p>
+                  <div className="bg-bg-secondary/60 rounded p-2 text-xs space-y-1 max-h-48 overflow-y-auto">
                     <pre className="whitespace-pre-wrap break-words">{JSON.stringify(change.newValue, null, 2)}</pre>
                   </div>
                 </div>
               ) : (
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-xs text-slate-400 uppercase mb-1">From</p>
-                    <div className="text-sm text-slate-300 bg-slate-900/60 rounded px-3 py-2 break-words">
+                    <p className="text-xs text-text-secondary uppercase mb-1">From</p>
+                    <div className="text-sm text-text-secondary bg-bg-secondary/60 rounded px-3 py-2 break-words">
                       {formatValue(change.oldValue)}
                     </div>
                   </div>
                   <div>
-                    <p className="text-xs text-slate-400 uppercase mb-1">To</p>
-                    <div className="text-sm text-slate-300 bg-slate-900/60 rounded px-3 py-2 break-words">
+                    <p className="text-xs text-text-secondary uppercase mb-1">To</p>
+                    <div className="text-sm text-text-secondary bg-bg-secondary/60 rounded px-3 py-2 break-words">
                       {formatValue(change.newValue)}
                     </div>
                   </div>

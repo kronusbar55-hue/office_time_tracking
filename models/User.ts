@@ -16,6 +16,7 @@ export interface IUser {
     avatarSize?: number;
     isActive: boolean;
     isDeleted: boolean;
+    themePreference?: "light" | "dark" | "system";
     department?: string;
     shiftHours?: number;
 }
@@ -79,6 +80,11 @@ const UserSchema = new Schema<IUser>(
         isDeleted: {
             type: Boolean,
             default: false
+        },
+        themePreference: {
+            type: String,
+            enum: ["light", "dark", "system"],
+            default: "system"
         },
         department: {
             type: String,

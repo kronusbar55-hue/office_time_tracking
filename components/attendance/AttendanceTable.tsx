@@ -49,45 +49,85 @@ export function AttendanceTable({
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-slate-400">Loading attendance data...</p>
+      <div className="overflow-x-auto rounded-xl border border-border-color bg-card/70 animate-pulse">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border-color/50">
+              {['Employee', 'Role / Department', 'Check-In', 'Check-Out', 'Working Hours', 'Status', 'Notes', ''].map((h, i) => (
+                <th key={i} className="px-4 py-3 text-left font-medium uppercase text-text-secondary text-xs tracking-wider">{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-800/30">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <tr key={i}>
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-full bg-card-bg" />
+                    <div className="space-y-1.5">
+                      <div className="h-3 w-24 rounded bg-card-bg" />
+                      <div className="h-2 w-32 rounded bg-card-bg/60" />
+                    </div>
+                  </div>
+                </td>
+                <td className="px-4 py-3">
+                   <div className="space-y-1.5">
+                      <div className="h-3 w-20 rounded bg-card-bg" />
+                      <div className="h-2 w-16 rounded bg-card-bg/60" />
+                   </div>
+                </td>
+                <td className="px-4 py-3"><div className="h-4 w-12 rounded bg-card-bg" /></td>
+                <td className="px-4 py-3"><div className="h-4 w-12 rounded bg-card-bg" /></td>
+                <td className="px-4 py-3">
+                   <div className="space-y-1.5">
+                      <div className="h-3 w-10 rounded bg-card-bg" />
+                      <div className="h-2 w-16 rounded bg-card-bg/60" />
+                   </div>
+                </td>
+                <td className="px-4 py-3"><div className="h-6 w-20 rounded-full bg-card-bg" /></td>
+                <td className="px-4 py-3"><div className="h-3 w-32 rounded bg-card-bg/60" /></td>
+                <td className="px-4 py-3"><div className="h-4 w-4 rounded bg-card-bg/60 ml-auto" /></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     );
   }
 
   if (records.length === 0) {
     return (
-      <div className="rounded-xl border border-slate-800 bg-card/70 p-12 text-center">
-        <p className="text-slate-400">No attendance records found</p>
+      <div className="rounded-xl border border-border-color bg-card/70 p-12 text-center">
+        <p className="text-text-secondary">No attendance records found</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      <div className="overflow-x-auto rounded-xl border border-slate-800 bg-card/70">
+      <div className="overflow-x-auto rounded-xl border border-border-color bg-card/70">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-slate-800/50">
-              <th className="px-4 py-3 text-left font-medium uppercase text-slate-400 text-xs">
+            <tr className="border-b border-border-color/50">
+              <th className="px-4 py-3 text-left font-medium uppercase text-text-secondary text-xs">
                 Employee
               </th>
-              <th className="px-4 py-3 text-left font-medium uppercase text-slate-400 text-xs">
+              <th className="px-4 py-3 text-left font-medium uppercase text-text-secondary text-xs">
                 Role / Department
               </th>
-              <th className="px-4 py-3 text-left font-medium uppercase text-slate-400 text-xs">
+              <th className="px-4 py-3 text-left font-medium uppercase text-text-secondary text-xs">
                 Check-In
               </th>
-              <th className="px-4 py-3 text-left font-medium uppercase text-slate-400 text-xs">
+              <th className="px-4 py-3 text-left font-medium uppercase text-text-secondary text-xs">
                 Check-Out
               </th>
-              <th className="px-4 py-3 text-left font-medium uppercase text-slate-400 text-xs">
+              <th className="px-4 py-3 text-left font-medium uppercase text-text-secondary text-xs">
                 Working Hours
               </th>
-              <th className="px-4 py-3 text-left font-medium uppercase text-slate-400 text-xs">
+              <th className="px-4 py-3 text-left font-medium uppercase text-text-secondary text-xs">
                 Status
               </th>
-              <th className="px-4 py-3 text-left font-medium uppercase text-slate-400 text-xs">
+              <th className="px-4 py-3 text-left font-medium uppercase text-text-secondary text-xs">
                 Notes
               </th>
               <th className="w-8"></th>
@@ -97,21 +137,21 @@ export function AttendanceTable({
             {paginatedRecords.map((record) => (
               <tr
                 key={record.id}
-                className="transition-colors hover:bg-slate-800/20"
+                className="transition-colors hover:bg-card-bg/20"
               >
                 {/* Employee */}
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
                     <div
-                      className={`h-8 w-8 rounded-full ${getAvatarColor(record.id)} flex items-center justify-center text-xs font-semibold text-white`}
+                      className={`h-8 w-8 rounded-full ${getAvatarColor(record.id)} flex items-center justify-center text-xs font-semibold text-text-primary`}
                     >
                       {getInitials(record.firstName, record.lastName)}
                     </div>
                     <div className="flex-1">
-                      <p className="font-medium text-slate-50">
+                      <p className="font-medium text-text-primary">
                         {record.firstName} {record.lastName}
                       </p>
-                      <p className="text-xs text-slate-400">
+                      <p className="text-xs text-text-secondary">
                         {record.email}
                       </p>
                     </div>
@@ -121,48 +161,48 @@ export function AttendanceTable({
                 {/* Role / Department */}
                 <td className="px-4 py-3">
                   <div>
-                    <p className="font-medium text-slate-100 capitalize">
+                    <p className="font-medium text-text-primary capitalize">
                       {record.role}
                     </p>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-text-secondary">
                       {record.technology?.name || "N/A"}
                     </p>
                   </div>
                 </td>
 
                 {/* Check-In */}
-                <td className="px-4 py-3 text-slate-100">
+                <td className="px-4 py-3 text-text-primary">
                   {record.checkIn ? (
                     <div>
                       <p className="font-medium whitespace-nowrap">
-                        {format(new Date(record.checkIn), "hh:mm")} <span className="text-[10px] uppercase text-slate-400">{format(new Date(record.checkIn), "a")}</span>
+                        {format(new Date(record.checkIn), "hh:mm")} <span className="text-[10px] uppercase text-text-secondary">{format(new Date(record.checkIn), "a")}</span>
                       </p>
                     </div>
                   ) : (
-                    <p className="text-slate-500">—</p>
+                    <p className="text-text-secondary">—</p>
                   )}
                 </td>
 
                 {/* Check-Out */}
-                <td className="px-4 py-3 text-slate-100">
+                <td className="px-4 py-3 text-text-primary">
                   {record.checkOut ? (
                     <div>
                       <p className="font-medium whitespace-nowrap">
-                        {format(new Date(record.checkOut), "hh:mm")} <span className="text-[10px] uppercase text-slate-400">{format(new Date(record.checkOut), "a")}</span>
+                        {format(new Date(record.checkOut), "hh:mm")} <span className="text-[10px] uppercase text-text-secondary">{format(new Date(record.checkOut), "a")}</span>
                       </p>
                     </div>
                   ) : (
-                    <p className="text-slate-500">—</p>
+                    <p className="text-text-secondary">—</p>
                   )}
                 </td>
 
                 {/* Working Hours */}
                 <td className="px-4 py-3">
                   <div>
-                    <p className="font-medium text-slate-50">
+                    <p className="font-medium text-text-primary">
                       {record.workingHours}h
                     </p>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-text-secondary">
                       {record.breakDuration}h break
                     </p>
                   </div>
@@ -176,7 +216,7 @@ export function AttendanceTable({
                 {/* Notes */}
                 <td className="px-4 py-3 max-w-xs">
                   {record.notes ? (
-                    <p className="text-sm text-slate-400 truncate">
+                    <p className="text-sm text-text-secondary truncate">
                       {record.notes}
                     </p>
                   ) : (
@@ -186,7 +226,7 @@ export function AttendanceTable({
 
                 {/* Actions */}
                 <td className="px-4 py-3">
-                  <button className="rounded p-1 text-slate-400 transition-colors hover:bg-slate-800 hover:text-slate-200">
+                  <button className="rounded p-1 text-text-secondary transition-colors hover:bg-card-bg hover:text-text-primary">
                     <MoreVertical className="h-4 w-4" />
                   </button>
                 </td>
@@ -198,7 +238,7 @@ export function AttendanceTable({
 
       {/* Pagination */}
       <div className="flex items-center justify-between px-4">
-        <p className="text-xs text-slate-400">
+        <p className="text-xs text-text-secondary">
           Showing {startIdx + 1} to {Math.min(endIdx, records.length)} of{" "}
           {records.length} entries
         </p>
@@ -208,7 +248,7 @@ export function AttendanceTable({
             <button
               onClick={() => onPageChange?.(Math.max(1, currentPage - 1))}
               disabled={currentPage === 1}
-              className="rounded border border-slate-700 bg-slate-900/50 px-2 py-1 text-xs text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-800"
+              className="rounded border border-border-color bg-bg-secondary/50 px-2 py-1 text-xs text-text-secondary disabled:opacity-50 disabled:cursor-not-allowed hover:bg-card-bg"
             >
               Previous
             </button>
@@ -219,7 +259,7 @@ export function AttendanceTable({
                 onClick={() => onPageChange?.(i + 1)}
                 className={`rounded px-2 py-1 text-xs font-medium ${currentPage === i + 1
                     ? "bg-accent text-slate-950"
-                    : "border border-slate-700 bg-slate-900/50 text-slate-400 hover:bg-slate-800"
+                    : "border border-border-color bg-bg-secondary/50 text-text-secondary hover:bg-card-bg"
                   }`}
               >
                 {i + 1}
@@ -231,7 +271,7 @@ export function AttendanceTable({
                 onPageChange?.(Math.min(totalPages, currentPage + 1))
               }
               disabled={currentPage === totalPages}
-              className="rounded border border-slate-700 bg-slate-900/50 px-2 py-1 text-xs text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-800"
+              className="rounded border border-border-color bg-bg-secondary/50 px-2 py-1 text-xs text-text-secondary disabled:opacity-50 disabled:cursor-not-allowed hover:bg-card-bg"
             >
               Next
             </button>

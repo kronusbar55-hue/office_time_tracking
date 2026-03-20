@@ -34,7 +34,7 @@ export default function HeroSessionCard() {
     "clocked-out": {
       label: "Clocked Out",
       pulseClass: "",
-      badgeBg: "bg-slate-500/20 border-slate-500/50 text-slate-400",
+      badgeBg: "bg-slate-500/20 border-slate-500/50 text-text-secondary",
       gradient: "from-slate-500/10 via-slate-900/80 to-slate-600/10"
     }
   };
@@ -43,21 +43,21 @@ export default function HeroSessionCard() {
 
   return (
     <div
-      className={`relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br ${config.gradient} p-8 backdrop-blur-xl shadow-2xl ${
+      className={`relative overflow-hidden rounded-2xl border border-border-color bg-gradient-to-br ${config.gradient} p-8 backdrop-blur-xl shadow-2xl ${
         status !== "clocked-out" ? config.pulseClass : ""
       }`}
     >
-      <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-bg-secondary/40 backdrop-blur-sm" />
       <div className="relative z-10 flex flex-col items-center">
         <span
           className={`mb-4 inline-flex rounded-full border px-4 py-1.5 text-xs font-semibold uppercase tracking-wider ${config.badgeBg}`}
         >
           {config.label}
         </span>
-        <p className="font-mono text-6xl font-bold tabular-nums text-white md:text-7xl">
+        <p className="font-mono text-6xl font-bold tabular-nums text-text-primary md:text-7xl">
           {formatHHMMSS(displayMs)}
         </p>
-        <p className="mt-2 text-sm text-slate-400">
+        <p className="mt-2 text-sm text-text-secondary">
           {ongoingBreak ? "Break Duration" : "Work Time"}
         </p>
       </div>

@@ -80,7 +80,7 @@ export default function CheckInOutList({ role, period = "today", limit = 50 }: C
       );
     }
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-slate-600/50 px-2 py-1 text-xs font-medium text-slate-300">
+      <span className="inline-flex items-center gap-1 rounded-full bg-slate-600/50 px-2 py-1 text-xs font-medium text-text-secondary">
         Checked Out
       </span>
     );
@@ -109,7 +109,7 @@ export default function CheckInOutList({ role, period = "today", limit = 50 }: C
     return (
       <div className="space-y-3">
         {[...Array(5)].map((_, i) => (
-          <div key={i} className="h-16 rounded-lg border border-slate-700 bg-slate-800/50 animate-pulse" />
+          <div key={i} className="h-16 rounded-lg border border-border-color bg-card-bg/50 animate-pulse" />
         ))}
       </div>
     );
@@ -125,7 +125,7 @@ export default function CheckInOutList({ role, period = "today", limit = 50 }: C
 
   if (records.length === 0) {
     return (
-      <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-8 text-center text-slate-400">
+      <div className="rounded-lg border border-border-color bg-card-bg/50 p-8 text-center text-text-secondary">
         No check-in/out records found
       </div>
     );
@@ -138,7 +138,7 @@ export default function CheckInOutList({ role, period = "today", limit = 50 }: C
         <select
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value as any)}
-          className="px-3 py-2 rounded border border-slate-600 bg-slate-800 text-sm text-slate-100"
+          className="px-3 py-2 rounded border border-border-color bg-card-bg text-sm text-text-primary"
         >
           <option value="date">Sort by Date</option>
           <option value="time">Sort by Time</option>
@@ -146,7 +146,7 @@ export default function CheckInOutList({ role, period = "today", limit = 50 }: C
         </select>
         <button
           onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
-          className="px-3 py-2 rounded border border-slate-600 bg-slate-800 text-sm text-slate-100 hover:bg-slate-700"
+          className="px-3 py-2 rounded border border-border-color bg-card-bg text-sm text-text-primary hover:bg-hover-bg"
         >
           {sortOrder === "asc" ? "↑" : "↓"}
         </button>
@@ -157,7 +157,7 @@ export default function CheckInOutList({ role, period = "today", limit = 50 }: C
         records.map((record) => (
           <div
             key={record._id}
-            className="rounded-lg border border-slate-700 bg-slate-800/50 p-4 transition-colors hover:bg-slate-800"
+            className="rounded-lg border border-border-color bg-card-bg/50 p-4 transition-colors hover:bg-card-bg"
           >
             <div className="flex items-center justify-between gap-4">
               {/* User Info */}
@@ -168,10 +168,10 @@ export default function CheckInOutList({ role, period = "today", limit = 50 }: C
                   )}
                 </div>
                 <div className="min-w-0">
-                  <p className="font-medium text-slate-100 truncate">
+                  <p className="font-medium text-text-primary truncate">
                     {record.user.firstName} {record.user.lastName}
                   </p>
-                  <p className="text-xs text-slate-400 truncate">{record.user.email}</p>
+                  <p className="text-xs text-text-secondary truncate">{record.user.email}</p>
                 </div>
               </div>
 
@@ -182,25 +182,25 @@ export default function CheckInOutList({ role, period = "today", limit = 50 }: C
             {/* Details */}
             <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
               <div>
-                <p className="text-slate-400">Clock In</p>
-                <p className="text-slate-100">
+                <p className="text-text-secondary">Clock In</p>
+                <p className="text-text-primary">
                   {new Date(record.clockIn).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                 </p>
               </div>
               {record.clockOut && (
                 <div>
-                  <p className="text-slate-400">Clock Out</p>
-                  <p className="text-slate-100">
+                  <p className="text-text-secondary">Clock Out</p>
+                  <p className="text-text-primary">
                     {new Date(record.clockOut).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                   </p>
                 </div>
               )}
               <div>
-                <p className="text-slate-400">Work Hours</p>
-                <p className="text-slate-100">{(record.workMinutes / 60).toFixed(2)}h</p>
+                <p className="text-text-secondary">Work Hours</p>
+                <p className="text-text-primary">{(record.workMinutes / 60).toFixed(2)}h</p>
               </div>
               <div>
-                <p className="text-slate-400">Attendance %</p>
+                <p className="text-text-secondary">Attendance %</p>
                 <p className={record.attendancePercentage >= 100 ? "text-green-400" : "text-yellow-400"}>
                   {record.attendancePercentage}%
                 </p>
@@ -209,7 +209,7 @@ export default function CheckInOutList({ role, period = "today", limit = 50 }: C
 
             {/* Issues */}
             {(record.isLateCheckIn || record.isEarlyCheckOut || record.isOvertime) && (
-              <div className="mt-3 pt-3 border-t border-slate-700">{issueIndicators(record)}</div>
+              <div className="mt-3 pt-3 border-t border-border-color">{issueIndicators(record)}</div>
             )}
           </div>
         ))

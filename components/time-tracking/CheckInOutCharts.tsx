@@ -60,7 +60,7 @@ export default function CheckInOutCharts({ period = "month", role }: CheckInOutC
     return (
       <div className="grid gap-4 md:grid-cols-2">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="h-64 rounded-lg border border-slate-700 bg-slate-800/50 animate-pulse" />
+          <div key={i} className="h-64 rounded-lg border border-border-color bg-card-bg/50 animate-pulse" />
         ))}
       </div>
     );
@@ -91,8 +91,8 @@ export default function CheckInOutCharts({ period = "month", role }: CheckInOutC
   return (
     <div className="grid gap-4 md:grid-cols-2">
       {/* Daily Work Hours */}
-      <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-4">
-        <h3 className="mb-4 text-sm font-semibold text-slate-200">Daily Work Hours (Last 14 Days)</h3>
+      <div className="rounded-lg border border-border-color bg-card-bg/50 p-4">
+        <h3 className="mb-4 text-sm font-semibold text-text-primary">Daily Work Hours (Last 14 Days)</h3>
         <div className="flex h-40 items-end gap-1 justify-center">
           {dailyDates.map((date) => {
             const hours = Number(data.daily[date]?.worked || 0);
@@ -107,7 +107,7 @@ export default function CheckInOutCharts({ period = "month", role }: CheckInOutC
                   style={{ height: `${height}%`, minHeight: "4px" }}
                   title={`${date}: ${hours.toFixed(1)}h`}
                 />
-                <span className="text-xs text-slate-500">{date.slice(5)}</span>
+                <span className="text-xs text-text-secondary">{date.slice(5)}</span>
               </div>
             );
           })}
@@ -115,22 +115,22 @@ export default function CheckInOutCharts({ period = "month", role }: CheckInOutC
         <div className="mt-3 flex gap-3 text-xs">
           <div className="flex items-center gap-1">
             <div className="h-2 w-2 rounded bg-green-500"></div>
-            <span className="text-slate-400">Normal (8h)</span>
+            <span className="text-text-secondary">Normal (8h)</span>
           </div>
           <div className="flex items-center gap-1">
             <div className="h-2 w-2 rounded bg-yellow-500"></div>
-            <span className="text-slate-400">Partial</span>
+            <span className="text-text-secondary">Partial</span>
           </div>
           <div className="flex items-center gap-1">
             <div className="h-2 w-2 rounded bg-blue-500"></div>
-            <span className="text-slate-400">Overtime</span>
+            <span className="text-text-secondary">Overtime</span>
           </div>
         </div>
       </div>
 
       {/* Role Breakdown */}
-      <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-4">
-        <h3 className="mb-4 text-sm font-semibold text-slate-200">Hours by Role</h3>
+      <div className="rounded-lg border border-border-color bg-card-bg/50 p-4">
+        <h3 className="mb-4 text-sm font-semibold text-text-primary">Hours by Role</h3>
         <div className="space-y-3">
           {roleEntries.map(([roleKey, stats]) => {
             const maxHours = Math.max(...roleEntries.map((e) => e[1].hours), 100);
@@ -138,8 +138,8 @@ export default function CheckInOutCharts({ period = "month", role }: CheckInOutC
             return (
               <div key={roleKey}>
                 <div className="flex items-center justify-between text-sm mb-1">
-                  <span className="text-slate-300 capitalize">{roleKey}</span>
-                  <span className="text-slate-400">
+                  <span className="text-text-secondary capitalize">{roleKey}</span>
+                  <span className="text-text-secondary">
                     {stats.hours.toFixed(0)}h ({stats.count} records)
                   </span>
                 </div>
@@ -156,10 +156,10 @@ export default function CheckInOutCharts({ period = "month", role }: CheckInOutC
       </div>
 
       {/* Issues Distribution */}
-      <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-4">
-        <h3 className="mb-4 text-sm font-semibold text-slate-200">Issues Detected</h3>
+      <div className="rounded-lg border border-border-color bg-card-bg/50 p-4">
+        <h3 className="mb-4 text-sm font-semibold text-text-primary">Issues Detected</h3>
         {totalIssues === 0 ? (
-          <p className="text-slate-400 text-sm">No issues detected ✓</p>
+          <p className="text-text-secondary text-sm">No issues detected ✓</p>
         ) : (
           <div className="space-y-3">
             {[
@@ -176,8 +176,8 @@ export default function CheckInOutCharts({ period = "month", role }: CheckInOutC
               return (
                 <div key={label}>
                   <div className="flex items-center justify-between text-sm mb-1">
-                    <span className="text-slate-300">{label}</span>
-                    <span className="text-slate-400">{count}</span>
+                    <span className="text-text-secondary">{label}</span>
+                    <span className="text-text-secondary">{count}</span>
                   </div>
                   <div className="h-2 w-full rounded-full bg-slate-700">
                     <div
@@ -193,31 +193,31 @@ export default function CheckInOutCharts({ period = "month", role }: CheckInOutC
       </div>
 
       {/* Summary Stats */}
-      <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-4">
-        <h3 className="mb-4 text-sm font-semibold text-slate-200">Summary</h3>
+      <div className="rounded-lg border border-border-color bg-card-bg/50 p-4">
+        <h3 className="mb-4 text-sm font-semibold text-text-primary">Summary</h3>
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <span className="text-slate-400">Unique Employees</span>
-            <span className="text-slate-100 font-medium">{data.summary.uniqueEmployees}</span>
+            <span className="text-text-secondary">Unique Employees</span>
+            <span className="text-text-primary font-medium">{data.summary.uniqueEmployees}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-400">Total Records</span>
-            <span className="text-slate-100 font-medium">{data.summary.totalRecords}</span>
+            <span className="text-text-secondary">Total Records</span>
+            <span className="text-text-primary font-medium">{data.summary.totalRecords}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-400">Avg Work Hours/Day</span>
-            <span className="text-slate-100 font-medium">
+            <span className="text-text-secondary">Avg Work Hours/Day</span>
+            <span className="text-text-primary font-medium">
               {(Number(data.summary?.averageWorkHoursPerDay) || 0).toFixed(1)}h
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-400">Total Overtime</span>
+            <span className="text-text-secondary">Total Overtime</span>
             <span className="text-blue-400 font-medium">
               {(Number(data.summary?.totalOvertimeHours) || 0).toFixed(1)}h
             </span>
           </div>
-          <div className="flex justify-between border-t border-slate-700 pt-2 mt-2">
-            <span className="text-slate-400">Avg Attendance Rate</span>
+          <div className="flex justify-between border-t border-border-color pt-2 mt-2">
+            <span className="text-text-secondary">Avg Attendance Rate</span>
             <span className={`font-medium ${(Number(data.summary?.averageAttendanceRate) || 0) >= 80 ? "text-green-400" : "text-red-400"}`}>
               {(Number(data.summary?.averageAttendanceRate) || 0).toFixed(1)}%
             </span>

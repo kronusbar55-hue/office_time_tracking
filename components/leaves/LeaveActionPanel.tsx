@@ -91,7 +91,7 @@ export default function LeaveActionPanel({
         <input
           type="text"
           placeholder="Rejection reason (optional)"
-          className="w-full max-w-[200px] rounded-lg border border-white/10 bg-slate-900/60 px-3 py-2 text-sm text-slate-200 placeholder-slate-500 focus:border-emerald-500/50 focus:outline-none"
+          className="w-full max-w-[200px] rounded-lg border border-border-color bg-bg-secondary/60 px-3 py-2 text-sm text-text-primary placeholder-slate-500 focus:border-emerald-500/50 focus:outline-none"
           value={rejectReason}
           onChange={(e) => setRejectReason(e.target.value)}
         />
@@ -108,7 +108,7 @@ export default function LeaveActionPanel({
               setShowRejectInput(false);
               setRejectReason("");
             }}
-            className="rounded-lg bg-slate-700 px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-600"
+            className="rounded-lg bg-slate-700 px-3 py-1.5 text-xs text-text-secondary hover:bg-slate-600"
           >
             Cancel
           </button>
@@ -138,7 +138,7 @@ export default function LeaveActionPanel({
       {role !== "admin" && leave.status === "pending" && (
         <button
           onClick={handleCancel}
-          className="rounded-lg border border-white/10 bg-slate-800/60 px-4 py-2 text-sm text-slate-300 transition hover:bg-slate-700"
+          className="rounded-lg border border-border-color bg-card-bg/60 px-4 py-2 text-sm text-text-secondary transition hover:bg-hover-bg"
         >
           Cancel Request
         </button>

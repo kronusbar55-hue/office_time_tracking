@@ -91,28 +91,28 @@ export default function TechnologyModal({
         className="z-10 w-[680px] rounded-lg bg-card/90 p-6 shadow-lg"
       >
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-slate-50">{initial ? "Edit Technology" : "Add Technology"}</h3>
-          <button type="button" onClick={onClose} className="text-slate-400 hover:text-slate-200">
+          <h3 className="text-sm font-semibold text-text-primary">{initial ? "Edit Technology" : "Add Technology"}</h3>
+          <button type="button" onClick={onClose} className="text-text-secondary hover:text-text-primary">
             <X className="h-4 w-4" />
           </button>
         </div>
 
         <div className="mt-4 grid gap-3">
-          <label className="text-[11px] text-slate-300">Name</label>
+          <label className="text-[11px] text-text-secondary">Name</label>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="h-10 rounded-md border border-slate-700 bg-slate-950/60 px-3 text-sm text-slate-100 outline-none"
+            className="h-10 rounded-md border border-border-color bg-bg-primary/60 px-3 text-sm text-text-primary outline-none"
             placeholder="e.g. React"
             required
           />
 
           <div>
-            <label className="text-[11px] text-slate-300">Status</label>
+            <label className="text-[11px] text-text-secondary">Status</label>
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value as any)}
-              className="ml-2 rounded-md border border-slate-700 bg-slate-950/60 px-2 py-1 text-sm text-slate-100"
+              className="ml-2 rounded-md border border-border-color bg-bg-primary/60 px-2 py-1 text-sm text-text-primary"
             >
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
@@ -136,7 +136,7 @@ export default function TechnologyModal({
             <span>{initial ? "Save changes" : "Add Technology"}</span>
           </button>
 
-          <button type="button" onClick={onClose} className="rounded-md px-3 py-2 text-sm text-slate-300 hover:text-slate-100">
+          <button type="button" onClick={onClose} className="rounded-md px-3 py-2 text-sm text-text-secondary hover:text-text-primary">
             Cancel
           </button>
         </div>

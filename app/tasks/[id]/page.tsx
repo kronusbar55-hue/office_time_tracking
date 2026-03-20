@@ -40,7 +40,7 @@ export default function TaskViewPage() {
           const taskData = await taskRes.json();
           setTask(taskData.data);
           setNewAssignee(taskData.data?.assignee?._id || null);
-          setNewStatus(taskData.data?.status || "backlog");
+          setNewStatus(taskData.data?.status || "todo");
 
           // Load project members for assignee filter
           if (taskData.data?.project && projRes.ok) {
@@ -182,9 +182,9 @@ export default function TaskViewPage() {
     return (
       <div className="p-6">
         <div className="space-y-3">
-          <div className="h-6 w-1/2 animate-pulse rounded bg-slate-800/40" />
-          <div className="h-4 w-1/3 animate-pulse rounded bg-slate-800/40" />
-          <div className="mt-6 h-32 animate-pulse rounded bg-slate-800/40" />
+          <div className="h-6 w-1/2 animate-pulse rounded bg-card-bg/40" />
+          <div className="h-4 w-1/3 animate-pulse rounded bg-card-bg/40" />
+          <div className="mt-6 h-32 animate-pulse rounded bg-card-bg/40" />
         </div>
       </div>
     );
@@ -193,28 +193,28 @@ export default function TaskViewPage() {
   if (!task) {
     return (
       <div className="p-6">
-        <button onClick={() => router.back()} className="flex items-center gap-2 text-slate-400 hover:text-slate-200 mb-6">
+        <button onClick={() => router.back()} className="flex items-center gap-2 text-text-secondary hover:text-text-primary mb-6">
           <ChevronLeft className="h-4 w-4" />
           Back
         </button>
-        <div className="text-center text-slate-400">Task not found</div>
+        <div className="text-center text-text-secondary">Task not found</div>
       </div>
     );
   }
 
   return (
     <div className="p-6 space-y-6">
-      <button onClick={() => router.back()} className="flex items-center gap-2 text-slate-400 hover:text-slate-200">
+      <button onClick={() => router.back()} className="flex items-center gap-2 text-text-secondary hover:text-text-primary">
         <ChevronLeft className="h-4 w-4" />
         Back
       </button>
 
       {/* Task Header */}
-      <div className="rounded-lg border border-slate-800/40 bg-slate-900/40 p-6">
+      <div className="rounded-lg border border-border-color/40 bg-bg-secondary/40 p-6">
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-slate-50">{task.key} — {task.title}</h1>
-            <p className="mt-1 text-sm text-slate-400">{task.project?.name}</p>
+            <h1 className="text-2xl font-bold text-text-primary">{task.key} — {task.title}</h1>
+            <p className="mt-1 text-sm text-text-secondary">{task.project?.name}</p>
           </div>
           {canFullEdit && (
             <button
@@ -228,47 +228,47 @@ export default function TaskViewPage() {
 
         <div className="mt-6 grid grid-cols-2 gap-6">
           <div>
-            <div className="text-xs text-slate-400 uppercase">Type</div>
-            <div className="mt-1 text-sm text-slate-200">{task.type}</div>
+            <div className="text-xs text-text-secondary uppercase">Type</div>
+            <div className="mt-1 text-sm text-text-primary">{task.type}</div>
           </div>
           <div>
-            <div className="text-xs text-slate-400 uppercase">Priority</div>
-            <div className="mt-1 text-sm text-slate-200">{task.priority}</div>
+            <div className="text-xs text-text-secondary uppercase">Priority</div>
+            <div className="mt-1 text-sm text-text-primary">{task.priority}</div>
           </div>
           <div>
-            <div className="text-xs text-slate-400 uppercase">Due Date</div>
-            <div className="mt-1 text-sm text-slate-200">
+            <div className="text-xs text-text-secondary uppercase">Due Date</div>
+            <div className="mt-1 text-sm text-text-primary">
               {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : "—"}
             </div>
           </div>
           <div>
-            <div className="text-xs text-slate-400 uppercase">Reporter</div>
-            <div className="mt-1 text-sm text-slate-200">
+            <div className="text-xs text-text-secondary uppercase">Reporter</div>
+            <div className="mt-1 text-sm text-text-primary">
               {task.reporter ? `${task.reporter.firstName} ${task.reporter.lastName}` : "—"}
             </div>
           </div>
         </div>
 
-        <div className="mt-6 border-t border-slate-800/40 pt-6">
-          <h3 className="text-sm font-semibold text-slate-200 mb-4">Description</h3>
-          <div className="text-sm text-slate-300">
+        <div className="mt-6 border-t border-border-color/40 pt-6">
+          <h3 className="text-sm font-semibold text-text-primary mb-4">Description</h3>
+          <div className="text-sm text-text-secondary">
             {task.description ? (
               <TaskEditor content={task.description} onChange={() => {}} editable={false} />
             ) : (
-              <span className="text-slate-500 italic">No description provided</span>
+              <span className="text-text-secondary italic">No description provided</span>
             )}
           </div>
         </div>
       </div>
 
       {/* Attachments Section */}
-      <div className="rounded-lg border border-slate-800/40 bg-slate-900/40 p-6">
+      <div className="rounded-lg border border-border-color/40 bg-bg-secondary/40 p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-text-primary flex items-center gap-2">
             <span>🖼️</span> Attachments
           </h3>
-          {(isEmployee || canFullEdit) && (
-            <label className="inline-flex items-center gap-2 rounded-md bg-slate-800 hover:bg-slate-700 px-3 py-2 text-sm font-medium text-slate-100 cursor-pointer transition">
+          {canFullEdit && (
+            <label className="inline-flex items-center gap-2 rounded-md bg-card-bg hover:bg-hover-bg px-3 py-2 text-sm font-medium text-text-primary cursor-pointer transition">
               <Upload className="h-4 w-4" />
               <span>Upload Images</span>
               <input
@@ -293,15 +293,15 @@ export default function TaskViewPage() {
 
       {/* Employee Update Panel */}
       {isEmployee && (
-        <div className="rounded-lg border border-slate-800/40 bg-slate-900/40 p-6">
-          <h3 className="text-sm font-semibold text-slate-200 mb-4">Update Task</h3>
+        <div className="rounded-lg border border-border-color/40 bg-bg-secondary/40 p-6">
+          <h3 className="text-sm font-semibold text-text-primary mb-4">Update Task</h3>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-[11px] text-slate-400 uppercase">Assignee</label>
+              <label className="text-[11px] text-text-secondary uppercase">Assignee</label>
               <select
                 value={newAssignee || ""}
                 onChange={(e) => setNewAssignee(e.target.value || null)}
-                className="mt-2 w-full rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100"
+                className="mt-2 w-full rounded-md border border-border-color bg-bg-primary/60 px-3 py-2 text-sm text-text-primary"
               >
                 <option value="">Unassigned</option>
                 {users.map((u: any) => (
@@ -313,14 +313,15 @@ export default function TaskViewPage() {
             </div>
 
             <div>
-              <label className="text-[11px] text-slate-400 uppercase">Status</label>
+              <label className="text-[11px] text-text-secondary uppercase">Status</label>
               <select
-                value={newStatus || "backlog"}
+                value={newStatus || "todo"}
                 onChange={(e) => setNewStatus(e.target.value)}
-                className="mt-2 w-full rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100"
+                className="mt-2 w-full rounded-md border border-border-color bg-bg-primary/60 px-3 py-2 text-sm text-text-primary"
               >
-                <option value="backlog">Backlog</option>
+                <option value="todo">To Do</option>
                 <option value="in_progress">In Progress</option>
+                <option value="qa">QA</option>
                 <option value="done">Done</option>
               </select>
             </div>
@@ -339,7 +340,7 @@ export default function TaskViewPage() {
                 setNewAssignee(task.assignee?._id || null);
                 setNewStatus(task.status);
               }}
-              className="rounded-md px-4 py-2 text-sm text-slate-300 hover:text-slate-100"
+              className="rounded-md px-4 py-2 text-sm text-text-secondary hover:text-text-primary"
             >
               Reset
             </button>
@@ -348,14 +349,14 @@ export default function TaskViewPage() {
       )}
 
       {/* Activity / Comments Tabbed Section */}
-      <div className="rounded-lg border border-slate-800/40 bg-slate-900/40 overflow-hidden shadow-xl">
-        <div className="flex items-center gap-1 p-1 bg-slate-900/60 border-b border-white/5">
+      <div className="rounded-lg border border-border-color/40 bg-bg-secondary/40 overflow-hidden shadow-xl">
+        <div className="flex items-center gap-1 p-1 bg-bg-secondary/60 border-b border-border-color">
           <button
             onClick={() => setActiveTab("comments")}
             className={`flex items-center gap-2 px-6 py-2.5 rounded-md text-sm font-black transition-all uppercase tracking-tighter ${
               activeTab === "comments"
                 ? "bg-accent text-slate-950 shadow-lg shadow-accent/20"
-                : "text-slate-400 hover:text-white hover:bg-white/5"
+                : "text-text-secondary hover:text-text-primary hover:bg-hover-bg"
             }`}
           >
             <MessageSquare className="h-4 w-4" />
@@ -366,7 +367,7 @@ export default function TaskViewPage() {
             className={`flex items-center gap-2 px-6 py-2.5 rounded-md text-sm font-black transition-all uppercase tracking-tighter ${
               activeTab === "activity"
                 ? "bg-accent text-slate-950 shadow-lg shadow-accent/20"
-                : "text-slate-400 hover:text-white hover:bg-white/5"
+                : "text-text-secondary hover:text-text-primary hover:bg-hover-bg"
             }`}
           >
             <Clock className="h-4 w-4" />

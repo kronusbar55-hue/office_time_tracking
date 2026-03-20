@@ -251,15 +251,15 @@ export default function AttendancePage() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-slate-50">Attendance</h1>
-          <p className="mt-1 text-sm text-slate-400">
+          <h1 className="text-3xl font-bold text-text-primary">Attendance</h1>
+          <p className="mt-1 text-sm text-text-secondary">
             Calendar and daily attendance status generated from time entries.
           </p>
         </div>
         <button
           onClick={() => fetchAttendance(true)}
           disabled={isRefreshing}
-          className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+          className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-text-primary hover:bg-emerald-700 disabled:opacity-50"
         >
           {isRefreshing ? "Refreshing..." : "Refresh Now"}
         </button>
@@ -269,27 +269,27 @@ export default function AttendancePage() {
       {showExportModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/50" onClick={closeExportModal} />
-          <div className="relative z-10 w-full max-w-md rounded-lg bg-slate-900 p-6">
-            <h3 className="mb-4 text-lg font-semibold text-slate-100">Export attendance (date range)</h3>
+          <div className="relative z-10 w-full max-w-md rounded-lg bg-bg-secondary p-6">
+            <h3 className="mb-4 text-lg font-semibold text-text-primary">Export attendance (date range)</h3>
             <div className="flex flex-col gap-3">
-              <label className="text-sm text-slate-300">Start date</label>
+              <label className="text-sm text-text-secondary">Start date</label>
               <input
                 type="date"
                 value={exportStart}
                 onChange={(e) => setExportStart(e.target.value)}
-                className="rounded-md bg-slate-800 p-2 text-slate-100"
+                className="rounded-md bg-card-bg p-2 text-text-primary"
               />
-              <label className="text-sm text-slate-300">End date</label>
+              <label className="text-sm text-text-secondary">End date</label>
               <input
                 type="date"
                 value={exportEnd}
                 onChange={(e) => setExportEnd(e.target.value)}
-                className="rounded-md bg-slate-800 p-2 text-slate-100"
+                className="rounded-md bg-card-bg p-2 text-text-primary"
               />
             </div>
             <div className="mt-4 flex justify-end gap-2">
-              <button onClick={closeExportModal} className="rounded-md bg-slate-700 px-3 py-2 text-sm text-slate-200">Cancel</button>
-              <button onClick={confirmExportRange} className="rounded-md bg-emerald-600 px-3 py-2 text-sm text-white">Export</button>
+              <button onClick={closeExportModal} className="rounded-md bg-slate-700 px-3 py-2 text-sm text-text-primary">Cancel</button>
+              <button onClick={confirmExportRange} className="rounded-md bg-emerald-600 px-3 py-2 text-sm text-text-primary">Export</button>
             </div>
           </div>
         </div>
@@ -338,8 +338,8 @@ export default function AttendancePage() {
 
       {/* Calendar Placeholder */}
       {/* {viewMode === "calendar" && (
-        <div className="rounded-xl border border-slate-800 bg-card/70 p-12 text-center">
-          <p className="text-slate-400">Calendar view coming soon</p>
+        <div className="rounded-xl border border-border-color bg-card/70 p-12 text-center">
+          <p className="text-text-secondary">Calendar view coming soon</p>
         </div>
       )} */}
     </div>

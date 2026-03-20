@@ -19,7 +19,7 @@ export default function ActionButtons({ onClockOutRequested }: Props) {
         <button
           disabled={busy}
           onClick={clockIn}
-          className={`${baseClass} bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40`}
+          className={`${baseClass} bg-gradient-to-r from-emerald-500 to-emerald-600 text-text-primary shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40`}
         >
           <Clock className="h-5 w-5" />
           {busy ? "Processing..." : "Clock In"}
@@ -29,7 +29,7 @@ export default function ActionButtons({ onClockOutRequested }: Props) {
           <button
             disabled={busy}
             onClick={onClockOutRequested ?? clockOut}
-            className={`${baseClass} bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg shadow-red-500/25 hover:shadow-red-500/40`}
+            className={`${baseClass} bg-gradient-to-r from-red-500 to-red-600 text-text-primary shadow-lg shadow-red-500/25 hover:shadow-red-500/40`}
           >
             <LogOut className="h-5 w-5" />
             {busy ? "Processing..." : "Clock Out"}
@@ -38,7 +38,7 @@ export default function ActionButtons({ onClockOutRequested }: Props) {
             <button
               disabled={busy}
               onClick={startBreak}
-              className={`${baseClass} bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40`}
+              className={`${baseClass} bg-gradient-to-r from-amber-500 to-orange-500 text-text-primary shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40`}
             >
               <Coffee className="h-5 w-5" />
               {busy ? "Processing..." : "Start Break"}

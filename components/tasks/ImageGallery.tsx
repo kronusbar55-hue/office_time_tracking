@@ -34,11 +34,11 @@ export default function ImageGallery({
 
   if (attachments.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-lg border border-slate-800/40 bg-slate-900/20 p-12">
+      <div className="flex flex-col items-center justify-center rounded-lg border border-border-color/40 bg-bg-secondary/20 p-12">
         <div className="text-center">
           <div className="mb-2 text-3xl">🖼️</div>
-          <p className="text-sm text-slate-400 font-medium">No attachments uploaded.</p>
-          <p className="text-xs text-slate-500 mt-1">Add images to this task to view them here.</p>
+          <p className="text-sm text-text-secondary font-medium">No attachments uploaded.</p>
+          <p className="text-xs text-text-secondary mt-1">Add images to this task to view them here.</p>
         </div>
       </div>
     );
@@ -65,7 +65,7 @@ export default function ImageGallery({
           {attachments.map((attachment, index) => (
             <div
               key={attachment.publicId}
-              className="group relative aspect-square overflow-hidden rounded-lg border border-slate-800/40 bg-slate-900/40 hover:border-slate-700 transition-all"
+              className="group relative aspect-square overflow-hidden rounded-lg border border-border-color/40 bg-bg-secondary/40 hover:border-border-color transition-all"
             >
               {/* Image Thumbnail */}
               <button
@@ -82,12 +82,12 @@ export default function ImageGallery({
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                  <span className="text-white text-sm font-medium">View</span>
+                  <span className="text-text-primary text-sm font-medium">View</span>
                 </div>
               </button>
 
               {/* Image Counter */}
-              <div className="absolute top-2 left-2 bg-slate-900/80 rounded px-2 py-1 text-xs font-medium text-slate-300">
+              <div className="absolute top-2 left-2 bg-bg-secondary/80 rounded px-2 py-1 text-xs font-medium text-text-secondary">
                 {index + 1} / {attachments.length}
               </div>
 
@@ -96,7 +96,7 @@ export default function ImageGallery({
                 <button
                   onClick={() => handleDeleteClick(attachment.publicId)}
                   disabled={isLoading || deletingId === attachment.publicId}
-                  className="absolute top-2 right-2 rounded-lg p-1.5 bg-red-600/80 hover:bg-red-600 text-white opacity-0 group-hover:opacity-100 transition-all disabled:opacity-50 cursor-pointer"
+                  className="absolute top-2 right-2 rounded-lg p-1.5 bg-red-600/80 hover:bg-red-600 text-text-primary opacity-0 group-hover:opacity-100 transition-all disabled:opacity-50 cursor-pointer"
                 >
                   {deletingId === attachment.publicId ? (
                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -115,7 +115,7 @@ export default function ImageGallery({
 
               {/* Filename Tooltip */}
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <p className="text-xs text-white truncate">{attachment.fileName}</p>
+                <p className="text-xs text-text-primary truncate">{attachment.fileName}</p>
               </div>
             </div>
           ))}
@@ -123,7 +123,7 @@ export default function ImageGallery({
       </div>
 
       {/* Image Info & Stats */}
-      <div className="flex items-center justify-between text-xs text-slate-400">
+      <div className="flex items-center justify-between text-xs text-text-secondary">
         <span className="font-medium">
           {attachments.length} {attachments.length === 1 ? "attachment" : "attachments"}
         </span>

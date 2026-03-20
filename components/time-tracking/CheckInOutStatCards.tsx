@@ -99,7 +99,7 @@ export default function CheckInOutStatCards({ period = "today", role }: CheckInO
     return (
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {[...Array(6)].map((_, i) => (
-          <div key={i} className="h-28 rounded-lg border border-slate-700 bg-slate-800/50 animate-pulse" />
+          <div key={i} className="h-28 rounded-lg border border-border-color bg-card-bg/50 animate-pulse" />
         ))}
       </div>
     );
@@ -119,7 +119,7 @@ export default function CheckInOutStatCards({ period = "today", role }: CheckInO
     yellow: { bg: "bg-yellow-500/10", text: "text-yellow-400", border: "border-yellow-500/20" },
     orange: { bg: "bg-orange-500/10", text: "text-orange-400", border: "border-orange-500/20" },
     red: { bg: "bg-red-500/10", text: "text-red-400", border: "border-red-500/20" },
-    slate: { bg: "bg-slate-500/10", text: "text-slate-400", border: "border-slate-500/20" }
+    slate: { bg: "bg-slate-500/10", text: "text-text-secondary", border: "border-slate-500/20" }
   };
 
   return (
@@ -133,9 +133,9 @@ export default function CheckInOutStatCards({ period = "today", role }: CheckInO
           >
             <div className="flex items-center justify-between">
               <div className="flex-1">
-                <p className="text-sm text-slate-400">{card.title}</p>
+                <p className="text-sm text-text-secondary">{card.title}</p>
                 <p className={`mt-2 text-2xl font-bold ${colors.text}`}>{card.value}</p>
-                <p className="mt-1 text-xs text-slate-500">{card.subtext}</p>
+                <p className="mt-1 text-xs text-text-secondary">{card.subtext}</p>
               </div>
               <div className="text-3xl opacity-50">{card.icon}</div>
             </div>

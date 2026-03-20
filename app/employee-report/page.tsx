@@ -112,8 +112,8 @@ export default function EmployeeReportPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0f172a] text-slate-200">
-      <header className="border-b border-slate-800 bg-[#0f172a]/80 backdrop-blur-md sticky top-0 z-30">
+    <div className="min-h-screen bg-[#0f172a] text-text-primary">
+      <header className="border-b border-border-color bg-[#0f172a]/80 backdrop-blur-md sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <h1 className="text-xl font-bold bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
@@ -125,18 +125,18 @@ export default function EmployeeReportPage() {
 
       <main className="max-w-7xl mx-auto p-6 space-y-6">
         {/* Filters */}
-        <div className="flex flex-col md:flex-row items-center gap-4 bg-slate-900/40 p-4 rounded-2xl border border-slate-800">
+        <div className="flex flex-col md:flex-row items-center gap-4 bg-bg-secondary/40 p-4 rounded-2xl border border-border-color">
           <div className="w-full md:flex-1">
-            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block">
+            <label className="text-[10px] font-black text-text-secondary uppercase tracking-widest mb-2 block">
               Select Employee
             </label>
             <div className="relative">
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="w-full pl-10 pr-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-sm font-bold text-white focus:outline-none focus:border-blue-500 flex items-center justify-between"
+                className="w-full pl-10 pr-4 py-3 bg-bg-primary border border-border-color rounded-xl text-sm font-bold text-text-primary focus:outline-none focus:border-blue-500 flex items-center justify-between"
               >
                 <div className="flex items-center gap-2">
-                  <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                  <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
                   <span>
                     {selectedUserId !== "all" 
                       ? employees.find(e => (e.id || e._id) === selectedUserId)
@@ -145,7 +145,7 @@ export default function EmployeeReportPage() {
                       : "Select an employee"}
                   </span>
                 </div>
-                <ChevronDown className={`h-4 w-4 text-slate-500 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`h-4 w-4 text-text-secondary transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
               </button>
 
               <AnimatePresence>
@@ -154,18 +154,18 @@ export default function EmployeeReportPage() {
                     initial={{ opacity: 0, y: 5 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 5 }}
-                    className="absolute top-full left-0 right-0 mt-2 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl z-50 overflow-hidden"
+                    className="absolute top-full left-0 right-0 mt-2 bg-bg-secondary border border-border-color rounded-xl shadow-2xl z-50 overflow-hidden"
                     onMouseLeave={() => setIsDropdownOpen(false)}
                   >
-                    <div className="p-3 border-b border-slate-800">
+                    <div className="p-3 border-b border-border-color">
                       <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
                         <input
                           type="text"
                           placeholder="Search employee..."
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-9 pr-3 py-2 text-xs font-bold text-white placeholder:text-slate-600 focus:outline-none focus:border-blue-500"
+                          className="w-full bg-bg-primary border border-border-color rounded-lg pl-9 pr-3 py-2 text-xs font-bold text-text-primary placeholder:text-slate-600 focus:outline-none focus:border-blue-500"
                         />
                       </div>
                     </div>
@@ -181,7 +181,7 @@ export default function EmployeeReportPage() {
                               setIsDropdownOpen(false);
                               setSearchQuery("");
                             }}
-                            className={`w-full flex items-center gap-3 p-2 rounded-lg transition-all text-left ${selectedUserId === (emp.id || emp._id) ? "bg-blue-500/20 text-blue-400" : "hover:bg-slate-800 text-slate-300"}`}
+                            className={`w-full flex items-center gap-3 p-2 rounded-lg transition-all text-left ${selectedUserId === (emp.id || emp._id) ? "bg-blue-500/20 text-blue-400" : "hover:bg-card-bg text-text-secondary"}`}
                           >
                             <span className="text-xs font-bold">{emp.firstName} {emp.lastName}</span>
                           </button>
@@ -195,16 +195,16 @@ export default function EmployeeReportPage() {
           </div>
           
           <div className="w-full md:w-64">
-            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block">
+            <label className="text-[10px] font-black text-text-secondary uppercase tracking-widest mb-2 block">
               Select Month
             </label>
             <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
               <input
                 type="month"
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-sm font-bold text-white focus:outline-none focus:border-blue-500 [color-scheme:dark]"
+                className="w-full pl-10 pr-4 py-3 bg-bg-primary border border-border-color rounded-xl text-sm font-bold text-text-primary focus:outline-none focus:border-blue-500 [color-scheme:dark]"
               />
             </div>
           </div>
@@ -220,46 +220,46 @@ export default function EmployeeReportPage() {
             
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-6 flex items-center gap-4">
+              <div className="bg-bg-secondary/40 border border-border-color rounded-2xl p-6 flex items-center gap-4">
                 <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl text-blue-400">
                   <UserIcon className="h-6 w-6" />
                 </div>
                 <div>
-                  <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">Employee</p>
-                  <p className="text-lg font-bold text-white">{reportData.name}</p>
+                  <p className="text-xs text-text-secondary font-medium uppercase tracking-wider">Employee</p>
+                  <p className="text-lg font-bold text-text-primary">{reportData.name}</p>
                 </div>
               </div>
-              <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-6 flex items-center gap-4">
+              <div className="bg-bg-secondary/40 border border-border-color rounded-2xl p-6 flex items-center gap-4">
                 <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400">
                   <Clock className="h-6 w-6" />
                 </div>
                 <div>
-                  <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">Total Work</p>
-                  <p className="text-lg font-bold text-white">{formatDuration(reportData.totalWorkMs)}</p>
+                  <p className="text-xs text-text-secondary font-medium uppercase tracking-wider">Total Work</p>
+                  <p className="text-lg font-bold text-text-primary">{formatDuration(reportData.totalWorkMs)}</p>
                 </div>
               </div>
-              <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-6 flex items-center gap-4">
+              <div className="bg-bg-secondary/40 border border-border-color rounded-2xl p-6 flex items-center gap-4">
                 <div className="p-3 bg-orange-500/10 border border-orange-500/20 rounded-xl text-orange-400">
                   <Coffee className="h-6 w-6" />
                 </div>
                 <div>
-                  <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">Total Break</p>
-                  <p className="text-lg font-bold text-white">{formatDuration(reportData.totalBreakMs)}</p>
+                  <p className="text-xs text-text-secondary font-medium uppercase tracking-wider">Total Break</p>
+                  <p className="text-lg font-bold text-text-primary">{formatDuration(reportData.totalBreakMs)}</p>
                 </div>
               </div>
             </div>
 
             {/* Daily Table */}
-            <div className="bg-slate-900/40 border border-slate-800 rounded-2xl overflow-hidden">
+            <div className="bg-bg-secondary/40 border border-border-color rounded-2xl overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="bg-slate-950 border-b border-slate-800">
-                      <th className="p-4 text-xs font-black uppercase tracking-widest text-slate-400">Date</th>
-                      <th className="p-4 text-xs font-black uppercase tracking-widest text-slate-400">Check In</th>
-                      <th className="p-4 text-xs font-black uppercase tracking-widest text-slate-400">Check Out</th>
-                      <th className="p-4 text-xs font-black uppercase tracking-widest text-slate-400 text-right">Work Duration</th>
-                      <th className="p-4 text-xs font-black uppercase tracking-widest text-slate-400 text-right">Break Time</th>
+                    <tr className="bg-bg-primary border-b border-border-color">
+                      <th className="p-4 text-xs font-black uppercase tracking-widest text-text-secondary">Date</th>
+                      <th className="p-4 text-xs font-black uppercase tracking-widest text-text-secondary">Check In</th>
+                      <th className="p-4 text-xs font-black uppercase tracking-widest text-text-secondary">Check Out</th>
+                      <th className="p-4 text-xs font-black uppercase tracking-widest text-text-secondary text-right">Work Duration</th>
+                      <th className="p-4 text-xs font-black uppercase tracking-widest text-text-secondary text-right">Break Time</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800/50">
@@ -269,26 +269,26 @@ export default function EmployeeReportPage() {
                       return (
                         <tr 
                           key={record.date} 
-                          className="hover:bg-slate-800/50 transition-colors cursor-pointer"
+                          className="hover:bg-card-bg/50 transition-colors cursor-pointer"
                           onClick={() => router.push(`/monitor?userId=${selectedUserId}&date=${record.date}`)}
                         >
                           <td className="p-4">
                             <div className="flex flex-col">
-                              <span className="text-sm font-bold text-slate-200">
+                              <span className="text-sm font-bold text-text-primary">
                                 {format(d, "MMM dd, yyyy")}
                               </span>
-                              <span className={`text-[10px] font-black uppercase tracking-widest ${isWeekend ? "text-orange-400" : "text-slate-500"}`}>
+                              <span className={`text-[10px] font-black uppercase tracking-widest ${isWeekend ? "text-orange-400" : "text-text-secondary"}`}>
                                 {format(d, "eeee")}
                               </span>
                             </div>
                           </td>
                           <td className="p-4">
-                            <span className="text-sm font-medium text-slate-300">
+                            <span className="text-sm font-medium text-text-secondary">
                               {record.workMs > 0 || record.checkInTime ? formatTime(record.checkInTime) : "---"}
                             </span>
                           </td>
                           <td className="p-4">
-                            <span className="text-sm font-medium text-slate-300">
+                            <span className="text-sm font-medium text-text-secondary">
                               {record.workMs > 0 || record.checkOutTime ? formatTime(record.checkOutTime) : "---"}
                             </span>
                           </td>
@@ -314,7 +314,7 @@ export default function EmployeeReportPage() {
 
           </div>
         ) : (
-          <div className="text-center py-20 text-slate-500">
+          <div className="text-center py-20 text-text-secondary">
             <Search className="h-12 w-12 mx-auto mb-4 opacity-20" />
             <p className="text-lg font-medium">No report data found.</p>
             <p className="text-sm">Please select a different month or employee.</p>

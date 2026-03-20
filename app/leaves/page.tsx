@@ -32,13 +32,13 @@ export default function LeavesPage() {
               <h1 className="font-display text-3xl font-bold text-emerald-400 lg:text-4xl">
                 Leave Management
               </h1>
-              <p className="mt-2 text-slate-400">
+              <p className="mt-2 text-text-secondary">
                 Manage your time off requests and team absences
               </p>
             </div>
-            <div className="rounded-xl border border-white/10 bg-slate-900/60 px-5 py-3 shadow-lg">
+            <div className="rounded-xl border border-border-color bg-bg-secondary/60 px-5 py-3 shadow-lg">
               <div className="font-semibold text-emerald-400">{userName}</div>
-              <div className="text-xs text-slate-500">
+              <div className="text-xs text-text-secondary">
                 {role === "admin" ? "Admin" : "Employee"}
               </div>
             </div>
@@ -50,7 +50,7 @@ export default function LeavesPage() {
           {/* Leave list section */}
           <section className="animate-fade-in-up">
             <LeaveBalanceCards />
-            <div className="mt-8 rounded-2xl border border-white/10 bg-slate-900/40 p-6 shadow-xl backdrop-blur-sm">
+            <div className="mt-8 rounded-2xl border border-border-color bg-bg-secondary/40 p-6 shadow-xl backdrop-blur-sm">
               <LeaveHistory role={role} onOpenApply={() => setOpen(true)} showApply={showApply} />
             </div>
           </section>
@@ -58,11 +58,11 @@ export default function LeavesPage() {
           {/* Apply for Leave sidebar */}
           {showApply && (
             <aside className="animate-fade-in-up lg:sticky lg:top-6 lg:self-start">
-              <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-6 shadow-xl backdrop-blur-sm">
-                <h2 className="font-display mb-6 border-b-2 border-white/10 pb-4 text-xl font-semibold text-emerald-400">
+              <div className="rounded-2xl border border-border-color bg-bg-secondary/40 p-6 shadow-xl backdrop-blur-sm">
+                <h2 className="font-display mb-6 border-b-2 border-border-color pb-4 text-xl font-semibold text-emerald-400">
                   Apply for Leave
                 </h2>
-                <p className="mb-6 text-sm text-slate-400">
+                <p className="mb-6 text-sm text-text-secondary">
                   Submit a new leave request. Your manager will be notified.
                 </p>
                 <button

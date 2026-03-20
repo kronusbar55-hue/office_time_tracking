@@ -34,25 +34,22 @@ export async function GET(request: Request) {
     if (!payload) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const userId = payload.sub;
-    const role = payload.role;
+
+    // Fetch latest user info from DB to avoid staleness issues with JWT roles
+    const currentUser = await User.findById(userId).select("role").lean() as any;
+    if (!currentUser) return NextResponse.json({ error: "User not found" }, { status: 401 });
+    const userRole = String(currentUser.role || "").toLowerCase();
 
     // Role-based visibility
-    if (role === "admin" || role === "hr") {
-      // admin and hr can see all (hr is view-only at API-level)
-    } else if (role === "manager") {
-      // Find projects where manager is a member
-      const projects = await Project.find({ members: userId }).select("_id").lean();
-      const projectIds = projects.map((p: any) => p._id);
-
-      // manager: tasks in their projects OR tasks they reported OR tasks assigned to their team
-      const team = await User.find({ manager: userId, isDeleted: false }).select("_id").lean();
-      const teamIds = team.map((t: any) => t._id.toString());
-      
-      query.$or = [
-        { project: { $in: projectIds } },
-        { reporter: userId },
-        { assignee: { $in: teamIds } }
-      ];
+    if (userRole === "admin" || userRole === "hr") {
+      // admin and hr can see all tasks everywhere
+      if (assignee) query.assignee = assignee;
+    } else if (userRole === "manager") {
+      // managers see all tasks within projects they are members of
+      const myProjects = await Project.find({ members: userId }).select("_id").lean();
+      const projectIds = myProjects.map(p => p._id);
+      query.project = { $in: projectIds };
+      if (assignee) query.assignee = assignee;
     } else {
       // employee: only tasks assigned to them
       query.assignee = userId;
@@ -60,7 +57,6 @@ export async function GET(request: Request) {
 
     if (project) query.project = project;
     if (status) query.status = status;
-    if (assignee) query.assignee = assignee;
     if (priority) query.priority = priority;
 
     if (search) {
@@ -92,11 +88,13 @@ export async function GET(request: Request) {
     // Augment with subtask stats
     const subtaskStats = await SubTask.aggregate([
       { $match: { parentTask: { $in: taskIds }, isDeleted: false } },
-      { $group: { 
-          _id: "$parentTask", 
+      {
+        $group: {
+          _id: "$parentTask",
           total: { $sum: 1 },
           done: { $sum: { $cond: [{ $eq: ["$status", "done"] }, 1, 0] } }
-      } }
+        }
+      }
     ]);
     const subtaskStatsMap = new Map(subtaskStats.map(s => [s._id.toString(), { total: s.total, done: s.done }]));
 
@@ -253,7 +251,7 @@ export async function POST(request: Request) {
       project,
       assignee: assignee || null,
       reporter,
-      status: "backlog",
+      status: fields.status || (assignee ? "todo" : "backlog"),
       dueDate: dueDate ? new Date(dueDate) : null,
       attachments
     });

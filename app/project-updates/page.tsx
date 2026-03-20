@@ -171,36 +171,36 @@ export default function ProjectUpdateModule() {
     const selectedUser = users.find(u => (u._id || u.id) === selectedUserId);
 
     return (
-        <div className="min-h-screen bg-[#0f172a] text-slate-200">
+        <div className="min-h-screen bg-[#0f172a] text-text-primary">
             {/* Header */}
-            <header className="border-b border-slate-800 bg-[#0f172a]/80 backdrop-blur-md sticky top-0 z-40">
+            <header className="border-b border-border-color bg-[#0f172a]/80 backdrop-blur-md sticky top-0 z-40">
                 <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <div className="h-10 w-10 rounded-xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400">
                             <Briefcase className="h-6 w-6" />
                         </div>
                         <h1 className="text-xl font-black bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent uppercase tracking-tighter">
-                            Project <span className="text-white">Updates</span>
+                            Project <span className="text-text-primary">Updates</span>
                         </h1>
                     </div>
 
                     {/* View Mode Switcher */}
-                    <div className="flex bg-slate-950 p-1 rounded-2xl border border-slate-800 backdrop-blur-md shadow-inner">
+                    <div className="flex bg-bg-primary p-1 rounded-2xl border border-border-color backdrop-blur-md shadow-inner">
                         <button 
                             onClick={() => setViewMode("feed")}
-                            className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'feed' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
+                            className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'feed' ? 'bg-blue-600 text-text-primary shadow-lg' : 'text-text-secondary hover:text-text-secondary'}`}
                         >
                             Feed View
                         </button>
                         <button 
                             onClick={() => setViewMode("project")}
-                            className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'project' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
+                            className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'project' ? 'bg-blue-600 text-text-primary shadow-lg' : 'text-text-secondary hover:text-text-secondary'}`}
                         >
                             By Project
                         </button>
                         <button 
                             onClick={() => setViewMode("user")}
-                            className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'user' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
+                            className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'user' ? 'bg-blue-600 text-text-primary shadow-lg' : 'text-text-secondary hover:text-text-secondary'}`}
                         >
                             By Employee
                         </button>
@@ -210,16 +210,16 @@ export default function ProjectUpdateModule() {
 
             <main className="max-w-7xl mx-auto p-6 space-y-6">
                 {/* Advanced Filters */}
-                <div className={`grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-900/40 p-6 rounded-3xl border border-slate-800 backdrop-blur-xl shadow-2xl relative transition-all ${showUserDropdown ? 'z-50 overflow-visible' : 'z-30 overflow-visible'}`}>
+                <div className={`grid grid-cols-1 md:grid-cols-3 gap-6 bg-bg-secondary/40 p-6 rounded-3xl border border-border-color backdrop-blur-xl shadow-2xl relative transition-all ${showUserDropdown ? 'z-50 overflow-visible' : 'z-30 overflow-visible'}`}>
                     {/* User Selector with Search */}
                     <div className={`space-y-2 relative transition-all ${showUserDropdown ? 'z-50' : 'z-0'}`} ref={userDropdownRef}>
-                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">Employee Search</label>
+                        <label className="text-[10px] font-black text-text-secondary uppercase tracking-widest pl-1">Employee Search</label>
                         <div
                             className="relative group cursor-pointer"
                             onClick={() => setShowUserDropdown(!showUserDropdown)}
                         >
-                            <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-hover:text-blue-400 transition-colors" />
-                            <div className="w-full pl-11 pr-4 py-3.5 bg-slate-950 border border-slate-800 rounded-2xl text-sm font-bold text-white group-hover:border-blue-500/50 transition-all">
+                            <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary group-hover:text-blue-400 transition-colors" />
+                            <div className="w-full pl-11 pr-4 py-3.5 bg-bg-primary border border-border-color rounded-2xl text-sm font-bold text-text-primary group-hover:border-blue-500/50 transition-all">
                                 {selectedUserId === "all" ? "All Employees" : (selectedUser ? `${selectedUser.firstName} ${selectedUser.lastName}` : "Select Employee")}
                             </div>
                         </div>
@@ -230,9 +230,9 @@ export default function ProjectUpdateModule() {
                                     initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                     animate={{ opacity: 1, y: 0, scale: 1 }}
                                     exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                    className="absolute top-full left-0 right-0 mt-2 p-2 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl z-50 overflow-hidden"
+                                    className="absolute top-full left-0 right-0 mt-2 p-2 bg-bg-secondary border border-border-color rounded-2xl shadow-2xl z-50 overflow-hidden"
                                 >
-                                    <div className="px-2 pt-1 pb-2 border-b border-slate-800 mb-2">
+                                    <div className="px-2 pt-1 pb-2 border-b border-border-color mb-2">
                                         <div className="relative">
                                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-600" />
                                             <input
@@ -241,13 +241,13 @@ export default function ProjectUpdateModule() {
                                                 value={userSearchText}
                                                 onChange={(e) => setUserSearchText(e.target.value)}
                                                 onClick={(e) => e.stopPropagation()}
-                                                className="w-full bg-slate-950/50 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs font-bold text-white focus:outline-none focus:border-blue-500"
+                                                className="w-full bg-bg-primary/50 border border-border-color rounded-xl pl-9 pr-4 py-2 text-xs font-bold text-text-primary focus:outline-none focus:border-blue-500"
                                             />
                                         </div>
                                     </div>
                                     <div className="space-y-1 max-h-[240px] overflow-y-auto pr-1">
                                         <button
-                                            className={`w-full p-3 rounded-xl text-left text-xs font-bold transition-all ${selectedUserId === 'all' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800'}`}
+                                            className={`w-full p-3 rounded-xl text-left text-xs font-bold transition-all ${selectedUserId === 'all' ? 'bg-blue-600 text-text-primary' : 'text-text-secondary hover:bg-card-bg'}`}
                                             onClick={() => { setSelectedUserId("all"); setShowUserDropdown(false); }}
                                         >
                                             All Employees
@@ -255,10 +255,10 @@ export default function ProjectUpdateModule() {
                                         {filteredUsers.map((u) => (
                                             <button
                                                 key={u._id || u.id}
-                                                className={`w-full p-3 rounded-xl text-left flex items-center gap-3 transition-all ${selectedUserId === (u._id || u.id) ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800'}`}
+                                                className={`w-full p-3 rounded-xl text-left flex items-center gap-3 transition-all ${selectedUserId === (u._id || u.id) ? 'bg-blue-600 text-text-primary' : 'text-text-secondary hover:bg-card-bg'}`}
                                                 onClick={() => { setSelectedUserId(u._id || u.id); setShowUserDropdown(false); setUserSearchText(""); }}
                                             >
-                                                <div className="h-6 w-6 rounded-lg bg-white/10 flex items-center justify-center overflow-hidden">
+                                                <div className="h-6 w-6 rounded-lg bg-hover-bg flex items-center justify-center overflow-hidden">
                                                     {u.avatarUrl ? <img src={u.avatarUrl} alt="" className="w-full h-full object-cover" /> : <UserIcon className="h-3 w-3" />}
                                                 </div>
                                                 <span className="text-xs font-bold">{u.firstName} {u.lastName}</span>
@@ -272,34 +272,34 @@ export default function ProjectUpdateModule() {
 
                     {/* Month Filter */}
                     <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">Month Period</label>
+                        <label className="text-[10px] font-black text-text-secondary uppercase tracking-widest pl-1">Month Period</label>
                         <div className="relative group">
-                            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-hover:text-blue-400 transition-colors" />
+                            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary group-hover:text-blue-400 transition-colors" />
                             <input
                                 type="month"
                                 value={selectedMonth}
                                 onChange={(e) => setSelectedMonth(e.target.value)}
-                                className="w-full pl-11 pr-4 py-3.5 bg-slate-950 border border-slate-800 rounded-2xl text-sm font-bold text-white focus:outline-none focus:border-blue-500/50 transition-all [color-scheme:dark]"
+                                className="w-full pl-11 pr-4 py-3.5 bg-bg-primary border border-border-color rounded-2xl text-sm font-bold text-text-primary focus:outline-none focus:border-blue-500/50 transition-all [color-scheme:dark]"
                             />
                         </div>
                     </div>
 
                     {/* Project Filter */}
                     <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">Target Project</label>
+                        <label className="text-[10px] font-black text-text-secondary uppercase tracking-widest pl-1">Target Project</label>
                         <div className="relative group">
-                            <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-hover:text-blue-400 transition-colors" />
+                            <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary group-hover:text-blue-400 transition-colors" />
                             <select
                                 value={selectedProjectId}
                                 onChange={(e) => setSelectedProjectId(e.target.value)}
-                                className="w-full pl-11 pr-10 py-3.5 bg-slate-950 border border-slate-800 rounded-2xl text-sm font-bold text-white focus:outline-none focus:border-blue-500/50 transition-all appearance-none cursor-pointer"
+                                className="w-full pl-11 pr-10 py-3.5 bg-bg-primary border border-border-color rounded-2xl text-sm font-bold text-text-primary focus:outline-none focus:border-blue-500/50 transition-all appearance-none cursor-pointer"
                             >
                                 <option value="all">All Projects</option>
                                 {projects.map((p) => (
                                     <option key={p._id || p.id} value={p._id || p.id}>{p.name}</option>
                                 ))}
                             </select>
-                            <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 pointer-events-none rotate-90" />
+                            <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary pointer-events-none rotate-90" />
                         </div>
                     </div>
                 </div>
@@ -311,29 +311,29 @@ export default function ProjectUpdateModule() {
                             <motion.div 
                                 key="loading"
                                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                                className="bg-slate-900/40 rounded-3xl border border-slate-800 p-12 flex flex-col items-center justify-center space-y-4"
+                                className="bg-bg-secondary/40 rounded-3xl border border-border-color p-12 flex flex-col items-center justify-center space-y-4"
                             >
                                 <div className="h-12 w-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
-                                <p className="text-sm font-black text-slate-500 uppercase tracking-widest">Compiling Activities...</p>
+                                <p className="text-sm font-black text-text-secondary uppercase tracking-widest">Compiling Activities...</p>
                             </motion.div>
                         ) : updates.length === 0 ? (
                             <motion.div 
                                 key="empty"
                                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                                className="bg-slate-900/40 rounded-3xl border border-slate-800 p-20 text-center"
+                                className="bg-bg-secondary/40 rounded-3xl border border-border-color p-20 text-center"
                             >
                                 <div className="flex flex-col items-center justify-center opacity-40">
                                     <Search className="h-16 w-16 mb-4 text-slate-600" />
                                     {selectedUserId === "all" && selectedProjectId === "all" ? (
                                         <>
                                             <p className="text-lg font-black uppercase tracking-widest">Ready to Search</p>
-                                            <p className="text-sm font-medium text-slate-500 mt-2">Please select an employee or project to view updates.</p>
+                                            <p className="text-sm font-medium text-text-secondary mt-2">Please select an employee or project to view updates.</p>
                                         </>
                                     ) : (
                                         <>
                                             <SearchX className="h-16 w-16 mb-4 text-slate-600" />
                                             <p className="text-lg font-black uppercase tracking-widest">No Updates Found</p>
-                                            <p className="text-sm font-medium text-slate-500 mt-2">Try adjusting your filters or selecting a different month.</p>
+                                            <p className="text-sm font-medium text-text-secondary mt-2">Try adjusting your filters or selecting a different month.</p>
                                         </>
                                     )}
                                 </div>
@@ -342,25 +342,25 @@ export default function ProjectUpdateModule() {
                             <motion.div 
                                 key="feed"
                                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
-                                className="bg-slate-900/40 rounded-3xl border border-slate-800 overflow-hidden backdrop-blur-xl shadow-2xl"
+                                className="bg-bg-secondary/40 rounded-3xl border border-border-color overflow-hidden backdrop-blur-xl shadow-2xl"
                             >
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-left border-collapse">
                                         <thead>
-                                            <tr className="bg-slate-950/80 border-b border-slate-800">
-                                                <th className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-500 w-[180px]">Date & Time</th>
-                                                <th className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-500 w-[220px]">Employee</th>
-                                                <th className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-500">Project Updates</th>
-                                                <th className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-500 text-right w-[120px]">Hours</th>
+                                            <tr className="bg-bg-primary/80 border-b border-border-color">
+                                                <th className="p-6 text-[10px] font-black uppercase tracking-widest text-text-secondary w-[180px]">Date & Time</th>
+                                                <th className="p-6 text-[10px] font-black uppercase tracking-widest text-text-secondary w-[220px]">Employee</th>
+                                                <th className="p-6 text-[10px] font-black uppercase tracking-widest text-text-secondary">Project Updates</th>
+                                                <th className="p-6 text-[10px] font-black uppercase tracking-widest text-text-secondary text-right w-[120px]">Hours</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-800/50">
                                             {updates.map((record) => (
-                                                <tr key={record._id} className="group hover:bg-slate-800/20 transition-all">
+                                                <tr key={record._id} className="group hover:bg-card-bg/20 transition-all">
                                                     <td className="p-6">
                                                         <div className="flex flex-col">
-                                                            <span className="text-sm font-bold text-white">{format(parseISO(record.date), "MMM dd, yyyy")}</span>
-                                                            <div className="flex items-center gap-1.5 text-[9px] font-black text-slate-500 mt-1 uppercase tracking-tighter">
+                                                            <span className="text-sm font-bold text-text-primary">{format(parseISO(record.date), "MMM dd, yyyy")}</span>
+                                                            <div className="flex items-center gap-1.5 text-[9px] font-black text-text-secondary mt-1 uppercase tracking-tighter">
                                                                 <Clock className="h-2.5 w-2.5" />
                                                                 {record.time}
                                                             </div>
@@ -368,7 +368,7 @@ export default function ProjectUpdateModule() {
                                                     </td>
                                                     <td className="p-6">
                                                         <div className="flex items-center gap-3">
-                                                            <div className="h-9 w-9 rounded-xl bg-slate-950 border border-slate-800 overflow-hidden flex items-center justify-center ring-2 ring-transparent group-hover:ring-blue-500/30 transition-all">
+                                                            <div className="h-9 w-9 rounded-xl bg-bg-primary border border-border-color overflow-hidden flex items-center justify-center ring-2 ring-transparent group-hover:ring-blue-500/30 transition-all">
                                                                 {record.user?.avatarUrl ? (
                                                                     <img src={record.user.avatarUrl} alt="" className="w-full h-full object-cover" />
                                                                 ) : (
@@ -376,7 +376,7 @@ export default function ProjectUpdateModule() {
                                                                 )}
                                                             </div>
                                                             <div className="flex flex-col">
-                                                                <span className="text-sm font-bold text-slate-300 group-hover:text-blue-400 transition-colors">
+                                                                <span className="text-sm font-bold text-text-secondary group-hover:text-blue-400 transition-colors">
                                                                     {record.userName}
                                                                 </span>
                                                                 <span className="text-[8px] font-black text-slate-600 uppercase tracking-tighter">ID: {record.userId.slice(-6).toUpperCase()}</span>
@@ -391,7 +391,7 @@ export default function ProjectUpdateModule() {
                                                                         <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest">{p.projectName}</span>
                                                                         <span className="text-[9px] font-bold text-slate-600">#{p.projectId.slice(-6).toUpperCase()}</span>
                                                                     </div>
-                                                                    <p className="text-sm text-slate-300 font-medium leading-relaxed italic">
+                                                                    <p className="text-sm text-text-secondary font-medium leading-relaxed italic">
                                                                         &quot;{p.update}&quot;
                                                                     </p>
                                                                 </div>
@@ -400,8 +400,8 @@ export default function ProjectUpdateModule() {
                                                     </td>
                                                     <td className="p-6 text-right">
                                                         <div className="flex flex-col items-end">
-                                                            <span className="text-base font-black text-white">{record.projects.reduce((acc, p) => acc + (p.hoursWorked || 0), 0)}</span>
-                                                            <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Hrs Logged</span>
+                                                            <span className="text-base font-black text-text-primary">{record.projects.reduce((acc, p) => acc + (p.hoursWorked || 0), 0)}</span>
+                                                            <span className="text-[8px] font-black text-text-secondary uppercase tracking-widest">Hrs Logged</span>
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -429,21 +429,21 @@ export default function ProjectUpdateModule() {
                                     const totalHours = groupUpdates.reduce((acc, r) => acc + r.projects.reduce((pa, p) => pa + p.hoursWorked, 0), 0);
                                     
                                     return (
-                                        <div key={groupName} className="bg-slate-900/40 rounded-3xl border border-slate-800 overflow-hidden backdrop-blur-xl shadow-xl">
-                                            <div className="bg-slate-950/50 px-6 py-4 border-b border-slate-800 flex items-center justify-between">
+                                        <div key={groupName} className="bg-bg-secondary/40 rounded-3xl border border-border-color overflow-hidden backdrop-blur-xl shadow-xl">
+                                            <div className="bg-bg-primary/50 px-6 py-4 border-b border-border-color flex items-center justify-between">
                                                 <div className="flex items-center gap-4">
                                                     <div className="h-8 w-8 rounded-lg bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
                                                         {viewMode === "project" ? <Briefcase className="h-4 w-4" /> : <UserIcon className="h-4 w-4" />}
                                                     </div>
                                                     <div>
-                                                        <h3 className="text-sm font-black text-white uppercase tracking-widest">{groupName}</h3>
-                                                        <p className="text-[10px] font-bold text-slate-500">{groupUpdates.length} update sessions detected</p>
+                                                        <h3 className="text-sm font-black text-text-primary uppercase tracking-widest">{groupName}</h3>
+                                                        <p className="text-[10px] font-bold text-text-secondary">{groupUpdates.length} update sessions detected</p>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-3">
                                                     <div className="text-right">
                                                         <div className="text-lg font-black text-blue-400 leading-none">{totalHours.toFixed(1)}</div>
-                                                        <div className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Total Hours</div>
+                                                        <div className="text-[8px] font-black text-text-secondary uppercase tracking-widest">Total Hours</div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -451,31 +451,31 @@ export default function ProjectUpdateModule() {
                                                 {groupUpdates.map((record) => (
                                                     <div key={record._id} className="flex gap-6 items-start">
                                                         <div className="flex flex-col items-center pt-1 min-w-[60px]">
-                                                            <span className="text-[10px] font-black text-white uppercase">{format(parseISO(record.date), "MMM dd")}</span>
-                                                            <span className="text-[9px] font-bold text-slate-500">{record.time}</span>
+                                                            <span className="text-[10px] font-black text-text-primary uppercase">{format(parseISO(record.date), "MMM dd")}</span>
+                                                            <span className="text-[9px] font-bold text-text-secondary">{record.time}</span>
                                                         </div>
                                                         <div className="flex-1 space-y-3">
                                                             {record.projects.map((p, idx) => (
-                                                                <div key={idx} className="bg-slate-950/30 p-4 rounded-2xl border border-slate-800/50 hover:border-blue-500/20 transition-all">
+                                                                <div key={idx} className="bg-bg-primary/30 p-4 rounded-2xl border border-border-color/50 hover:border-blue-500/20 transition-all">
                                                                     <div className="flex items-center justify-between mb-2">
                                                                         <div className="flex items-center gap-2">
                                                                             {viewMode === "project" && (
                                                                                 <div className="flex items-center gap-2">
-                                                                                    <div className="h-5 w-5 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-[8px] font-bold text-blue-400 overflow-hidden">
+                                                                                    <div className="h-5 w-5 rounded-full bg-card-bg border border-border-color flex items-center justify-center text-[8px] font-bold text-blue-400 overflow-hidden">
                                                                                         {record.user?.avatarUrl ? <img src={record.user.avatarUrl} alt="" /> : record.userName.charAt(0)}
                                                                                     </div>
-                                                                                    <span className="text-[10px] font-bold text-slate-400">{record.userName}</span>
+                                                                                    <span className="text-[10px] font-bold text-text-secondary">{record.userName}</span>
                                                                                 </div>
                                                                             )}
                                                                             {viewMode === "user" && (
                                                                                 <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest">{p.projectName}</span>
                                                                             )}
                                                                         </div>
-                                                                        <div className="text-[10px] font-black text-slate-400 group-hover:text-blue-400 transition-colors uppercase">
+                                                                        <div className="text-[10px] font-black text-text-secondary group-hover:text-blue-400 transition-colors uppercase">
                                                                             {p.hoursWorked} hrs
                                                                         </div>
                                                                     </div>
-                                                                    <p className="text-sm text-slate-300 font-medium italic border-l-2 border-slate-700 pl-4 py-1 leading-relaxed">
+                                                                    <p className="text-sm text-text-secondary font-medium italic border-l-2 border-border-color pl-4 py-1 leading-relaxed">
                                                                         &quot;{p.update}&quot;
                                                                     </p>
                                                                 </div>
@@ -493,15 +493,15 @@ export default function ProjectUpdateModule() {
 
                     {/* Pagination */}
                     {pagination.total > 0 && !loading && (
-                        <div className="mt-8 p-6 bg-slate-900/40 rounded-3xl border border-slate-800 flex items-center justify-between backdrop-blur-xl shadow-xl">
-                            <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                                Showing <span className="text-white">{(pagination.page - 1) * pagination.limit + 1} - {Math.min(pagination.page * pagination.limit, pagination.total)}</span> of <span className="text-white">{pagination.total}</span> entries
+                        <div className="mt-8 p-6 bg-bg-secondary/40 rounded-3xl border border-border-color flex items-center justify-between backdrop-blur-xl shadow-xl">
+                            <div className="text-[10px] font-black text-text-secondary uppercase tracking-widest">
+                                Showing <span className="text-text-primary">{(pagination.page - 1) * pagination.limit + 1} - {Math.min(pagination.page * pagination.limit, pagination.total)}</span> of <span className="text-text-primary">{pagination.total}</span> entries
                             </div>
                             <div className="flex items-center gap-2">
                                 <button
                                     onClick={() => fetchUpdates(pagination.page - 1)}
                                     disabled={pagination.page <= 1 || loading}
-                                    className="p-2 rounded-xl border border-slate-800 text-slate-400 hover:bg-slate-800 disabled:opacity-30 disabled:hover:bg-transparent transition-all"
+                                    className="p-2 rounded-xl border border-border-color text-text-secondary hover:bg-card-bg disabled:opacity-30 disabled:hover:bg-transparent transition-all"
                                 >
                                     <ChevronLeft className="h-5 w-5" />
                                 </button>
@@ -519,7 +519,7 @@ export default function ProjectUpdateModule() {
                                             <button
                                                 key={i}
                                                 onClick={() => fetchUpdates(pageNum)}
-                                                className={`h-9 w-9 rounded-xl border text-[10px] font-black transition-all ${pagination.page === pageNum ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/20 scale-110' : 'border-slate-800 text-slate-500 hover:bg-slate-800'}`}
+                                                className={`h-9 w-9 rounded-xl border text-[10px] font-black transition-all ${pagination.page === pageNum ? 'bg-blue-600 border-blue-500 text-text-primary shadow-lg shadow-blue-500/20 scale-110' : 'border-border-color text-text-secondary hover:bg-card-bg'}`}
                                             >
                                                 {pageNum}
                                             </button>
@@ -530,7 +530,7 @@ export default function ProjectUpdateModule() {
                                 <button
                                     onClick={() => fetchUpdates(pagination.page + 1)}
                                     disabled={pagination.page >= pagination.pages || loading}
-                                    className="p-2 rounded-xl border border-slate-800 text-slate-400 hover:bg-slate-800 disabled:opacity-30 disabled:hover:bg-transparent transition-all"
+                                    className="p-2 rounded-xl border border-border-color text-text-secondary hover:bg-card-bg disabled:opacity-30 disabled:hover:bg-transparent transition-all"
                                 >
                                     <ChevronRight className="h-5 w-5" />
                                 </button>

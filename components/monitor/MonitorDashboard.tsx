@@ -149,7 +149,7 @@ export default function MonitorDashboard() {
             {/* Main Content Area */}
             <div className="flex-1 space-y-6">
                 {/* Header Filter Bar */}
-                <div className="bg-slate-900/60 p-6 rounded-2xl border border-white/10 backdrop-blur-md shadow-2xl relative z-50">
+                <div className="bg-bg-secondary/60 p-6 rounded-2xl border border-border-color backdrop-blur-md shadow-2xl relative z-50">
                     <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none">
                         <div className="absolute top-0 right-0 w-64 h-64 bg-accent/5 rounded-full blur-3xl -mr-32 -mt-32" />
                     </div>
@@ -161,19 +161,19 @@ export default function MonitorDashboard() {
                                     <Monitor className="h-7 w-7 text-accent" />
                                 </div>
                                 <div>
-                                    <h1 className="text-3xl font-black text-white tracking-tighter uppercase">
+                                    <h1 className="text-3xl font-black text-text-primary tracking-tighter uppercase">
                                         Monitor <span className="text-accent">Center</span>
                                     </h1>
-                                    <p className="text-slate-500 text-[10px] mt-1 font-bold uppercase tracking-[0.3em]">Activity Insight Dashboard</p>
+                                    <p className="text-text-secondary text-[10px] mt-1 font-bold uppercase tracking-[0.3em]">Activity Insight Dashboard</p>
                                 </div>
                             </div>
 
                             {selectedUserData && (
-                                <div className="mt-4 inline-flex items-center gap-3 bg-black/20 px-3 py-1.5 rounded-xl border border-white/5 animate-in slide-in-from-left duration-300">
+                                <div className="mt-4 inline-flex items-center gap-3 bg-black/20 px-3 py-1.5 rounded-xl border border-border-color animate-in slide-in-from-left duration-300">
                                     <div className="h-6 w-6 rounded bg-accent/20 flex items-center justify-center text-[10px] font-black text-accent uppercase">
                                         {selectedUserData.firstName?.[0]}{selectedUserData.lastName?.[0]}
                                     </div>
-                                    <span className="text-xs font-black text-white uppercase tracking-wider">{selectedUserData.firstName} {selectedUserData.lastName}</span>
+                                    <span className="text-xs font-black text-text-primary uppercase tracking-wider">{selectedUserData.firstName} {selectedUserData.lastName}</span>
                                 </div>
                             )}
                         </div>
@@ -184,7 +184,7 @@ export default function MonitorDashboard() {
                                 <div className="relative">
                                     <button
                                         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                        className="flex items-center gap-2 bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-xs font-bold text-white focus:outline-none focus:ring-1 focus:ring-accent/50 transition-all cursor-pointer hover:bg-slate-800 shadow-inner min-w-[220px] justify-between"
+                                        className="flex items-center gap-2 bg-black/40 border border-border-color rounded-xl px-4 py-2 text-xs font-bold text-text-primary focus:outline-none focus:ring-1 focus:ring-accent/50 transition-all cursor-pointer hover:bg-card-bg shadow-inner min-w-[220px] justify-between"
                                     >
                                         <div className="flex items-center gap-2 truncate">
                                             {selectedUserId !== "all" && selectedUserData && (
@@ -196,7 +196,7 @@ export default function MonitorDashboard() {
                                                 {selectedUserId === "all" ? "Select Employee..." : selectedUserData ? `${selectedUserData.firstName} ${selectedUserData.lastName}` : "Select Employee..."}
                                             </span>
                                         </div>
-                                        <Search className="h-3 w-3 text-slate-500 shrink-0" />
+                                        <Search className="h-3 w-3 text-text-secondary shrink-0" />
                                     </button>
 
                                     <AnimatePresence>
@@ -205,12 +205,12 @@ export default function MonitorDashboard() {
                                                 initial={{ opacity: 0, y: 5 }}
                                                 animate={{ opacity: 1, y: 0 }}
                                                 exit={{ opacity: 0, y: 5 }}
-                                                className="absolute top-full right-0 md:left-0 md:right-auto mt-2 w-72 bg-slate-900 border border-white/10 rounded-xl shadow-2xl z-[100] overflow-hidden backdrop-blur-xl"
+                                                className="absolute top-full right-0 md:left-0 md:right-auto mt-2 w-72 bg-bg-secondary border border-border-color rounded-xl shadow-2xl z-[100] overflow-hidden backdrop-blur-xl"
                                                 onMouseLeave={() => setIsDropdownOpen(false)}
                                             >
-                                                <div className="p-3 border-b border-white/10 bg-black/20">
+                                                <div className="p-3 border-b border-border-color bg-black/20">
                                                     <div className="relative">
-                                                        <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500" />
+                                                        <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-text-secondary" />
                                                         <input
                                                             type="text"
                                                             placeholder="Search employees..."
@@ -219,14 +219,14 @@ export default function MonitorDashboard() {
                                                                 setUserSearchQuery(e.target.value);
                                                                 setUserPage(1);
                                                             }}
-                                                            className="w-full bg-black/40 border border-white/10 rounded-lg pl-8 pr-3 py-2 text-xs font-bold text-white placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-accent/50 transition-all shadow-inner"
+                                                            className="w-full bg-black/40 border border-border-color rounded-lg pl-8 pr-3 py-2 text-xs font-bold text-text-primary placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-accent/50 transition-all shadow-inner"
                                                         />
                                                     </div>
                                                 </div>
 
                                                 <div className="max-h-60 overflow-y-auto p-2 space-y-1">
                                                     {allUsers.length === 0 ? (
-                                                        <div className="py-4 text-center text-slate-500 text-xs italic">No employees found</div>
+                                                        <div className="py-4 text-center text-text-secondary text-xs italic">No employees found</div>
                                                     ) : (
                                                         allUsers.map((u: any) => (
                                                             <button
@@ -236,9 +236,9 @@ export default function MonitorDashboard() {
                                                                     if (!selectedDate) setSelectedDate(new Date().toISOString().split('T')[0]);
                                                                     setIsDropdownOpen(false);
                                                                 }}
-                                                                className={`w-full flex items-center gap-3 p-2 rounded-lg transition-all text-left group ${selectedUserId === u.id ? "bg-accent/20 text-accent" : "hover:bg-white/5 text-slate-300"}`}
+                                                                className={`w-full flex items-center gap-3 p-2 rounded-lg transition-all text-left group ${selectedUserId === u.id ? "bg-accent/20 text-accent" : "hover:bg-hover-bg text-text-secondary"}`}
                                                             >
-                                                                <div className={`h-6 w-6 rounded overflow-hidden shrink-0 flex items-center justify-center text-[8px] font-bold ${selectedUserId === u.id ? "bg-accent/10 border border-accent/20" : "bg-slate-800"}`}>
+                                                                <div className={`h-6 w-6 rounded overflow-hidden shrink-0 flex items-center justify-center text-[8px] font-bold ${selectedUserId === u.id ? "bg-accent/10 border border-accent/20" : "bg-card-bg"}`}>
                                                                     {u.avatarUrl ? <img src={u.avatarUrl} alt="" className="h-full w-full object-cover" /> : `${u.firstName?.[0] || ""}${u.lastName?.[0] || ""}`.toUpperCase()}
                                                                 </div>
                                                                 <div className="min-w-0 flex-1">
@@ -250,19 +250,19 @@ export default function MonitorDashboard() {
                                                 </div>
 
                                                 {totalUserPages > 1 && (
-                                                    <div className="flex items-center justify-between p-2 border-t border-white/10 bg-black/20">
+                                                    <div className="flex items-center justify-between p-2 border-t border-border-color bg-black/20">
                                                         <button
                                                             onClick={() => setUserPage(p => Math.max(1, p - 1))}
                                                             disabled={userPage === 1}
-                                                            className="p-1 rounded bg-slate-800 text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                                                            className="p-1 rounded bg-card-bg text-text-secondary hover:text-text-primary disabled:opacity-30 disabled:cursor-not-allowed"
                                                         >
                                                             <Move className="h-3 w-3 rotate-180" />
                                                         </button>
-                                                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">{userPage} / {totalUserPages}</span>
+                                                        <span className="text-[9px] font-bold text-text-secondary uppercase tracking-widest">{userPage} / {totalUserPages}</span>
                                                         <button
                                                             onClick={() => setUserPage(p => Math.min(totalUserPages, p + 1))}
                                                             disabled={userPage === totalUserPages}
-                                                            className="p-1 rounded bg-slate-800 text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                                                            className="p-1 rounded bg-card-bg text-text-secondary hover:text-text-primary disabled:opacity-30 disabled:cursor-not-allowed"
                                                         >
                                                             <Move className="h-3 w-3" />
                                                         </button>
@@ -280,24 +280,24 @@ export default function MonitorDashboard() {
                                     type="date"
                                     disabled={!selectedUserId || selectedUserId === "all"}
                                     title={(!selectedUserId || selectedUserId === "all") ? "Please select an employee first" : "Select date"}
-                                    className={`bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-xs font-bold text-white focus:outline-none focus:ring-1 focus:ring-accent/50 transition-all cursor-pointer hover:bg-slate-800 [color-scheme:dark] shadow-inner ${(!selectedUserId || selectedUserId === "all") ? "opacity-30 cursor-not-allowed grayscale" : ""}`}
+                                    className={`bg-black/40 border border-border-color rounded-xl px-4 py-2 text-xs font-bold text-text-primary focus:outline-none focus:ring-1 focus:ring-accent/50 transition-all cursor-pointer hover:bg-card-bg [color-scheme:dark] shadow-inner ${(!selectedUserId || selectedUserId === "all") ? "opacity-30 cursor-not-allowed grayscale" : ""}`}
                                     value={selectedDate}
                                     onChange={(e) => setSelectedDate(e.target.value)}
                                 />
                             </div>
 
-                            <div className="h-6 w-[1px] bg-white/10 mx-1 hidden sm:block" />
+                            <div className="h-6 w-[1px] bg-hover-bg mx-1 hidden sm:block" />
 
-                            <div className="flex items-center bg-black/40 border border-white/10 rounded-xl p-1 shadow-inner">
+                            <div className="flex items-center bg-black/40 border border-border-color rounded-xl p-1 shadow-inner">
                                 <button
                                     onClick={() => setViewMode("grid")}
-                                    className={`p-1.5 rounded-lg transition-all ${viewMode === "grid" ? "bg-accent text-slate-950 shadow-md" : "text-slate-500 hover:text-slate-300"}`}
+                                    className={`p-1.5 rounded-lg transition-all ${viewMode === "grid" ? "bg-accent text-slate-950 shadow-md" : "text-text-secondary hover:text-text-secondary"}`}
                                 >
                                     <Grid className="h-4 w-4" />
                                 </button>
                                 <button
                                     onClick={() => setViewMode("list")}
-                                    className={`p-1.5 rounded-lg transition-all ${viewMode === "list" ? "bg-accent text-slate-950 shadow-md" : "text-slate-500 hover:text-slate-300"}`}
+                                    className={`p-1.5 rounded-lg transition-all ${viewMode === "list" ? "bg-accent text-slate-950 shadow-md" : "text-text-secondary hover:text-text-secondary"}`}
                                 >
                                     <List className="h-4 w-4" />
                                 </button>
@@ -306,7 +306,7 @@ export default function MonitorDashboard() {
                             <button
                                 onClick={() => setShowTimeline(!showTimeline)}
                                 disabled={!selectedUserId || selectedUserId === "all" || !selectedDate}
-                                className={`h-10 px-4 rounded-xl border transition-all flex items-center gap-2 group ${showTimeline ? 'bg-accent text-slate-950 border-accent shadow-lg shadow-accent/20' : 'bg-black/40 border-white/10 text-slate-400 hover:bg-accent hover:text-slate-950 disabled:opacity-20 disabled:cursor-not-allowed'}`}
+                                className={`h-10 px-4 rounded-xl border transition-all flex items-center gap-2 group ${showTimeline ? 'bg-accent text-slate-950 border-accent shadow-lg shadow-accent/20' : 'bg-black/40 border-border-color text-text-secondary hover:bg-accent hover:text-slate-950 disabled:opacity-20 disabled:cursor-not-allowed'}`}
                             >
                                 <Activity className="h-4 w-4" />
                                 <span className="text-[10px] font-black uppercase tracking-widest">Timeline</span>
@@ -314,7 +314,7 @@ export default function MonitorDashboard() {
 
                             <button
                                 onClick={fetchMonitorData}
-                                className="h-10 w-10 flex items-center justify-center rounded-xl bg-black/40 border border-white/10 text-slate-400 hover:bg-accent hover:text-slate-950 transition-all group shadow-inner"
+                                className="h-10 w-10 flex items-center justify-center rounded-xl bg-black/40 border border-border-color text-text-secondary hover:bg-accent hover:text-slate-950 transition-all group shadow-inner"
                             >
                                 <RefreshCcw className={`h-4 w-4 ${loading ? "animate-spin" : "group-hover:rotate-180 transition-transform duration-500"}`} />
                             </button>
@@ -339,7 +339,7 @@ export default function MonitorDashboard() {
                 {loading && employees.length === 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
                         {[...Array(5)].map((_, i) => (
-                            <div key={i} className="aspect-video rounded-3xl bg-slate-900/40 animate-pulse border border-white/5" />
+                            <div key={i} className="aspect-video rounded-3xl bg-bg-secondary/40 animate-pulse border border-border-color" />
                         ))}
                     </div>
                 ) : (
@@ -352,13 +352,13 @@ export default function MonitorDashboard() {
                                 // Skeleton placeholders while loading
                                 [...Array(5)].map((_, i) => (
                                     viewMode === "grid" ? (
-                                        <div key={i} className="aspect-video rounded-3xl bg-slate-900/40 animate-pulse border border-white/5" />
+                                        <div key={i} className="aspect-video rounded-3xl bg-bg-secondary/40 animate-pulse border border-border-color" />
                                     ) : (
-                                        <div key={i} className="flex items-center gap-4 p-4 bg-slate-900/40 rounded-2xl animate-pulse border border-white/5">
-                                            <div className="w-12 h-12 bg-slate-800 rounded-full" />
+                                        <div key={i} className="flex items-center gap-4 p-4 bg-bg-secondary/40 rounded-2xl animate-pulse border border-border-color">
+                                            <div className="w-12 h-12 bg-card-bg rounded-full" />
                                             <div className="flex-1 space-y-2">
-                                                <div className="h-4 bg-slate-800 rounded w-3/4" />
-                                                <div className="h-3 bg-slate-800 rounded w-1/2" />
+                                                <div className="h-4 bg-card-bg rounded w-3/4" />
+                                                <div className="h-3 bg-card-bg rounded w-1/2" />
                                             </div>
                                         </div>
                                     )
@@ -376,11 +376,11 @@ export default function MonitorDashboard() {
                         </div>
 
                         {employees.length === 0 && (
-                            <div className="col-span-full flex flex-col items-center justify-center py-32 text-slate-500 bg-slate-900/10 rounded-[3rem] border border-dashed border-white/5 backdrop-blur-sm">
-                                <div className="h-24 w-24 bg-slate-900/40 rounded-full flex items-center justify-center mb-6 border border-white/5">
+                            <div className="col-span-full flex flex-col items-center justify-center py-32 text-text-secondary bg-bg-secondary/10 rounded-[3rem] border border-dashed border-border-color backdrop-blur-sm">
+                                <div className="h-24 w-24 bg-bg-secondary/40 rounded-full flex items-center justify-center mb-6 border border-border-color">
                                     <Monitor className="h-10 w-10 opacity-10" />
                                 </div>
-                                <h3 className="text-xl font-bold text-white/50 mb-2">No Records Found</h3>
+                                <h3 className="text-xl font-bold text-text-primary/50 mb-2">No Records Found</h3>
                                 <p className="text-slate-600 max-w-xs text-center text-sm">
                                     {(!selectedUserId || selectedUserId === "all")
                                         ? "Select an employee from the sidebar to view their activity log."
@@ -396,23 +396,23 @@ export default function MonitorDashboard() {
 
             {/* Pagination Controls */}
             {!loading && totalPages > 1 && (
-                <div className="flex items-center justify-between bg-black/40 p-5 rounded-2xl border border-white/5 backdrop-blur-sm shadow-xl">
-                    <div className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em]">
-                        Page <span className="text-white">{page}</span> of <span className="text-white">{totalPages}</span>
+                <div className="flex items-center justify-between bg-black/40 p-5 rounded-2xl border border-border-color backdrop-blur-sm shadow-xl">
+                    <div className="text-[10px] text-text-secondary font-black uppercase tracking-[0.2em]">
+                        Page <span className="text-text-primary">{page}</span> of <span className="text-text-primary">{totalPages}</span>
                         <span className="ml-3 text-accent opacity-60">Results: {totalActiveRecords}</span>
                     </div>
                     <div className="flex items-center gap-2">
                         <button
                             onClick={() => setPage(p => Math.max(1, p - 1))}
                             disabled={page === 1}
-                            className="h-9 px-4 rounded-xl bg-slate-900 border border-white/10 text-slate-300 hover:bg-accent hover:text-slate-950 disabled:opacity-20 disabled:cursor-not-allowed transition-all text-xs font-black uppercase tracking-widest"
+                            className="h-9 px-4 rounded-xl bg-bg-secondary border border-border-color text-text-secondary hover:bg-accent hover:text-slate-950 disabled:opacity-20 disabled:cursor-not-allowed transition-all text-xs font-black uppercase tracking-widest"
                         >
                             Previous
                         </button>
                         <button
                             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                             disabled={page === totalPages}
-                            className="h-9 px-4 rounded-xl bg-slate-900 border border-white/10 text-slate-300 hover:bg-accent hover:text-slate-950 disabled:opacity-20 disabled:cursor-not-allowed transition-all text-xs font-black uppercase tracking-widest"
+                            className="h-9 px-4 rounded-xl bg-bg-secondary border border-border-color text-text-secondary hover:bg-accent hover:text-slate-950 disabled:opacity-20 disabled:cursor-not-allowed transition-all text-xs font-black uppercase tracking-widest"
                         >
                             Next
                         </button>

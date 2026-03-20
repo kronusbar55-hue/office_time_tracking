@@ -63,25 +63,25 @@ export default function KanbanPage() {
                                 <Zap className="h-6 w-6 shadow-[0_0_15px_rgba(var(--accent-rgb),0.3)]" />
                             </div>
                             <div>
-                                <h2 className="text-2xl font-black text-white uppercase tracking-tighter">
+                                <h2 className="text-2xl font-black text-text-primary uppercase tracking-tighter">
                                     Kanban <span className="text-accent underline decoration-accent/30">Board</span>
                                 </h2>
                                 <div className="flex items-center gap-2 mt-1">
-                                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.3em]">
+                                    <span className="text-[10px] text-text-secondary font-bold uppercase tracking-[0.3em]">
                                         Project Management
                                     </span>
                                     <div className="h-1 w-1 rounded-full bg-slate-700" />
                                     <div className="relative group">
-                                        <button className="flex items-center gap-1.5 text-[10px] text-accent font-black uppercase tracking-widest hover:text-white transition-colors">
+                                        <button className="flex items-center gap-1.5 text-[10px] text-accent font-black uppercase tracking-widest hover:text-text-primary transition-colors">
                                             {selectedProject?.name || "Select Project"}
                                             <ChevronDown size={10} />
                                         </button>
-                                        <div className="absolute top-full left-0 mt-2 w-56 p-2 bg-slate-900/90 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                                        <div className="absolute top-full left-0 mt-2 w-56 p-2 bg-bg-secondary/90 backdrop-blur-xl border border-border-color rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
                                             {projects.map(p => (
                                                 <button
                                                     key={p.id}
                                                     onClick={() => setSelectedProjectId(p.id)}
-                                                    className="w-full text-left p-2 rounded-lg hover:bg-accent/10 text-[10px] font-bold text-white uppercase tracking-widest transition-colors"
+                                                    className="w-full text-left p-2 rounded-lg hover:bg-accent/10 text-[10px] font-bold text-text-primary uppercase tracking-widest transition-colors"
                                                 >
                                                     {p.name}
                                                 </button>
@@ -93,22 +93,22 @@ export default function KanbanPage() {
                         </div>
 
                         <div className="flex items-center gap-3">
-                            <div className="flex h-10 items-center gap-1 bg-slate-900/50 p-1 border border-white/5 rounded-xl">
+                            <div className="flex h-10 items-center gap-1 bg-bg-secondary/50 p-1 border border-border-color rounded-xl">
                                 <button
                                     onClick={() => setViewMode("kanban")}
-                                    className={`p-2 rounded-lg transition-all ${viewMode === "kanban" ? "bg-accent text-slate-950" : "text-slate-500 hover:text-white"}`}
+                                    className={`p-2 rounded-lg transition-all ${viewMode === "kanban" ? "bg-accent text-slate-950" : "text-text-secondary hover:text-text-primary"}`}
                                 >
                                     <LayoutGrid size={16} />
                                 </button>
                                 <button
                                     onClick={() => setViewMode("list")}
-                                    className={`p-2 rounded-lg transition-all ${viewMode === "list" ? "bg-accent text-slate-950" : "text-slate-500 hover:text-white"}`}
+                                    className={`p-2 rounded-lg transition-all ${viewMode === "list" ? "bg-accent text-slate-950" : "text-text-secondary hover:text-text-primary"}`}
                                 >
                                     <List size={16} />
                                 </button>
                                 <button
                                     onClick={() => setViewMode("calendar")}
-                                    className={`p-2 rounded-lg transition-all ${viewMode === "calendar" ? "bg-accent text-slate-950" : "text-slate-500 hover:text-white"}`}
+                                    className={`p-2 rounded-lg transition-all ${viewMode === "calendar" ? "bg-accent text-slate-950" : "text-text-secondary hover:text-text-primary"}`}
                                 >
                                     <Calendar size={16} />
                                 </button>
@@ -124,7 +124,7 @@ export default function KanbanPage() {
 
                             <button 
                                 onClick={() => setIsSettingsOpen(true)}
-                                className="h-10 w-10 flex items-center justify-center rounded-xl bg-slate-900/50 border border-white/5 text-slate-400 hover:text-white transition-all"
+                                className="h-10 w-10 flex items-center justify-center rounded-xl bg-bg-secondary/50 border border-border-color text-text-secondary hover:text-text-primary transition-all"
                             >
                                 <Settings size={18} />
                             </button>
@@ -132,15 +132,15 @@ export default function KanbanPage() {
                         </div>
                     </div>
 
-                    <div className="flex items-center justify-between gap-4 p-4 bg-slate-900/30 rounded-2xl border border-white/5 backdrop-blur-sm">
+                    <div className="flex items-center justify-between gap-4 p-4 bg-bg-secondary/30 rounded-2xl border border-border-color backdrop-blur-sm">
                         <div className="relative flex-1 max-w-md">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
                             <input
                                 type="text"
                                 placeholder="Search tasks by ID or title..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full h-10 pl-10 pr-4 bg-black/40 border border-white/5 rounded-xl text-xs font-bold text-white placeholder:text-slate-600 focus:outline-none focus:border-accent/40 transition-colors"
+                                className="w-full h-10 pl-10 pr-4 bg-black/40 border border-border-color rounded-xl text-xs font-bold text-text-primary placeholder:text-slate-600 focus:outline-none focus:border-accent/40 transition-colors"
                             />
                         </div>
 
@@ -155,18 +155,18 @@ export default function KanbanPage() {
                                     />
                                 ))}
                                 {selectedProject?.members?.length > 5 && (
-                                    <div className="flex items-center justify-center h-8 w-8 rounded-full ring-2 ring-slate-900 bg-slate-800 text-[10px] font-bold text-slate-400">
+                                    <div className="flex items-center justify-center h-8 w-8 rounded-full ring-2 ring-slate-900 bg-card-bg text-[10px] font-bold text-text-secondary">
                                         +{selectedProject.members.length - 5}
                                     </div>
                                 )}
                             </div>
 
-                            <button className="h-10 px-4 bg-slate-800/50 hover:bg-slate-800 rounded-xl border border-white/5 text-slate-400 hover:text-white transition-all flex items-center gap-2 text-[10px] font-black uppercase tracking-widest">
+                            <button className="h-10 px-4 bg-card-bg/50 hover:bg-card-bg rounded-xl border border-border-color text-text-secondary hover:text-text-primary transition-all flex items-center gap-2 text-[10px] font-black uppercase tracking-widest">
                                 <Users size={14} />
                                 Members
                             </button>
 
-                            <button className="h-10 px-4 bg-slate-800/50 hover:bg-slate-800 rounded-xl border border-white/5 text-slate-400 hover:text-white transition-all flex items-center gap-2 text-[10px] font-black uppercase tracking-widest">
+                            <button className="h-10 px-4 bg-card-bg/50 hover:bg-card-bg rounded-xl border border-border-color text-text-secondary hover:text-text-primary transition-all flex items-center gap-2 text-[10px] font-black uppercase tracking-widest">
                                 <Filter size={14} />
                                 Filters
                             </button>
@@ -175,7 +175,7 @@ export default function KanbanPage() {
                 </div>
 
                 {/* Board Section */}
-                <div className="flex-1 min-h-0 bg-slate-950/20 rounded-[2.5rem] border border-white/5 overflow-hidden">
+                <div className="flex-1 min-h-0 bg-bg-primary/20 rounded-[2.5rem] border border-border-color overflow-hidden">
                     {selectedProjectId ? (
                         <BoardProvider key={`${selectedProjectId}-${boardRefreshKey}`} projectId={selectedProjectId}>
                             {viewMode === "kanban" ? (

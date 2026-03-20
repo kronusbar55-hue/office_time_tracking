@@ -50,16 +50,16 @@ export default function StatsCard({
             </div>
 
             <div className="mt-4">
-                <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">{label}</p>
+                <p className="text-sm font-medium text-text-secondary uppercase tracking-wider">{label}</p>
                 <div className="mt-1 flex items-baseline gap-2">
                     <motion.h3
                         initial={{ scale: 0.9 }}
                         animate={{ scale: 1 }}
-                        className="text-2xl font-bold text-white"
+                        className="text-2xl font-bold text-text-primary"
                     >
                         {value}
                     </motion.h3>
-                    {subtext && <span className="text-xs text-slate-500">{subtext}</span>}
+                    {subtext && <span className="text-xs text-text-secondary">{subtext}</span>}
                 </div>
             </div>
         </DashboardCard>

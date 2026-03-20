@@ -25,7 +25,7 @@ export default function ProjectsPage() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-950 p-8 pt-24">
+        <div className="min-h-screen bg-bg-primary p-8 pt-24">
             <div className="max-w-7xl mx-auto space-y-12">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-6">
@@ -33,11 +33,11 @@ export default function ProjectsPage() {
                             <Layout size={32} />
                         </div>
                         <div>
-                            <h1 className="text-4xl font-black text-white tracking-tighter uppercase">Team <span className="text-accent">Projects</span></h1>
-                            <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px] mt-1">Manage your engineering workflows</p>
+                            <h1 className="text-4xl font-black text-text-primary tracking-tighter uppercase">Team <span className="text-accent">Projects</span></h1>
+                            <p className="text-text-secondary font-bold uppercase tracking-widest text-[10px] mt-1">Manage your engineering workflows</p>
                         </div>
                     </div>
-                    <button className="flex items-center gap-3 px-8 py-3 rounded-2xl bg-accent text-white hover:bg-accent-hover transition-all text-sm font-black shadow-xl shadow-accent/20">
+                    <button className="flex items-center gap-3 px-8 py-3 rounded-2xl bg-accent text-text-primary hover:bg-accent-hover transition-all text-sm font-black shadow-xl shadow-accent/20">
                         <Plus size={20} />
                         <span>New Project</span>
                     </button>
@@ -53,32 +53,32 @@ export default function ProjectsPage() {
                             <Link
                                 key={project._id}
                                 href={`/dashboard/kanban/${project._id}`}
-                                className="group relative rounded-3xl bg-slate-900/40 border border-white/5 p-8 transition-all hover:border-accent/40 hover:bg-slate-900 shadow-2xl overflow-hidden"
+                                className="group relative rounded-3xl bg-bg-secondary/40 border border-border-color p-8 transition-all hover:border-accent/40 hover:bg-bg-secondary shadow-2xl overflow-hidden"
                             >
                                 <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-20 transition-opacity">
-                                    <Layout size={80} className="text-white" />
+                                    <Layout size={80} className="text-text-primary" />
                                 </div>
 
                                 <div className="relative z-10 flex flex-col h-full gap-6">
                                     <div className="flex items-center gap-4">
-                                        <div className="px-3 py-1 bg-slate-950 border border-white/10 rounded-lg text-xs font-black text-accent uppercase tracking-widest">
+                                        <div className="px-3 py-1 bg-bg-primary border border-border-color rounded-lg text-xs font-black text-accent uppercase tracking-widest">
                                             {project.key}
                                         </div>
                                     </div>
 
                                     <div>
-                                        <h3 className="text-2xl font-black text-white tracking-tight group-hover:text-accent transition-colors">{project.name}</h3>
-                                        <p className="text-slate-500 text-sm mt-2 line-clamp-2 leading-relaxed">
+                                        <h3 className="text-2xl font-black text-text-primary tracking-tight group-hover:text-accent transition-colors">{project.name}</h3>
+                                        <p className="text-text-secondary text-sm mt-2 line-clamp-2 leading-relaxed">
                                             {project.description || "No description provided."}
                                         </p>
                                     </div>
 
                                     <div className="flex-1" />
 
-                                    <div className="flex items-center justify-between pt-6 border-t border-white/5">
+                                    <div className="flex items-center justify-between pt-6 border-t border-border-color">
                                         <div className="flex items-center -space-x-2">
-                                            <div className="h-8 w-8 rounded-full bg-slate-800 border-2 border-slate-950 animate-pulse" />
-                                            <div className="h-8 w-8 rounded-full bg-slate-900 border-2 border-slate-950 flex items-center justify-center text-[8px] font-black text-slate-500">
+                                            <div className="h-8 w-8 rounded-full bg-card-bg border-2 border-slate-950 animate-pulse" />
+                                            <div className="h-8 w-8 rounded-full bg-bg-secondary border-2 border-slate-950 flex items-center justify-center text-[8px] font-black text-text-secondary">
                                                 +{project.members?.length || 1}
                                             </div>
                                         </div>

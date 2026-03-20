@@ -39,7 +39,7 @@ export default function TimeGraphs({ period }: TimeGraphsProps) {
   }, [period]);
 
   if (loading) return <div className="text-center py-8">Loading graphs...</div>;
-  if (!data.length) return <div className="text-center py-8 text-slate-500">No data available</div>;
+  if (!data.length) return <div className="text-center py-8 text-text-secondary">No data available</div>;
 
   const maxWorked = Math.max(...data.map((d) => d.workedHours), 8);
   const labels = data.map((d) => d.date?.split("-")[2] || d.day || "");
@@ -47,7 +47,7 @@ export default function TimeGraphs({ period }: TimeGraphsProps) {
   return (
     <div className="space-y-6">
       {/* Worked Hours Bar Chart */}
-      <div className="bg-white rounded-lg border border-slate-200 p-6">
+      <div className="bg-bg-primary rounded-lg border border-slate-200 p-6">
         <h3 className="text-lg font-semibold mb-4">Worked Hours</h3>
         <div className="flex items-end justify-between gap-2 h-64">
           {data.map((item, idx) => (
@@ -63,7 +63,7 @@ export default function TimeGraphs({ period }: TimeGraphsProps) {
       </div>
 
       {/* Break Duration Comparison */}
-      <div className="bg-white rounded-lg border border-slate-200 p-6">
+      <div className="bg-bg-primary rounded-lg border border-slate-200 p-6">
         <h3 className="text-lg font-semibold mb-4">Breaks Distribution</h3>
         <div className="flex items-end justify-between gap-2 h-48">
           {data.map((item, idx) => (
@@ -77,7 +77,7 @@ export default function TimeGraphs({ period }: TimeGraphsProps) {
       </div>
 
       {/* Overtime Trend */}
-      <div className="bg-white rounded-lg border border-slate-200 p-6">
+      <div className="bg-bg-primary rounded-lg border border-slate-200 p-6">
         <h3 className="text-lg font-semibold mb-4">Overtime Hours</h3>
         <div className="flex items-end justify-between gap-2 h-48">
           {data.map((item, idx) => (
@@ -91,7 +91,7 @@ export default function TimeGraphs({ period }: TimeGraphsProps) {
       </div>
 
       {/* Work vs Break Pie Chart */}
-      <div className="bg-white rounded-lg border border-slate-200 p-6">
+      <div className="bg-bg-primary rounded-lg border border-slate-200 p-6">
         <h3 className="text-lg font-semibold mb-4">Work vs Break (Today)</h3>
         {data.length > 0 && (
           <div className="flex items-center justify-center gap-8">
