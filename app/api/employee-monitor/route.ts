@@ -43,28 +43,55 @@ export async function POST(req: Request) {
             )
         }
 
-        const newMonitorEntry = await EmployeeMonitor.create({
-            userId,
-            imageUrl,
-            date,
-            time,
-            intervalStart,
-            intervalEnd,
-            mouseClicks,
-            mouseMovements,
-            keyPresses,
-            activeSeconds,
-            timezone,
-            status,
-            sessionTime,
-            breakTime,
-            meetingTime,
-            appUsage: sanitizedAppUsage,
-            projects
-        })
+        let monitorEntry;
+
+        if (status === "stop") {
+            // Find existing stop entry for the same day and user to update it (one-time checkout)
+            monitorEntry = await EmployeeMonitor.findOneAndUpdate(
+                { userId, date, status: "stop" },
+                {
+                    imageUrl,
+                    time,
+                    intervalStart,
+                    intervalEnd,
+                    mouseClicks,
+                    mouseMovements,
+                    keyPresses,
+                    activeSeconds,
+                    timezone,
+                    status,
+                    sessionTime,
+                    breakTime,
+                    meetingTime,
+                    appUsage: sanitizedAppUsage,
+                    projects
+                },
+                { new: true, upsert: true }
+            );
+        } else {
+            monitorEntry = await EmployeeMonitor.create({
+                userId,
+                imageUrl,
+                date,
+                time,
+                intervalStart,
+                intervalEnd,
+                mouseClicks,
+                mouseMovements,
+                keyPresses,
+                activeSeconds,
+                timezone,
+                status,
+                sessionTime,
+                breakTime,
+                meetingTime,
+                appUsage: sanitizedAppUsage,
+                projects
+            });
+        }
 
         return NextResponse.json(
-            { success: true, data: newMonitorEntry },
+            { success: true, data: monitorEntry },
             { status: 201 }
         )
     } catch (error: any) {

@@ -97,11 +97,13 @@ export async function GET(request: Request) {
                     sessionMs = timeToMinutes(dayData.maxSession) * 60000;
                 }
 
+                const trackedMs = ((dayData?.workSeconds || 0) + (dayData?.idleSeconds || 0)) * 1000;
                 let workMs = Math.max(0, sessionMs - breakMs);
                 
-                // Fallback to active + idle if session is empty (e.g. single record only)
-                if (sessionMs === 0) {
-                    workMs = ((dayData?.workSeconds || 0) + (dayData?.idleSeconds || 0)) * 1000;
+                // Fallback: If tracked activity exists but session-break logic yields less 
+                // (e.g. breakMs is larger than sessionMs due to reporting issues), use trackedMs.
+                if (trackedMs > workMs || sessionMs === 0) {
+                    workMs = trackedMs;
                 }
 
                 totalWorkMs += workMs;

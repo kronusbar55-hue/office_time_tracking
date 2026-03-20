@@ -54,7 +54,13 @@ export async function getMonitorStats(userId: string, startDate: Date, endDate: 
 
         // The logic: (last record time - first record time) - total break time
         // This gives the total worked minutes between start and end
+        const trackedMins = (records.reduce((acc, r) => acc + (r.activeSeconds || 0) + (r.idleSeconds || 0), 0)) / 60;
         let workedMins = Math.max(0, endMins - startMins - breakMins);
+
+        // Fallback: If tracked activity minutes are greater than the session-based calculation
+        if (trackedMins > workedMins) {
+            workedMins = trackedMins;
+        }
 
         results.push({
             date,
@@ -86,7 +92,13 @@ export async function getDayMonitorStats(userId: string, dateStr: string) {
     const endMins = timeToMinutes(last.time);
     const breakMins = timeToMinutes(last.breakTime || "00:00:00");
 
-    const workedMinutes = Math.max(0, endMins - startMins - breakMins);
+    const trackedMinutes = (records.reduce((acc, r) => acc + (r.activeSeconds || 0) + (r.idleSeconds || 0), 0)) / 60;
+    let workedMinutes = Math.max(0, endMins - startMins - breakMins);
+
+    // Use trackedMinutes if it's more accurate than session-break calculation
+    if (trackedMinutes > workedMinutes) {
+        workedMinutes = trackedMinutes;
+    }
 
     // Check if user is currently active (last record within 15 minutes and status not OFFLINE/CHECKED_OUT)
     const lastCreatedAt = new Date(last.createdAt).getTime();

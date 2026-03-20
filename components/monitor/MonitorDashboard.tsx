@@ -308,7 +308,7 @@ export default function MonitorDashboard() {
                                 disabled={!selectedUserId || selectedUserId === "all" || !selectedDate}
                                 className={`h-10 px-4 rounded-xl border transition-all flex items-center gap-2 group ${showTimeline ? 'bg-accent text-slate-950 border-accent shadow-lg shadow-accent/20' : 'bg-black/40 border-white/10 text-slate-400 hover:bg-accent hover:text-slate-950 disabled:opacity-20 disabled:cursor-not-allowed'}`}
                             >
-                                <Activity className={`h-4 w-4 ${showTimeline ? 'animate-pulse' : ''}`} />
+                                <Activity className="h-4 w-4" />
                                 <span className="text-[10px] font-black uppercase tracking-widest">Timeline</span>
                             </button>
 

@@ -314,7 +314,6 @@ export default function ReportsPage() {
                           </div>
                           <div>
                             <h4 className="text-sm font-bold text-slate-100">{member.name}</h4>
-                            <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">{member.department} • {member.shiftHours}h shift</p>
                           </div>
                         </div>
                       </td>

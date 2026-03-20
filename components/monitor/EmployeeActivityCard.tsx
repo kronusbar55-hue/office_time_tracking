@@ -52,9 +52,9 @@ export default function EmployeeActivityCard({ employee, viewMode, showName = tr
         // Red: Low activity (less than 20 total interactions)
         // Green: High activity (more than 100 total interactions)
         // Yellow: Moderate activity (between 20 and 100)
-        if (totalActivity < 20) return "animate-blink-red border-4 border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.5)]";
-        if (totalActivity > 100) return "animate-glow-green-border border-4 border-green-500 shadow-[0_0_20px_rgba(34,197,94,0.5)]";
-        return "animate-glow-yellow-border border-4 border-yellow-500 shadow-[0_0_20px_rgba(234,179,8,0.5)]";
+        if (totalActivity < 20) return "border-4 border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.5)]";
+        if (totalActivity > 100) return "border-4 border-green-500 shadow-[0_0_20px_rgba(34,197,94,0.5)]";
+        return "border-4 border-yellow-500 shadow-[0_0_20px_rgba(234,179,8,0.5)]";
     };
 
     const activityBorderClass = activity ? getActivityBorderClass(activity.mouseClicks, activity.keyPresses || 0) : "border-[4px] border-white/10";
@@ -79,7 +79,7 @@ export default function EmployeeActivityCard({ employee, viewMode, showName = tr
 
                 <div className="flex flex-col min-w-[120px]">
                     <div className="flex items-center gap-2">
-                        <div className={`h-2 w-2 rounded-full ${statusColor.includes('green') ? 'bg-green-400 animate-pulse shadow-[0_0_8px_rgba(74,222,128,0.5)]' : 'bg-slate-600'}`} />
+                        <div className={`h-2 w-2 rounded-full ${statusColor.includes('green') ? 'bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.5)]' : 'bg-slate-600'}`} />
                         <span className="text-[10px] text-slate-300 font-bold uppercase tracking-widest">{statusLabel}</span>
                     </div>
                 </div>
