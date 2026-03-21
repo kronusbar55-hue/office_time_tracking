@@ -64,6 +64,7 @@ export async function aggregateSessionIntoDailyRecord(session: any) {
     if (!record) {
         record = new CheckInOut({
             user: session.user,
+            organizationId: (user as any).organizationId,
             userRole: (user as any).role,
             date: session.date,
             shift: shift ? shift._id : undefined,
@@ -170,6 +171,7 @@ export function initScheduler() {
                     // Create Absent Record
                     await CheckInOut.create({
                         user: emp._id,
+                        organizationId: (emp as any).organizationId,
                         userRole: emp.role,
                         date: today,
                         status: "Absent",

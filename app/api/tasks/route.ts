@@ -25,13 +25,19 @@ export async function GET(request: Request) {
     const page = parseInt(searchParams.get("page") || "1", 10);
     const limit = parseInt(searchParams.get("limit") || "25", 10);
 
-    const query: any = { isDeleted: false };
-
     // authorization: require auth token and apply role-aware filters
     const cookieStore = cookies();
     const token = cookieStore.get("auth_token")?.value;
     const payload = token ? verifyAuthToken(token) : null;
     if (!payload) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (payload.role !== "SUPER_ADMIN" && !payload.orgId) {
+      return NextResponse.json({ error: "Organization required" }, { status: 403 });
+    }
+
+    const query: any = { isDeleted: false };
+    if (payload.role !== "SUPER_ADMIN") {
+      query.organizationId = payload.orgId;
+    }
 
     const userId = payload.sub;
 
@@ -46,12 +52,12 @@ export async function GET(request: Request) {
       if (assignee) query.assignee = assignee;
     } else if (userRole === "manager") {
       // managers see all tasks within projects they are members of
-      const myProjects = await Project.find({ members: userId }).select("_id").lean();
+      const myProjects = await Project.find({ members: userId, organizationId: payload.orgId }).select("_id").lean();
       const projectIds = myProjects.map(p => p._id);
       query.project = { $in: projectIds };
       if (assignee) query.assignee = assignee;
     } else {
-      // employee: only tasks assigned to them
+      // employee: only tasks assigned to them (and currently scoped to org)
       query.assignee = userId;
     }
 
@@ -217,8 +223,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    const proj = await Project.findById(project).lean();
-    if (!proj) return NextResponse.json({ error: "Project not found" }, { status: 404 });
+    const proj = await Project.findOne({ _id: project, organizationId: payload.orgId }).lean();
+    if (!proj) return NextResponse.json({ error: "Project not found in your organization" }, { status: 404 });
 
     const rep = await User.findById(reporter).lean();
     if (!rep) return NextResponse.json({ error: "Reporter not found" }, { status: 404 });
@@ -253,7 +259,8 @@ export async function POST(request: Request) {
       reporter,
       status: fields.status || (assignee ? "todo" : "backlog"),
       dueDate: dueDate ? new Date(dueDate) : null,
-      attachments
+      attachments,
+      organizationId: payload.orgId
     });
 
     const populated = await Task.findById(created._id)

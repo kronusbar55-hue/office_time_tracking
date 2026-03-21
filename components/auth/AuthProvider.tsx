@@ -44,7 +44,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // Public routes should not trigger session check
-  const PUBLIC_ROUTES = ["/login", "/register", "/forgot-password"];
+  const PUBLIC_ROUTES = ["/login", "/register", "/forgot-password", "/auth/super-admin/login"];
 
   function isPublicRoute(p?: string | null) {
     if (!p) return false;

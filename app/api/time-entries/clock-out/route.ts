@@ -88,6 +88,7 @@ export async function POST(request: Request) {
 
             await TimeEntry.create({
                 user: payload.sub,
+                organizationId: payload.orgId,
                 clockIn: session.clockIn,
                 clockOut: now,
                 trackedMinutes: Math.max(0, workMinutes),
@@ -115,6 +116,7 @@ export async function POST(request: Request) {
             },
             {
                 user: payload.sub,
+                organizationId: payload.orgId,
                 userRole: user?.role || "employee",
                 date: dateStr,
                 clockIn: session.clockIn,

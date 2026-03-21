@@ -4,6 +4,7 @@ import { verifyAuthToken } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { Project } from "@/models/Project";
 import { User } from "@/models/User";
+import { Organization } from "@/models/Organization";
 import path from "path";
 import { mkdir, writeFile } from "fs/promises";
 import cloudinary from "@/lib/cloudinary";
@@ -24,7 +25,8 @@ export async function GET(request: Request) {
 
   const query: Record<string, any> = { 
     status: { $ne: "archived" },
-    name: { $nin: ["Other", "other", "OTHER"] }
+    name: { $nin: ["Other", "other", "OTHER"] },
+    organizationId: payload.orgId
   };
 
   const userId = payload.sub;
@@ -136,6 +138,15 @@ export async function POST(request: Request) {
   }
 
 
+  // Plan Restriction
+  const org = await Organization.findById(payload.orgId).lean() as any;
+  if (org && org.plan === "FREE") {
+    const projectCount = await Project.countDocuments({ organizationId: payload.orgId });
+    if (projectCount >= 5) {
+      return NextResponse.json({ error: "Free plan is limited to 5 projects. Please upgrade." }, { status: 403 });
+    }
+  }
+
   if (!name) {
     return NextResponse.json(
       { error: "Project name is required" },
@@ -161,8 +172,8 @@ export async function POST(request: Request) {
     key = key.toUpperCase();
   }
 
-  // Check for duplicate key
-  const existingKey = await Project.findOne({ key, isDeleted: { $ne: true } });
+  // Check for duplicate key inside organization
+  const existingKey = await Project.findOne({ key, organizationId: payload.orgId });
   if (existingKey) {
     return NextResponse.json({ error: `Project key "${key}" already exists` }, { status: 409 });
   }
@@ -184,7 +195,8 @@ export async function POST(request: Request) {
     members: memberIds,
     logoUrl,
     color,
-    createdBy: payload.sub
+    createdBy: payload.sub,
+    organizationId: payload.orgId
   });
 
 

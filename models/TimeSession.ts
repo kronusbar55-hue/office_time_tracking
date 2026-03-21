@@ -5,6 +5,7 @@ export type TimeSessionStatus = "active" | "completed";
 export interface ITimeSession {
   _id: Types.ObjectId;
   user: Types.ObjectId;
+  organizationId: Types.ObjectId;
   date: string; // YYYY-MM-DD
   clockIn: Date;
   clockOut?: Date | null;
@@ -23,6 +24,7 @@ export interface ITimeSession {
 const TimeSessionSchema = new Schema<ITimeSession>(
   {
     user: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
+    organizationId: { type: Schema.Types.ObjectId, ref: "Organization", required: true, index: true },
     date: { type: String, required: true, index: true },
     clockIn: { type: Date, required: true, index: true },
     clockOut: { type: Date, default: null, index: true },
@@ -41,6 +43,7 @@ const TimeSessionSchema = new Schema<ITimeSession>(
 );
 
 TimeSessionSchema.index({ user: 1, date: 1 });
+TimeSessionSchema.index({ organizationId: 1, date: 1 });
 TimeSessionSchema.index({ user: 1, clockIn: 1 });
 
 export const TimeSession = (models && models.TimeSession) || model<ITimeSession>("TimeSession", TimeSessionSchema);

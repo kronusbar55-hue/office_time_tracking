@@ -10,7 +10,12 @@ export function AuthGuard({ children }: { children: ReactNode }) {
   const { isAuthenticated, loading } = useAuth();
   const pathname = usePathname();
 
-  const PUBLIC_ROUTES = ["/login", "/register", "/forgot-password"];
+  const PUBLIC_ROUTES = [
+    "/login", 
+    "/register", 
+    "/forgot-password", 
+    "/auth/super-admin/login"
+  ];
   function isPublicRoute(p?: string | null) {
     if (!p) return false;
     return PUBLIC_ROUTES.some((r) => p === r || p.startsWith(r + "/"));

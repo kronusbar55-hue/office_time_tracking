@@ -19,6 +19,8 @@ export interface IUser {
     themePreference?: "light" | "dark" | "system";
     department?: string;
     shiftHours?: number;
+    organizationId?: Types.ObjectId; // Null for Super Admin
+    status: "ACTIVE" | "INACTIVE" | "SUSPENDED";
 }
 
 const UserSchema = new Schema<IUser>(
@@ -46,9 +48,19 @@ const UserSchema = new Schema<IUser>(
         },
         role: {
             type: String,
-            enum: ["admin", "manager", "employee", "hr"],
+            enum: ["admin", "manager", "employee", "hr", "SUPER_ADMIN"],
             required: true,
             default: "employee"
+        },
+        organizationId: {
+            type: Schema.Types.ObjectId,
+            ref: "Organization",
+            index: true
+        },
+        status: {
+            type: String,
+            enum: ["ACTIVE", "INACTIVE", "SUSPENDED"],
+            default: "ACTIVE"
         },
         manager: {
             type: Schema.Types.ObjectId,

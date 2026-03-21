@@ -48,6 +48,7 @@ export async function POST(request: Request) {
     // Create new time session
     const session = await TimeSession.create({
       user: payload.sub,
+      organizationId: payload.orgId,
       date: dateStr,
       clockIn: now,
       status: "active",

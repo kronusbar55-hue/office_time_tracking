@@ -12,6 +12,7 @@ export interface ICheckInOutSession {
 export interface ICheckInOut {
   _id: Types.ObjectId;
   user: Types.ObjectId;
+  organizationId: Types.ObjectId;
   userRole: string;
   date: string; // YYYY-MM-DD
   shift?: Types.ObjectId; // assigned shift for this day
@@ -47,6 +48,12 @@ const CheckInOutSchema = new Schema<ICheckInOut>(
     user: {
       type: Schema.Types.ObjectId,
       ref: "User",
+      required: true,
+      index: true
+    },
+    organizationId: {
+      type: Schema.Types.ObjectId,
+      ref: "Organization",
       required: true,
       index: true
     },
@@ -117,6 +124,7 @@ const CheckInOutSchema = new Schema<ICheckInOut>(
 
 // Unique index ensures one document per user per day
 CheckInOutSchema.index({ user: 1, date: 1 }, { unique: true });
+CheckInOutSchema.index({ organizationId: 1, date: 1 });
 CheckInOutSchema.index({ userRole: 1, date: 1 });
 
 export const CheckInOut: Model<ICheckInOut> =

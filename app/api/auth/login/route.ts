@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { User } from "@/models/User";
+import { Organization } from "@/models/Organization";
 import bcrypt from "bcryptjs";
 import { signAuthToken } from "@/lib/auth";
 import { successResp, errorResp } from "@/lib/apiResponse";
 import { AuditLog } from "@/models/AuditLog";
 import mongoose from "mongoose";
+import crypto from "crypto";
+import { UserSession } from "@/models/UserSession";
 
 export async function POST(request: Request) {
   await connectDB();
@@ -19,16 +22,33 @@ export async function POST(request: Request) {
     return NextResponse.json(errorResp("Email and password are required"), { status: 400 });
   }
 
-  // Robust User model retrieval
-  const UserModel = User || (mongoose.models && mongoose.models.User) || mongoose.model("User");
-
-  const user = await UserModel.findOne({
+  // Find user and include organization
+  const user = await User.findOne({
     email: email.toLowerCase(),
     isDeleted: false
-  });
+  }).populate("organizationId");
 
-  if (!user || !user.isActive) {
+  if (!user) {
     return NextResponse.json(errorResp("Invalid credentials"), { status: 401 });
+  }
+
+  // Per requirement: Separate login flow for Super Admin
+  if (user.role === "SUPER_ADMIN") {
+    return NextResponse.json(errorResp("Please use the Super Admin login portal"), { status: 403 });
+  }
+
+  if (user.status !== "ACTIVE" || !user.isActive) {
+    return NextResponse.json(errorResp("Your account is not active"), { status: 401 });
+  }
+
+  // Check Organization Status
+  const org = user.organizationId as any;
+  if (!org) {
+    return NextResponse.json(errorResp("No organization associated with this account"), { status: 401 });
+  }
+
+  if (org.status !== "ACTIVE") {
+    return NextResponse.json(errorResp(`Your organization is ${org.status.toLowerCase()}. Please contact support.`), { status: 403 });
   }
 
   const valid = await bcrypt.compare(password, user.passwordHash);
@@ -38,17 +58,18 @@ export async function POST(request: Request) {
 
   const token = signAuthToken({
     sub: user._id.toString(),
-    role: user.role
+    name: `${user.firstName} ${user.lastName}`,
+    role: user.role as any,
+    orgId: org._id.toString()
   });
 
-  // Fetch assigned projects
+  // Fetch assigned projects (scoped to organization naturally because users/projects are org-bound)
   const { Project } = await import("@/models/Project");
   const projects = await Project.find({
     members: user._id,
     status: { $ne: "archived" }
   }, "name").lean();
 
-  // Check for today's entry in employeemonitors
   const { EmployeeMonitor } = await import("@/models/EmployeeMonitor");
   const today = new Date().toISOString().split('T')[0];
   const firstEntry = await EmployeeMonitor.findOne({
@@ -65,6 +86,8 @@ export async function POST(request: Request) {
       lastName: user.lastName,
       email: user.email,
       role: user.role,
+      organizationId: org._id.toString(),
+      organizationName: org.name,
       assignedProjects: projects.map((p: any) => ({
         id: p._id.toString(),
         name: p.name
@@ -74,11 +97,20 @@ export async function POST(request: Request) {
     firstEntry
   }));
 
-  // Log successful login
   try {
+    await UserSession.create({
+      user: user._id,
+      organizationId: org._id,
+      tokenHash: crypto.createHash("sha256").update(token).digest("hex"),
+      ipAddress: request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "",
+      userAgent: request.headers.get("user-agent") || "",
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+    });
+
     await AuditLog.create({
       action: "login",
       user: user._id,
+      organizationId: org._id,
       entity: "User",
       entityId: user._id,
       ipAddress: request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "",
@@ -98,4 +130,5 @@ export async function POST(request: Request) {
 
   return res;
 }
+
 

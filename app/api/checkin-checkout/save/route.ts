@@ -115,6 +115,7 @@ export async function POST(request: Request) {
       // Create new Daily Record
       record = new CheckInOut({
         user: payload.sub,
+        organizationId: (user as any).organizationId,
         userRole: user.role,
         date: s.date,
         shift: shift ? shift._id : undefined,

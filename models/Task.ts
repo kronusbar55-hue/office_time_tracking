@@ -47,8 +47,8 @@ export interface ITask {
   order?: number;
   isDeleted?: boolean;
   attachments?: IAttachment[];
-  createdAt?: Date;
   updatedAt?: Date;
+  organizationId: Types.ObjectId;
 }
 
 const TaskSchema = new Schema<ITask>(
@@ -160,6 +160,12 @@ const TaskSchema = new Schema<ITask>(
     isDeleted: {
       type: Boolean,
       default: false,
+      index: true
+    },
+    organizationId: {
+      type: Schema.Types.ObjectId,
+      ref: "Organization",
+      required: true,
       index: true
     },
     attachments: [

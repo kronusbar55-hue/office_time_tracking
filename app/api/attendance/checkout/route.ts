@@ -96,6 +96,7 @@ export async function POST(request: Request) {
     // Persist work log linked to this session
     await WorkLog.create({
       user: payload.sub,
+      organizationId: payload.orgId,
       timeSession: session._id,
       project: projectId,
       description,

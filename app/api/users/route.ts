@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { connectDB } from "@/lib/db";
-import { verifyAuthToken } from "@/lib/auth";
 import { User } from "@/models/User";
-import { Technology } from "@/models/Technology";
 import bcrypt from "bcryptjs";
 import cloudinary from "@/lib/cloudinary";
+import { requireAuth, requireActiveOrganization, requireRole, withTenantQuery } from "@/lib/authz";
 
 export async function GET(request: Request) {
+  const ctx = await requireAuth();
+  await requireActiveOrganization(ctx);
   const { searchParams } = new URL(request.url);
   const paginate = searchParams.get("paginate") === "true";
   const search = searchParams.get("search") || "";
@@ -15,14 +15,11 @@ export async function GET(request: Request) {
   const limit = parseInt(searchParams.get("limit") || "5");
   const skip = (page - 1) * limit;
 
-  const cookieStore = cookies();
-  const token = cookieStore.get("auth_token")?.value;
-  const payload = token ? verifyAuthToken(token) : null;
-  if (!payload) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
   await connectDB();
-
-  const query: any = { isDeleted: false };
+  const query: any = withTenantQuery(ctx, { isDeleted: false });
+  if (ctx.token.role === "SUPER_ADMIN" && searchParams.get("organizationId")) {
+    query.organizationId = searchParams.get("organizationId");
+  }
 
   if (search) {
     query.$or = [
@@ -39,6 +36,7 @@ export async function GET(request: Request) {
       .skip(skip)
       .limit(limit)
       .populate({ path: "technology", select: "name" })
+      .populate({ path: "organizationId", select: "name" })
       .lean();
 
     return NextResponse.json({
@@ -48,6 +46,8 @@ export async function GET(request: Request) {
         lastName: u.lastName,
         email: u.email,
         role: u.role,
+        organizationId: u.organizationId?._id?.toString() || null,
+        organizationName: u.organizationId?.name || null,
         technology: u.technology
           ? { id: String(u.technology._id || u.technology), name: u.technology.name }
           : null,
@@ -67,6 +67,7 @@ export async function GET(request: Request) {
   const users = await User.find(query)
     .sort({ createdAt: -1 })
     .populate({ path: "technology", select: "name" })
+    .populate({ path: "organizationId", select: "name" })
     .lean();
 
   return NextResponse.json(
@@ -76,6 +77,8 @@ export async function GET(request: Request) {
       lastName: u.lastName,
       email: u.email,
       role: u.role,
+      organizationId: u.organizationId?._id?.toString() || null,
+      organizationName: u.organizationId?.name || null,
       technology: u.technology
         ? { id: String(u.technology._id || u.technology), name: u.technology.name }
         : null,
@@ -87,6 +90,9 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const ctx = await requireAuth();
+  await requireActiveOrganization(ctx);
+  requireRole(ctx, ["admin", "hr", "SUPER_ADMIN"]);
   await connectDB();
 
   const contentType = request.headers.get("content-type") || "";
@@ -115,7 +121,10 @@ export async function POST(request: Request) {
       );
     }
 
-    const existing = await User.findOne({ email, isDeleted: false }).lean();
+    const orgId = ctx.token.orgId;
+    if (!orgId) return NextResponse.json({ error: "Organization required" }, { status: 400 });
+
+    const existing = await User.findOne({ email, organizationId: orgId, isDeleted: false }).lean();
     if (existing) {
       return NextResponse.json(
         { error: "User with this email already exists" },
@@ -164,7 +173,8 @@ export async function POST(request: Request) {
       isActive,
       avatarUrl,
       avatarPublicId,
-      avatarSize
+      avatarSize,
+      organizationId: orgId
     });
 
     return NextResponse.json(
@@ -194,7 +204,10 @@ export async function POST(request: Request) {
     );
   }
 
-  const existing = await User.findOne({ email, isDeleted: false }).lean();
+  const orgId = ctx.token.orgId;
+  if (!orgId) return NextResponse.json({ error: "Organization required" }, { status: 400 });
+
+  const existing = await User.findOne({ email, organizationId: orgId, isDeleted: false }).lean();
   if (existing) {
     return NextResponse.json(
       { error: "User with this email already exists" },
@@ -211,7 +224,8 @@ export async function POST(request: Request) {
     passwordHash,
     role: role || "employee",
     technology,
-    joinDate: joinDate ? new Date(joinDate) : undefined
+    joinDate: joinDate ? new Date(joinDate) : undefined,
+    organizationId: orgId
   });
   // populate technology for response
   const populated = (await User.findById(created._id).populate({ path: "technology", select: "name" }).lean()) as any;

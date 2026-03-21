@@ -15,6 +15,7 @@ export interface IProject {
   logoSize?: number;
   color?: string;
   createdBy: Types.ObjectId;
+  organizationId: Types.ObjectId;
 }
 
 const ProjectSchema = new Schema<IProject>(
@@ -67,6 +68,12 @@ const ProjectSchema = new Schema<IProject>(
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true
+    },
+    organizationId: {
+      type: Schema.Types.ObjectId,
+      ref: "Organization",
+      required: true,
+      index: true
     }
   },
   {

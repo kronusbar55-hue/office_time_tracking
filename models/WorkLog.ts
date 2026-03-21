@@ -3,6 +3,7 @@ import { Schema, model, models, type Model, type Types } from "mongoose";
 export interface IWorkLog {
   _id: Types.ObjectId;
   user: Types.ObjectId;
+  organizationId: Types.ObjectId;
   timeSession: Types.ObjectId;
   project?: Types.ObjectId;
   description: string;
@@ -14,6 +15,7 @@ export interface IWorkLog {
 const WorkLogSchema = new Schema<IWorkLog>(
   {
     user: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
+    organizationId: { type: Schema.Types.ObjectId, ref: "Organization", required: true, index: true },
     timeSession: { type: Schema.Types.ObjectId, ref: "TimeSession", required: true, index: true },
     project: { type: Schema.Types.ObjectId, ref: "Project" },
     description: { type: String, required: true, trim: true },
@@ -25,6 +27,7 @@ const WorkLogSchema = new Schema<IWorkLog>(
 );
 
 WorkLogSchema.index({ user: 1, date: 1 });
+WorkLogSchema.index({ organizationId: 1, date: 1 });
 WorkLogSchema.index({ project: 1, date: 1 });
 
 export const WorkLog: Model<IWorkLog> =

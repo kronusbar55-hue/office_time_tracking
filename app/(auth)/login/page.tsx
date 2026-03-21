@@ -55,7 +55,12 @@ export default function LoginPage() {
       } catch { }
 
       toast.success("Login successful!");
-      router.replace("/");
+      const role = body?.data?.user?.role;
+      if (role === "SUPER_ADMIN") {
+        router.replace("/super-admin/dashboard");
+      } else {
+        router.replace("/dashboard");
+      }
     } catch (e) {
       const errorMessage = e instanceof Error ? e.message : "Unable to sign in. Please try again.";
       setError(errorMessage);

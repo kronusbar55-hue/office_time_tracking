@@ -122,6 +122,7 @@ export async function POST(request: Request) {
     await WorkLog.insertMany(
       projectLogs.map((pl) => ({
         user: payload.sub,
+        organizationId: payload.orgId,
         timeSession: session._id,
         project: pl.projectId,
         description: pl.description,

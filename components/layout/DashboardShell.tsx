@@ -4,6 +4,7 @@ import { ReactNode, useEffect, useState } from "react";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
 import AuthGuard from "@/components/auth/AuthGuard";
+import { usePathname } from "next/navigation";
 
 interface DashboardShellProps {
   children: ReactNode;
@@ -11,12 +12,21 @@ interface DashboardShellProps {
 
 export function DashboardShell({ children }: DashboardShellProps) {
   const [mounted, setMounted] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  const PUBLIC_ROUTES = ["/login", "/register", "/forgot-password", "/auth/super-admin/login"];
+  const isPublic = PUBLIC_ROUTES.some(r => pathname === r || pathname.startsWith(r + "/"));
+
   if (!mounted) {
+    return <AuthGuard>{children}</AuthGuard>;
+  }
+
+  // Pure login pages don't need sidebar/topbar
+  if (isPublic) {
     return <AuthGuard>{children}</AuthGuard>;
   }
 
@@ -32,4 +42,3 @@ export function DashboardShell({ children }: DashboardShellProps) {
     </div>
   );
 }
-

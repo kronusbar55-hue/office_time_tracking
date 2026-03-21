@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 // Ensure models are registered when the module is loaded so populate() works
 import "@/models/Role";
 import "@/models/User";
+import "@/models/Organization";
 import "@/models/Project";
 import "@/models/Task";
 import "@/models/TaskCounter";

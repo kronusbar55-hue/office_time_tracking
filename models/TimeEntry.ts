@@ -15,6 +15,7 @@ export interface IProjectAllocation {
 export interface ITimeEntry {
   _id: Types.ObjectId;
   user: Types.ObjectId;
+  organizationId: Types.ObjectId;
   clockIn: Date;
   clockOut?: Date | null;
   breaks: IBreak[];
@@ -29,6 +30,12 @@ const TimeEntrySchema = new Schema<ITimeEntry>(
     user: {
       type: Schema.Types.ObjectId,
       ref: "User",
+      required: true,
+      index: true
+    },
+    organizationId: {
+      type: Schema.Types.ObjectId,
+      ref: "Organization",
       required: true,
       index: true
     },
@@ -89,6 +96,7 @@ const TimeEntrySchema = new Schema<ITimeEntry>(
 
 TimeEntrySchema.index({ user: 1, clockIn: -1 });
 TimeEntrySchema.index({ user: 1, clockOut: -1 });
+TimeEntrySchema.index({ organizationId: 1, clockIn: -1 });
 
 export const TimeEntry: Model<ITimeEntry> =
   (models.TimeEntry as Model<ITimeEntry>) ||
