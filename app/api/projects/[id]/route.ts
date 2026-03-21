@@ -24,6 +24,10 @@ export async function PUT(request: Request, { params }: Params) {
   }
 
   await connectDB();
+  const user = await User.findById(payload.sub).select("role").lean() as any;
+  if (!user || (user.role !== "admin" && user.role !== "hr" && user.role !== "manager")) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
 
   const contentType = request.headers.get("content-type") || "";
 
@@ -128,6 +132,10 @@ export async function DELETE(_request: Request, { params }: Params) {
   }
 
   await connectDB();
+  const user = await User.findById(payload.sub).select("role").lean() as any;
+  if (!user || (user.role !== "admin" && user.role !== "hr" && user.role !== "manager")) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
 
   const deleted = await Project.findByIdAndUpdate(
     params.id,

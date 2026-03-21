@@ -23,7 +23,7 @@ interface Member {
     name: string;
     email: string;
     avatar?: string;
-    status: "IN" | "BREAK" | "OUT";
+    status: "IN" | "BREAK" | "OUT" | "MEETING";
     lastActivityAt: string;
     timezone: string;
 }
@@ -32,6 +32,7 @@ interface Summary {
     total: number;
     in: number;
     break: number;
+    meeting: number;
     out: number;
 }
 
@@ -40,7 +41,7 @@ export default function LiveAttendancePage() {
     const [loading, setLoading] = useState(true);
     const [data, setData] = useState<{ summary: Summary; members: Member[] } | null>(null);
     const [search, setSearch] = useState("");
-    const [filter, setFilter] = useState<"ALL" | "IN" | "BREAK" | "OUT">("ALL");
+    const [filter, setFilter] = useState<"ALL" | "IN" | "BREAK" | "MEETING" | "OUT">("ALL");
     const [lastRefreshed, setLastRefreshed] = useState(new Date());
     const [page, setPage] = useState(1);
     const ITEMS_PER_PAGE = 5;
@@ -149,6 +150,13 @@ export default function LiveAttendancePage() {
                     delay={0.3}
                 />
                 <StatCard
+                    label="IN MEETING"
+                    value={data?.summary.meeting || 0}
+                    icon={<Users className="h-6 w-6" />}
+                    color="purple"
+                    delay={0.35}
+                />
+                <StatCard
                     label="OUT"
                     value={data?.summary.out || 0}
                     icon={<LogOut className="h-6 w-6" />}
@@ -171,7 +179,7 @@ export default function LiveAttendancePage() {
                         />
                     </div>
                     <div className="flex p-1 bg-card-bg/50 rounded-xl border border-border-color/50 self-start lg:self-center">
-                        {["ALL", "IN", "BREAK", "OUT"].map((tab) => (
+                        {["ALL", "IN", "BREAK", "MEETING", "OUT"].map((tab) => (
                             <button
                                 key={tab}
                                 onClick={() => setFilter(tab as any)}
@@ -241,6 +249,7 @@ function StatCard({ label, value, icon, color, delay }: any) {
         blue: "from-blue-600/20 to-indigo-600/20 text-blue-400 border-blue-500/20",
         green: "from-emerald-600/20 to-teal-600/20 text-emerald-400 border-emerald-500/20",
         yellow: "from-amber-600/20 to-orange-600/20 text-amber-400 border-amber-500/20",
+        purple: "from-purple-600/20 to-pink-600/20 text-purple-400 border-purple-500/20",
         slate: "from-slate-600/20 to-slate-500/20 text-text-secondary border-slate-500/20"
     };
 
@@ -269,6 +278,7 @@ function MemberListItem({ member, index }: { member: Member; index: number }) {
     const statusColors = {
         IN: "bg-emerald-500 shadow-emerald-500/50",
         BREAK: "bg-amber-500 shadow-amber-500/50",
+        MEETING: "bg-purple-500 shadow-purple-500/50",
         OUT: "bg-slate-600 shadow-slate-600/50"
     };
 
@@ -320,9 +330,13 @@ function MemberListItem({ member, index }: { member: Member; index: number }) {
                     <p className="text-[10px] uppercase font-bold text-slate-600 tracking-widest mb-1">Current Status</p>
                     <span className={`text-[10px] font-extrabold uppercase tracking-tight px-2.5 py-1 rounded-full ${member.status === "IN" ? "bg-emerald-500/10 text-emerald-500" :
                         member.status === "BREAK" ? "bg-amber-500/10 text-amber-500" :
+                        member.status === "MEETING" ? "bg-purple-500/10 text-purple-500" :
                             "bg-slate-500/10 text-text-secondary"
                         }`}>
-                        {member.status === "IN" ? "Working" : member.status === "BREAK" ? "On Break" : "Offline"}
+                        {member.status === "IN" ? "Working" : 
+                         member.status === "BREAK" ? "On Break" : 
+                         member.status === "MEETING" ? "In Meeting" : 
+                         "Offline"}
                     </span>
                 </div>
                 <ChevronRight className="h-5 w-5 text-slate-700 group-hover:text-text-secondary group-hover:translate-x-1 transition-all" />

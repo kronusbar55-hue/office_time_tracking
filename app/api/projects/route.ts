@@ -16,8 +16,14 @@ export async function GET(request: Request) {
   if (!payload) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-
+  const userId = payload.sub;
   await connectDB();
+  const userRecord = await User.findById(userId).select("role").lean() as any;
+  if (!userRecord) return NextResponse.json({ error: "User not found" }, { status: 401 });
+  
+  const userRole = String(userRecord.role || "").toLowerCase();
+  const isAdminOrHR = userRole === "admin" || userRole === "hr";
+  const canManage = isAdminOrHR || userRole === "manager";
 
   const url = new URL(request.url);
   const forCurrentUser = url.searchParams.get("forCurrentUser") === "true";
@@ -26,11 +32,6 @@ export async function GET(request: Request) {
     status: { $ne: "archived" },
     name: { $nin: ["Other", "other", "OTHER"] }
   };
-
-  const userId = payload.sub;
-  const userRecord = await User.findById(userId).select("role").lean() as any;
-  if (!userRecord) return NextResponse.json({ error: "User not found" }, { status: 401 });
-  const userRole = String(userRecord.role || "").toLowerCase();
 
   // Enforce filtering for managers and employees
   // Admins and HR still see everything unless they explicitly request forCurrentUser
@@ -79,6 +80,10 @@ export async function POST(request: Request) {
   }
 
   await connectDB();
+  const user = await User.findById(payload.sub).select("role").lean() as any;
+  if (!user || (user.role !== "admin" && user.role !== "hr" && user.role !== "manager")) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
 
   const contentType = request.headers.get("content-type") || "";
 

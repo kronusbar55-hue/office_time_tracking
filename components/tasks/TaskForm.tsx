@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { Check, Upload, AlertCircle, X } from "lucide-react";
 import TaskEditor from "./TaskEditor";
 import { toast } from "react-toastify";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 type Props = {
   initial?: any | null;
@@ -31,6 +32,8 @@ export default function TaskForm({ initial, onSaved, onCancel, showHeader = true
   const [loadingMeta, setLoadingMeta] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
+  const { user } = useAuth();
+  const canManage = user?.role === "admin" || user?.role === "manager" || user?.role === "hr";
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dragContainerRef = useRef<HTMLDivElement>(null);
@@ -299,20 +302,29 @@ export default function TaskForm({ initial, onSaved, onCancel, showHeader = true
         )}
       </div>
 
+      {!canManage && (
+        <div className="flex items-center gap-3 rounded-xl bg-bg-secondary/40 border border-border-color/50 p-4 text-xs font-bold text-text-secondary uppercase tracking-widest">
+           <AlertCircle className="h-4 w-4" />
+           <span>Read Only: Only Admin, HR, and Managers can create or edit tasks.</span>
+        </div>
+      )}
+
       <div className="flex items-center gap-3 pt-4 border-t border-border-color/40">
-        <button
-          type="submit"
-          disabled={submitting}
-          className="flex items-center gap-2 rounded-md bg-accent px-6 py-2.5 text-sm font-bold text-slate-900 hover:brightness-105 disabled:opacity-50"
-        >
-          {submitting ? "Saving..." : <><Check size={18} /> Save Task</>}
-        </button>
+        {canManage && (
+          <button
+            type="submit"
+            disabled={submitting}
+            className="flex items-center gap-2 rounded-md bg-accent px-6 py-2.5 text-sm font-bold text-slate-900 hover:brightness-105 disabled:opacity-50"
+          >
+            {submitting ? "Saving..." : <><Check size={18} /> Save Task</>}
+          </button>
+        )}
         <button
           type="button"
           onClick={onCancel}
           className="px-6 py-2.5 text-sm font-medium text-text-secondary hover:text-text-primary"
         >
-          Cancel
+          {canManage ? "Cancel" : "Close"}
         </button>
       </div>
     </form>

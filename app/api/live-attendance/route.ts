@@ -59,7 +59,7 @@ export async function GET(request: Request) {
         const members = users.map((user: any) => {
             const latest = monitorMap.get(user._id.toString());
 
-            let status: "IN" | "BREAK" | "OUT" = "OUT";
+            let status: "IN" | "BREAK" | "OUT" | "MEETING" = "OUT";
             let lastActivityAt = user.updatedAt || new Date();
             let rawStatus = "OFFLINE";
 
@@ -68,9 +68,12 @@ export async function GET(request: Request) {
                 lastActivityAt = latest.createdAt;
 
                 // Map monitor status to UI status
-                if (["ACTIVE", "IDLE", "IN_MEETING"].includes(rawStatus.toUpperCase())) {
+                const upRaw = rawStatus.toUpperCase();
+                if (upRaw === "IN_MEETING") {
+                    status = "MEETING";
+                } else if (["ACTIVE", "IDLE"].includes(upRaw)) {
                     status = "IN";
-                } else if (rawStatus.toUpperCase() === "ON_BREAK") {
+                } else if (upRaw === "ON_BREAK") {
                     status = "BREAK";
                 } else {
                     status = "IN"; // Default to IN if we have a record
@@ -108,6 +111,7 @@ export async function GET(request: Request) {
             total: members.length,
             in: members.filter(m => m.status === "IN").length,
             break: members.filter(m => m.status === "BREAK").length,
+            meeting: members.filter(m => m.status === "MEETING").length,
             out: members.filter(m => m.status === "OUT").length
         };
 

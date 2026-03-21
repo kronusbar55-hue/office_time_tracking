@@ -98,29 +98,24 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
     // Role-based allowed fields
-    let allowed: string[] = [];
-    if (user.role === "admin" || user.role === "manager") {
-      // Full edit for admin/manager
-      allowed = [
-        "title",
-        "description",
-        "priority",
-        "project",
-        "assignee",
-        "reporter",
-        "dueDate",
-        "status",
-        "labels",
-        "estimatedTime",
-        "sprint",
-        "attachments"
-      ];
-    } else if (user.role === "employee") {
-      // Limited edit for employees (only status and assignee)
-      allowed = ["status", "assignee"];
-    } else {
+    if (!(user.role === "admin" || user.role === "manager" || user.role === "hr")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
+
+    let allowed: string[] = [
+      "title",
+      "description",
+      "priority",
+      "project",
+      "assignee",
+      "reporter",
+      "dueDate",
+      "status",
+      "labels",
+      "estimatedTime",
+      "sprint",
+      "attachments"
+    ];
 
     const update: any = {};
     for (const k of Object.keys(payload)) {

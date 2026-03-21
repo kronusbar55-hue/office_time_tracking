@@ -132,6 +132,8 @@ function TasksPageContent() {
 
   function handleSaved(task: any) {
     void loadList();
+    setShowModal(false);
+    setEditingTask(null);
   }
 
   async function handleDelete(task: any) {

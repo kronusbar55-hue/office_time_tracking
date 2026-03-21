@@ -139,7 +139,12 @@ export default function TaskTable({ tasks, user, loading = false, onDelete, onSt
                   <span className={`inline-block rounded-full px-2 py-1 text-xs font-medium text-slate-900 ${priorityColor(t.priority)}`}>{t.priority}</span>
                 </td>
                 <td className="px-3 py-2 align-top">
-                  <select value={t.status} onChange={(e) => handleStatusChange(taskId, e.target.value)} className="rounded-md border border-border-color bg-bg-primary/60 px-2 py-1 text-xs text-text-primary font-bold">
+                  <select 
+                    value={t.status} 
+                    onChange={(e) => handleStatusChange(taskId, e.target.value)} 
+                    disabled={user?.role === "employee"}
+                    className="rounded-md border border-border-color bg-bg-primary/60 px-2 py-1 text-xs text-text-primary font-bold disabled:opacity-50"
+                  >
                     <option value="todo">To Do</option>
                     <option value="in_progress">In Progress</option>
                     <option value="qa">QA</option>

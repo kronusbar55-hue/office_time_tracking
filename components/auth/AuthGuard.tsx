@@ -24,6 +24,10 @@ export function AuthGuard({ children }: { children: ReactNode }) {
     }
   }, [loading, isAuthenticated, router, pathname]);
 
+  // if this is a public route, allow rendering children immediately
+  // this prevents hydration mismatch and avoids flickering on login pages
+  if (isPublicRoute(pathname)) return <>{children}</>;
+
   // while checking session, render a non-blocking skeleton/shell
   if (loading) {
     return (
@@ -40,9 +44,6 @@ export function AuthGuard({ children }: { children: ReactNode }) {
 
   // if authenticated, render children
   if (isAuthenticated) return <>{children}</>;
-
-  // if this is a public route, allow rendering children
-  if (isPublicRoute(pathname)) return <>{children}</>;
 
   // otherwise null while redirect happens
   return null;

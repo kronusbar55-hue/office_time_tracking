@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import Link from "next/link";
 import { ExternalLink, Users, MoreVertical, Briefcase, Layout } from "lucide-react";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 type MemberOption = {
   id: string;
@@ -40,6 +41,9 @@ const emptyProjectForm = {
 
 
 export default function ProjectsPage() {
+  const { user } = useAuth();
+  const canManage = user?.role === "admin" || user?.role === "hr" || user?.role === "manager";
+
   const [projects, setProjects] = useState<Project[]>([]);
   const [users, setUsers] = useState<MemberOption[]>([]);
   const [loading, setLoading] = useState(true);
@@ -240,13 +244,15 @@ export default function ProjectsPage() {
             Manage internal projects and team assignments.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={startNew}
-          className="rounded-full bg-accent px-4 py-1.5 text-[11px] font-semibold text-slate-950 shadow-md shadow-cyan-500/40 hover:bg-cyan-400"
-        >
-          + New Project
-        </button>
+        {canManage && (
+          <button
+            type="button"
+            onClick={startNew}
+            className="rounded-full bg-accent px-4 py-1.5 text-[11px] font-semibold text-slate-950 shadow-md shadow-cyan-500/40 hover:bg-cyan-400"
+          >
+            + New Project
+          </button>
+        )}
       </div>
 
       {error && (
@@ -350,17 +356,19 @@ export default function ProjectsPage() {
                    >
                      <Layout size={12} />
                    </button>
-                   <button
-                    type="button"
-                    onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        startEdit(project);
-                    }}
-                    className="h-6 w-6 rounded-md flex items-center justify-center bg-card-bg/50 text-text-secondary hover:text-accent"
-                   >
-                     <MoreVertical size={12} />
-                   </button>
+                   {canManage && (
+                     <button
+                      type="button"
+                      onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          startEdit(project);
+                      }}
+                      className="h-6 w-6 rounded-md flex items-center justify-center bg-card-bg/50 text-text-secondary hover:text-accent"
+                     >
+                       <MoreVertical size={12} />
+                     </button>
+                   )}
                 </div>
               </div>
 

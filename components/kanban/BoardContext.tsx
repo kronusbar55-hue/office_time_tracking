@@ -6,7 +6,9 @@ import { ITask } from "@/models/Task";
 interface BoardContextType {
     tasks: ITask[];
     loading: boolean;
-    refreshTasks: () => Promise<void>;
+    hasMore: boolean;
+    refreshTasks: (search?: string) => Promise<void>;
+    loadMore: () => Promise<void>;
     moveTask: (taskId: string, toStatus: string, order: number) => Promise<void>;
     createTask: (taskData: any) => Promise<void>;
     assigneeFilter: string;
@@ -18,40 +20,57 @@ const BoardContext = createContext<BoardContextType | undefined>(undefined);
 export const BoardProvider: React.FC<{ projectId: string; children: React.ReactNode }> = ({ projectId, children }) => {
     const [tasks, setTasks] = useState<ITask[]>([]);
     const [loading, setLoading] = useState(true);
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
     const [assigneeFilter, setAssigneeFilter] = useState<string>("all");
+    const [currentSearch, setCurrentSearch] = useState("");
 
-    const refreshTasks = useCallback(async () => {
+    const fetchTasks = useCallback(async (p: number, search: string = "", filter: string = "all") => {
         try {
-            setLoading(true);
-            let url = `/api/tasks?project=${projectId}`;
-            if (assigneeFilter !== "all") {
-                url += `&assignee=${assigneeFilter}`;
-            }
+            let url = `/api/tasks?project=${projectId}&page=${p}&limit=50`;
+            if (filter !== "all") url += `&assignee=${filter}`;
+            if (search) url += `&search=${encodeURIComponent(search)}`;
+            
             const res = await fetch(url);
             const result = await res.json();
-            if (result.data) {
-                setTasks(result.data);
-            }
+            return result;
         } catch (error) {
             console.error("Failed to fetch tasks", error);
-        } finally {
-            setLoading(false);
+            return { data: [], total: 0 };
         }
-    }, [projectId, assigneeFilter]);
+    }, [projectId]);
+
+    const refreshTasks = useCallback(async (search: string = "") => {
+        setLoading(true);
+        setCurrentSearch(search);
+        const result = await fetchTasks(1, search, assigneeFilter);
+        setTasks(result.data || []);
+        setPage(1);
+        setHasMore((result.data?.length || 0) < result.total);
+        setLoading(false);
+    }, [fetchTasks, assigneeFilter]);
+
+    const loadMore = useCallback(async () => {
+        if (!hasMore || loading) return;
+        const nextPage = page + 1;
+        const result = await fetchTasks(nextPage, currentSearch, assigneeFilter);
+        if (result.data) {
+            setTasks(prev => [...prev, ...result.data]);
+            setPage(nextPage);
+            setHasMore(tasks.length + result.data.length < result.total);
+        }
+    }, [hasMore, loading, page, fetchTasks, currentSearch, assigneeFilter, tasks.length]);
 
     useEffect(() => {
-        refreshTasks();
-    }, [refreshTasks, assigneeFilter]);
+        refreshTasks(currentSearch);
+    }, [projectId, assigneeFilter]);
 
     const moveTask = async (taskId: string, toStatus: string, order: number) => {
-        // Optimistic update
         const updatedTasks = [...tasks];
         const taskIndex = updatedTasks.findIndex((t) => t._id.toString() === taskId);
         if (taskIndex > -1) {
             const task = { ...updatedTasks[taskIndex], status: toStatus as any, order };
             updatedTasks[taskIndex] = task;
-            // Re-sort
-            updatedTasks.sort((a, b) => (a.order || 0) - (b.order || 0));
             setTasks(updatedTasks);
         }
 
@@ -63,15 +82,26 @@ export const BoardProvider: React.FC<{ projectId: string; children: React.ReactN
             });
         } catch (error) {
             console.error("Failed to move task", error);
-            refreshTasks(); // Revert on failure
+            refreshTasks(currentSearch);
         }
     };
+
     const createTask = async (taskData: any) => {
-        await refreshTasks();
+        await refreshTasks(currentSearch);
     };
 
     return (
-        <BoardContext.Provider value={{ tasks, loading, refreshTasks, moveTask, createTask, assigneeFilter, setAssigneeFilter }}>
+        <BoardContext.Provider value={{ 
+            tasks, 
+            loading, 
+            hasMore, 
+            refreshTasks, 
+            loadMore,
+            moveTask, 
+            createTask, 
+            assigneeFilter, 
+            setAssigneeFilter 
+        }}>
             {children}
         </BoardContext.Provider>
     );

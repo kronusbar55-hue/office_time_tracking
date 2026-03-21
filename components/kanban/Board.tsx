@@ -28,14 +28,17 @@ const COLUMNS: { id: TaskStatus; title: string }[] = [
     { id: "done", title: "Done" },
 ];
 
-export default function Board({ onTaskClick, searchQuery = "" }: { onTaskClick?: (task: any) => void; searchQuery?: string }) {
+export default function Board({ 
+    onTaskClick, 
+    searchQuery = "", 
+    canEdit = true 
+}: { 
+    onTaskClick?: (task: any) => void; 
+    searchQuery?: string;
+    canEdit?: boolean;
+}) {
     const { tasks: allTasks, moveTask } = useBoard();
     const [activeTask, setActiveTask] = useState<any>(null);
-
-    const tasks = allTasks.filter(task => 
-        task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        task.key.toLowerCase().includes(searchQuery.toLowerCase())
-    );
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -47,8 +50,9 @@ export default function Board({ onTaskClick, searchQuery = "" }: { onTaskClick?:
     );
 
     const handleDragStart = (event: DragStartEvent) => {
+        if (!canEdit) return;
         const { active } = event;
-        const task = tasks.find((t) => t._id.toString() === active.id);
+        const task = allTasks.find((t) => t._id.toString() === active.id);
         setActiveTask(task);
     };
 
@@ -59,7 +63,7 @@ export default function Board({ onTaskClick, searchQuery = "" }: { onTaskClick?:
         const activeTaskId = active.id.toString();
         const overId = over.id.toString();
 
-        const activeTask = tasks.find((t) => t._id.toString() === activeTaskId);
+        const activeTask = allTasks.find((t) => t._id.toString() === activeTaskId);
         if (!activeTask) return;
 
         // Check if dropped over a column or another task
@@ -69,10 +73,10 @@ export default function Board({ onTaskClick, searchQuery = "" }: { onTaskClick?:
         if (COLUMNS.some((col) => col.id === overId)) {
             targetStatus = overId as TaskStatus;
             // Drop at end of column
-            const columnTasks = tasks.filter((t) => t.status === targetStatus);
+            const columnTasks = allTasks.filter((t) => t.status === targetStatus);
             targetOrder = columnTasks.length > 0 ? Math.max(...columnTasks.map((t) => t.order || 0)) + 1 : 0;
         } else {
-            const overTask = tasks.find((t) => t._id.toString() === overId);
+            const overTask = allTasks.find((t) => t._id.toString() === overId);
             if (overTask) {
                 targetStatus = overTask.status;
                 targetOrder = overTask.order || 0;
@@ -99,7 +103,7 @@ export default function Board({ onTaskClick, searchQuery = "" }: { onTaskClick?:
                         key={column.id}
                         id={column.id}
                         title={column.title}
-                        tasks={tasks.filter((t) => t.status === column.id)}
+                        tasks={allTasks.filter((t) => t.status === column.id)}
                         onTaskClick={onTaskClick}
                     />
                 ))}

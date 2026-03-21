@@ -137,7 +137,7 @@ export async function POST(request: Request) {
     const token = cookieStore.get("auth_token")?.value;
     const payload = token ? verifyAuthToken(token) : null;
     if (!payload) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    if (!(payload.role === "admin" || payload.role === "manager")) {
+    if (!(payload.role === "admin" || payload.role === "manager" || payload.role === "hr")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

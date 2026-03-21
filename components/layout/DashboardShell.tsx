@@ -17,7 +17,17 @@ export function DashboardShell({ children }: DashboardShellProps) {
   }, []);
 
   if (!mounted) {
-    return <AuthGuard>{children}</AuthGuard>;
+    // Return the minimum shell to match the server-side render structure
+    // This helps avoid hydration mismatches by keeping the tree depth consistent
+    return (
+      <div className="flex min-h-screen bg-background">
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <main className="flex-1 overflow-y-auto px-6 pb-8 pt-4">
+            <AuthGuard>{children}</AuthGuard>
+          </main>
+        </div>
+      </div>
+    );
   }
 
   return (

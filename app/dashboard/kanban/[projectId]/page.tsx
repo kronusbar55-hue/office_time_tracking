@@ -5,6 +5,7 @@ import Board from "@/components/kanban/Board";
 import { BoardProvider } from "@/components/kanban/BoardContext";
 import { Filter, Search, Plus, Settings, Users, Layers, Layout } from "lucide-react";
 import TaskModal from "@/components/tasks/TaskModal";
+import { useAuth } from "@/components/auth/AuthProvider";
 import { useBoard } from "@/components/kanban/BoardContext";
 
 export default function KanbanPage({ params }: { params: { projectId: string } }) {
@@ -39,7 +40,19 @@ function KanbanContent({ projectId }: { projectId: string }) {
         fetchProject();
     }, [projectId]);
 
+    // Handle debounced search
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            refreshTasks(searchQuery);
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [searchQuery, refreshTasks]);
+
+    const { user } = useAuth();
+    const canManageTasks = user?.role === "admin" || user?.role === "manager" || user?.role === "hr";
+
     const handleCreateClick = () => {
+        if (!canManageTasks) return;
         setSelectedTask({ project: { _id: projectId } });
         setIsModalOpen(true);
     };
@@ -71,13 +84,15 @@ function KanbanContent({ projectId }: { projectId: string }) {
                             <Users size={16} />
                             <span>{project?.members?.length || 0} Members</span>
                         </button>
-                        <button
-                            onClick={handleCreateClick}
-                            className="flex items-center gap-2 px-6 py-2 rounded-xl bg-accent text-text-primary hover:bg-accent-hover transition-all text-sm font-black shadow-lg shadow-accent/20"
-                        >
-                            <Plus size={18} />
-                            <span>Create Task</span>
-                        </button>
+                        {canManageTasks && (
+                            <button
+                                onClick={handleCreateClick}
+                                className="flex items-center gap-2 px-6 py-2 rounded-xl bg-accent text-text-primary hover:bg-accent-hover transition-all text-sm font-black shadow-lg shadow-accent/20"
+                            >
+                                <Plus size={18} />
+                                <span>Create Task</span>
+                            </button>
+                        )}
                     </div>
                 </div>
 
@@ -143,9 +158,8 @@ function KanbanContent({ projectId }: { projectId: string }) {
                 </div>
             </div>
 
-            {/* Board Area */}
             <div className="flex-1 overflow-hidden">
-                <Board onTaskClick={handleTaskClick} searchQuery={searchQuery} />
+                <Board onTaskClick={handleTaskClick} searchQuery={searchQuery} canEdit={canManageTasks} />
             </div>
 
             <TaskModal
@@ -154,7 +168,11 @@ function KanbanContent({ projectId }: { projectId: string }) {
                     setIsModalOpen(false);
                     setSelectedTask(null);
                 }}
-                onSaved={() => refreshTasks()}
+                onSaved={() => {
+                    refreshTasks();
+                    setIsModalOpen(false);
+                    setSelectedTask(null);
+                }}
                 initial={selectedTask}
             />
         </div>
