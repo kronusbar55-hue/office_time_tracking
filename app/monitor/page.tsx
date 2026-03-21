@@ -1,4 +1,3 @@
-import { DashboardShell } from "@/components/layout/DashboardShell";
 import MonitorDashboard from "@/components/monitor/MonitorDashboard";
 import { connectDB } from "@/lib/db";
 

@@ -8,6 +8,7 @@ import ActivityTimeline from "@/components/tasks/ActivityTimeline";
 import TaskComments from "@/components/tasks/TaskComments";
 import ImageGallery from "@/components/tasks/ImageGallery";
 import TaskEditor from "@/components/tasks/TaskEditor";
+import TaskModal from "@/components/tasks/TaskModal";
 import { useAuth } from "@/components/auth/AuthProvider";
 
 export default function TaskViewPage() {
@@ -26,6 +27,7 @@ export default function TaskViewPage() {
   const [uploadingAttachments, setUploadingAttachments] = useState(false);
   const [deletingAttachments, setDeletingAttachments] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<"comments" | "activity">("comments");
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -218,7 +220,7 @@ export default function TaskViewPage() {
           </div>
           {canFullEdit && (
             <button
-              onClick={() => router.push(`/tasks/${taskId}/edit`)}
+              onClick={() => setIsEditing(true)}
               className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-slate-900 hover:brightness-95"
             >
               Edit
@@ -387,6 +389,18 @@ export default function TaskViewPage() {
           )}
         </div>
       </div>
+      
+      {isEditing && (
+        <TaskModal
+          open={isEditing}
+          onClose={() => setIsEditing(false)}
+          onSaved={(updatedTask) => {
+            setTask(updatedTask);
+            setIsEditing(false);
+          }}
+          initial={task}
+        />
+      )}
     </div>
   );
 }

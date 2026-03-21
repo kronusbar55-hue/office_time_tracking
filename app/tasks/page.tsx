@@ -21,6 +21,7 @@ function TasksPageContent() {
   const [loadingFilters, setLoadingFilters] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [editingTask, setEditingTask] = useState<any | null>(null);
 
   const loadList = useCallback(async () => {
     setLoading(true);
@@ -120,6 +121,12 @@ function TasksPageContent() {
   }, {});
 
   function openCreate() {
+    setEditingTask(null);
+    setShowModal(true);
+  }
+
+  function handleEdit(task: any) {
+    setEditingTask(task);
     setShowModal(true);
   }
 
@@ -244,15 +251,23 @@ function TasksPageContent() {
                 <h2 className="text-sm font-semibold text-text-primary">{proj}</h2>
                 <div className="text-xs text-text-secondary">{grouped[proj].length} task(s)</div>
               </div>
-              <TaskTable tasks={grouped[proj]} loading={loading} onDelete={handleDelete} onStatusChange={handleStatusChange} user={me} />
+              <TaskTable tasks={grouped[proj]} loading={loading} onDelete={handleDelete} onStatusChange={handleStatusChange} onEdit={handleEdit} user={me} />
             </div>
           ))}
         </div>
       ) : (
-        <TaskTable tasks={tasks} loading={loading} onDelete={handleDelete} onStatusChange={handleStatusChange} user={me} />
+        <TaskTable tasks={tasks} loading={loading} onDelete={handleDelete} onStatusChange={handleStatusChange} onEdit={handleEdit} user={me} />
       )}
 
-      <TaskModal open={showModal} onClose={() => setShowModal(false)} onSaved={handleSaved} />
+      <TaskModal 
+        open={showModal} 
+        onClose={() => {
+          setShowModal(false);
+          setEditingTask(null);
+        }} 
+        onSaved={handleSaved} 
+        initial={editingTask}
+      />
     </div>
   );
 }

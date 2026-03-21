@@ -3,13 +3,16 @@
 import { useState } from "react";
 import { toast } from "react-toastify";
 
-export default function TaskTable({ tasks, loading, onDelete, onStatusChange, user }: {
+type Props = {
   tasks: any[];
-  loading: boolean;
-  onDelete: (task: any) => void;
-  onStatusChange: (taskId: string, status: string) => void;
   user?: any;
-}) {
+  loading?: boolean;
+  onDelete?: (task: any) => void;
+  onStatusChange?: (taskId: string, status: string) => void;
+  onEdit?: (task: any) => void;
+};
+
+export default function TaskTable({ tasks, user, loading = false, onDelete, onStatusChange, onEdit }: Props) {
   const [deleting, setDeleting] = useState<string | null>(null);
 
   const handleDelete = async (task: any) => {
@@ -20,7 +23,7 @@ export default function TaskTable({ tasks, loading, onDelete, onStatusChange, us
       const res = await fetch(`/api/tasks/${task._id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete task");
       toast.success("Task deleted successfully!");
-      onDelete(task);
+      if (onDelete) onDelete(task);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to delete task");
     } finally {
@@ -28,8 +31,10 @@ export default function TaskTable({ tasks, loading, onDelete, onStatusChange, us
     }
   };
 
-  const handleStatusChange = async (taskId: string, newStatus: string) => {
-    if (!taskId || taskId === "undefined") {
+  const handleStatusChange = async (taskId: string, status: string) => {
+    try {
+      if (onStatusChange) onStatusChange(taskId, status);
+    } catch (err) {
       console.error("Attempted to update status with undefined taskId");
       return;
     }
@@ -37,11 +42,10 @@ export default function TaskTable({ tasks, loading, onDelete, onStatusChange, us
       const res = await fetch(`/api/tasks/${taskId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus })
+        body: JSON.stringify({ status })
       });
       if (!res.ok) throw new Error("Failed to update status");
       toast.success("Status updated successfully!");
-      onStatusChange(taskId, newStatus);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to update status");
     }
@@ -164,7 +168,11 @@ export default function TaskTable({ tasks, loading, onDelete, onStatusChange, us
                     <a href={`/tasks/${taskId}`} className="text-text-secondary hover:text-text-primary">View</a>
                     {user?.role !== "employee" && (
                       <>
-                        <a href={`/tasks/${taskId}/edit`} className="text-sky-400 hover:brightness-110">Edit</a>
+                        {onEdit ? (
+                          <button onClick={() => onEdit(t)} className="text-sky-400 hover:brightness-110">Edit</button>
+                        ) : (
+                          <a href={`/tasks/${taskId}/edit`} className="text-sky-400 hover:brightness-110">Edit</a>
+                        )}
                         <button onClick={() => handleDelete(t)} disabled={deleting === taskId} className="text-rose-400 hover:brightness-110 disabled:opacity-50">
                           {deleting === taskId ? "Deleting..." : "Delete"}
                         </button>

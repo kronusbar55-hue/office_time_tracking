@@ -1,4 +1,6 @@
-import { ReactNode } from "react";
+"use client";
+
+import { ReactNode, useEffect, useState } from "react";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
 import AuthGuard from "@/components/auth/AuthGuard";
@@ -8,6 +10,16 @@ interface DashboardShellProps {
 }
 
 export function DashboardShell({ children }: DashboardShellProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return <AuthGuard>{children}</AuthGuard>;
+  }
+
   return (
     <div className="flex min-h-screen bg-background">
       <Sidebar />

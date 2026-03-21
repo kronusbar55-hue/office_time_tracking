@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { DashboardShell } from "@/components/layout/DashboardShell";
+
 import { BoardProvider } from "@/components/kanban/BoardContext";
 import Board from "@/components/kanban/Board";
 import { 
@@ -53,7 +53,7 @@ export default function KanbanPage() {
     const selectedProject = projects.find(p => p.id === selectedProjectId);
 
     return (
-        <DashboardShell>
+        <div className="flex h-full flex-col overflow-hidden">
             <div className="flex flex-col h-[calc(100vh-120px)] overflow-hidden">
                 {/* Kanban Toolbar */}
                 <div className="flex flex-col gap-6 mb-6">
@@ -223,6 +223,6 @@ export default function KanbanPage() {
                 />
             )}
 
-        </DashboardShell>
+        </div>
     );
 }
