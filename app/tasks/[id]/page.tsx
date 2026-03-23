@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { ChevronLeft, Upload, MessageSquare, Clock } from "lucide-react";
+import { ChevronLeft, Upload, MessageSquare, Clock, Check } from "lucide-react";
 import { toast } from "react-toastify";
 import ActivityTimeline from "@/components/tasks/ActivityTimeline";
 import TaskComments from "@/components/tasks/TaskComments";
 import ImageGallery from "@/components/tasks/ImageGallery";
 import TaskEditor from "@/components/tasks/TaskEditor";
+import TaskForm from "@/components/tasks/TaskForm";
 import TaskModal from "@/components/tasks/TaskModal";
 import { useAuth } from "@/components/auth/AuthProvider";
 
@@ -63,8 +64,8 @@ export default function TaskViewPage() {
   }, [taskId]);
 
   const isEmployee = user?.role === "employee";
-  const canFullEdit = user?.role === "admin" || user?.role === "manager";
-  const canDeleteAttachments = user?.role === "admin" || user?.role === "manager";
+  const canFullEdit = ["admin", "manager", "hr"].includes(user?.role || "");
+  const canDeleteAttachments = canFullEdit;
 
   async function handleUpdate() {
     if (!task) return;
@@ -94,6 +95,8 @@ export default function TaskViewPage() {
 
       const data = await res.json();
       setTask(data.data);
+      setNewAssignee(data.data?.assignee?._id || null);
+      setNewStatus(data.data?.status || "todo");
       toast.success("Task updated successfully!");
     } catch (error) {
       console.error(error);
@@ -211,57 +214,158 @@ export default function TaskViewPage() {
         Back
       </button>
 
-      {/* Task Header */}
-      <div className="rounded-lg border border-border-color/40 bg-bg-secondary/40 p-6">
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-text-primary">{task.key} — {task.title}</h1>
-            <p className="mt-1 text-sm text-text-secondary">{task.project?.name}</p>
+      <div className="rounded-2xl border border-border-color/40 bg-bg-secondary/40 p-8 shadow-xl">
+        {isEditing ? (
+          <div className="animate-in fade-in slide-in-from-top-4 duration-300">
+             <TaskForm 
+               initial={task} 
+               onSaved={(updated) => {
+                 setTask(updated);
+                 setIsEditing(false);
+               }} 
+               onCancel={() => setIsEditing(false)} 
+               showHeader={false}
+             />
           </div>
-          {canFullEdit && (
-            <button
-              onClick={() => setIsEditing(true)}
-              className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-slate-900 hover:brightness-95"
-            >
-              Edit
-            </button>
-          )}
-        </div>
+        ) : (
+          <div className="animate-in fade-in duration-300">
+            <div className="flex items-start justify-between">
+              <div>
+                <h1 className="text-3xl font-black text-text-primary tracking-tighter uppercase">{task.key} — {task.title}</h1>
+                <p className="mt-2 text-sm text-text-secondary font-medium">{task.project?.name}</p>
+              </div>
+              {canFullEdit && (
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="rounded-md bg-accent px-4 py-2 text-sm font-black uppercase tracking-tighter text-slate-900 shadow-lg shadow-accent/20 hover:brightness-95 transition-all"
+                >
+                  Edit Task
+                </button>
+              )}
+            </div>
 
-        <div className="mt-6 grid grid-cols-2 gap-6">
-          <div>
-            <div className="text-xs text-text-secondary uppercase">Type</div>
-            <div className="mt-1 text-sm text-text-primary">{task.type}</div>
-          </div>
-          <div>
-            <div className="text-xs text-text-secondary uppercase">Priority</div>
-            <div className="mt-1 text-sm text-text-primary">{task.priority}</div>
-          </div>
-          <div>
-            <div className="text-xs text-text-secondary uppercase">Due Date</div>
-            <div className="mt-1 text-sm text-text-primary">
-              {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : "—"}
+            <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-8">
+              <div className="space-y-1">
+                <div className="text-[10px] text-text-secondary uppercase font-black tracking-widest">Type</div>
+                <div className="text-sm text-text-primary font-bold">{task.type}</div>
+              </div>
+              <div className="space-y-1">
+                <div className="text-[10px] text-text-secondary uppercase font-black tracking-widest">Priority</div>
+                <div className="text-sm text-text-primary font-bold">
+                  <span className={`px-2 py-0.5 rounded ${
+                    task.priority === 'Critical' ? 'bg-red-500/20 text-red-100' :
+                    task.priority === 'High' ? 'bg-orange-500/20 text-orange-100' :
+                    'bg-blue-500/20 text-blue-100'
+                  }`}>
+                    {task.priority}
+                  </span>
+                </div>
+              </div>
+              <div className="space-y-1">
+                <div className="text-[10px] text-text-secondary uppercase font-black tracking-widest">Due Date</div>
+                <div className="text-sm text-text-primary font-bold">
+                  {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : "—"}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <div className="text-[10px] text-text-secondary uppercase font-black tracking-widest">Reporter</div>
+                <div className="text-sm text-text-primary font-bold">
+                  {task.reporter ? `${task.reporter.firstName} ${task.reporter.lastName}` : "—"}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <div className="text-[10px] text-text-secondary uppercase font-black tracking-widest">Assignee</div>
+                <div className="text-sm text-text-primary font-bold">
+                  {task.assignee ? `${task.assignee.firstName} ${task.assignee.lastName}` : "Unassigned"}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <div className="text-[10px] text-text-secondary uppercase font-black tracking-widest">Status</div>
+                <div className="text-sm text-text-primary font-bold uppercase tracking-tighter">
+                  {task.status?.replace('_', ' ')}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-10 border-t border-border-color/40 pt-8">
+              <h3 className="text-xs font-black text-text-secondary uppercase tracking-widest mb-4">Description</h3>
+              <div className="text-sm text-text-primary leading-relaxed bg-bg-primary/20 rounded-xl p-4 border border-border-color/20">
+                {task.description ? (
+                  <TaskEditor content={task.description} onChange={() => {}} editable={false} />
+                ) : (
+                  <span className="text-text-secondary italic">No description provided</span>
+                )}
+              </div>
             </div>
           </div>
-          <div>
-            <div className="text-xs text-text-secondary uppercase">Reporter</div>
-            <div className="mt-1 text-sm text-text-primary">
-              {task.reporter ? `${task.reporter.firstName} ${task.reporter.lastName}` : "—"}
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-6 border-t border-border-color/40 pt-6">
-          <h3 className="text-sm font-semibold text-text-primary mb-4">Description</h3>
-          <div className="text-sm text-text-secondary">
-            {task.description ? (
-              <TaskEditor content={task.description} onChange={() => {}} editable={false} />
-            ) : (
-              <span className="text-text-secondary italic">No description provided</span>
-            )}
-          </div>
-        </div>
+        )}
       </div>
+
+      {/* Quick Update Section for Employees */}
+      {isEmployee && !isEditing && (
+        <div className="rounded-2xl border border-border-color/40 bg-bg-secondary/40 p-8 shadow-xl">
+           <div className="flex items-center gap-3 mb-6">
+             <div className="h-8 w-1 bg-accent rounded-full" />
+             <h3 className="text-lg font-black text-text-primary uppercase tracking-tighter">Quick Update</h3>
+             <span className="text-[10px] bg-accent/10 px-2 py-1 rounded text-accent uppercase font-black tracking-widest ml-auto">Employee View</span>
+           </div>
+           
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-[10px] text-text-secondary uppercase font-black tracking-widest pl-1">Assignee</label>
+                <select
+                  value={newAssignee || ""}
+                  onChange={(e) => setNewAssignee(e.target.value || null)}
+                  className="w-full rounded-xl border border-border-color bg-bg-primary/20 px-4 py-3 text-sm text-text-primary font-bold focus:border-accent focus:outline-none transition-all"
+                >
+                  <option value="">Unassigned</option>
+                  {users.map((u: any) => (
+                    <option key={u.id} value={u.id}>
+                      {u.firstName} {u.lastName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] text-text-secondary uppercase font-black tracking-widest pl-1">Status</label>
+                <select
+                  value={newStatus || "todo"}
+                  onChange={(e) => setNewStatus(e.target.value)}
+                  className="w-full rounded-xl border border-border-color bg-bg-primary/20 px-4 py-3 text-sm text-text-primary font-bold focus:border-accent focus:outline-none transition-all"
+                >
+                  <option value="todo">To Do</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="qa">QA</option>
+                  <option value="done">Done</option>
+                </select>
+              </div>
+           </div>
+
+           <div className="mt-8 flex items-center gap-4">
+              <button
+                onClick={handleUpdate}
+                disabled={updating}
+                className="rounded-xl bg-accent px-8 py-3 text-sm font-black uppercase tracking-tighter text-slate-900 shadow-lg shadow-accent/20 hover:brightness-95 disabled:opacity-50 transition-all flex items-center gap-2"
+              >
+                {updating ? (
+                  <span className="h-4 w-4 border-2 border-slate-900 border-t-transparent animate-spin rounded-full" />
+                ) : <Check className="h-4 w-4" />}
+                {updating ? "Updating..." : "Update Task"}
+              </button>
+              
+              <button
+                onClick={() => {
+                  setNewAssignee(task.assignee?._id || null);
+                  setNewStatus(task.status);
+                }}
+                className="px-6 py-3 text-xs font-black text-text-secondary uppercase tracking-widest hover:text-text-primary transition-colors"
+              >
+                Reset Changes
+              </button>
+           </div>
+        </div>
+      )}
 
       {/* Attachments Section */}
       <div className="rounded-lg border border-border-color/40 bg-bg-secondary/40 p-6">
@@ -293,62 +397,6 @@ export default function TaskViewPage() {
         />
       </div>
 
-      {/* Employee Update Panel */}
-      {isEmployee && (
-        <div className="rounded-lg border border-border-color/40 bg-bg-secondary/40 p-6">
-          <h3 className="text-sm font-semibold text-text-primary mb-4">Update Task</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-[11px] text-text-secondary uppercase">Assignee</label>
-              <select
-                value={newAssignee || ""}
-                onChange={(e) => setNewAssignee(e.target.value || null)}
-                className="mt-2 w-full rounded-md border border-border-color bg-bg-primary/60 px-3 py-2 text-sm text-text-primary"
-              >
-                <option value="">Unassigned</option>
-                {users.map((u: any) => (
-                  <option key={u.id} value={u.id}>
-                    {u.firstName} {u.lastName}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="text-[11px] text-text-secondary uppercase">Status</label>
-              <select
-                value={newStatus || "todo"}
-                onChange={(e) => setNewStatus(e.target.value)}
-                className="mt-2 w-full rounded-md border border-border-color bg-bg-primary/60 px-3 py-2 text-sm text-text-primary"
-              >
-                <option value="todo">To Do</option>
-                <option value="in_progress">In Progress</option>
-                <option value="qa">QA</option>
-                <option value="done">Done</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="mt-4 flex gap-2">
-            <button
-              onClick={handleUpdate}
-              disabled={updating}
-              className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-slate-900 hover:brightness-95 disabled:opacity-50"
-            >
-              {updating ? "Updating..." : "Update"}
-            </button>
-            <button
-              onClick={() => {
-                setNewAssignee(task.assignee?._id || null);
-                setNewStatus(task.status);
-              }}
-              className="rounded-md px-4 py-2 text-sm text-text-secondary hover:text-text-primary"
-            >
-              Reset
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Activity / Comments Tabbed Section */}
       <div className="rounded-lg border border-border-color/40 bg-bg-secondary/40 overflow-hidden shadow-xl">
@@ -390,17 +438,6 @@ export default function TaskViewPage() {
         </div>
       </div>
       
-      {isEditing && (
-        <TaskModal
-          open={isEditing}
-          onClose={() => setIsEditing(false)}
-          onSaved={(updatedTask) => {
-            setTask(updatedTask);
-            setIsEditing(false);
-          }}
-          initial={task}
-        />
-      )}
     </div>
   );
 }

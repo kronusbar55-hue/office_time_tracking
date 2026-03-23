@@ -57,10 +57,14 @@ export async function connectDB() {
     return cached.conn;
   }
 
+  const dbNameFromEnv = process.env.MONGODB_DB_NAME
+    ? process.env.MONGODB_DB_NAME.trim().replace(/^['"]|['"]$/g, "")
+    : "office_time_tracking";
+
   if (!cached.promise) {
     cached.promise = mongoose
       .connect(MONGODB_URI!, {
-        dbName: process.env.MONGODB_DB_NAME || "office_time_tracking",
+        dbName: dbNameFromEnv,
         serverSelectionTimeoutMS: 15000,
         connectTimeoutMS: 15000,
       })

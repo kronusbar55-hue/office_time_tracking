@@ -97,25 +97,33 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     const existing = await Task.findById(params.id).lean();
     if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-    // Role-based allowed fields
-    if (!(user.role === "admin" || user.role === "manager" || user.role === "hr")) {
+    const isAdminOrManager = user.role === "admin" || user.role === "manager" || user.role === "hr";
+    const isEmployee = user.role === "employee";
+
+    if (!isAdminOrManager && !isEmployee) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    let allowed: string[] = [
-      "title",
-      "description",
-      "priority",
-      "project",
-      "assignee",
-      "reporter",
-      "dueDate",
-      "status",
-      "labels",
-      "estimatedTime",
-      "sprint",
-      "attachments"
-    ];
+    let allowed: string[] = [];
+    if (isAdminOrManager) {
+      allowed = [
+        "title",
+        "description",
+        "priority",
+        "project",
+        "assignee",
+        "reporter",
+        "dueDate",
+        "status",
+        "labels",
+        "estimatedTime",
+        "sprint",
+        "attachments"
+      ];
+    } else if (isEmployee) {
+      // Employees can only update status and assignee
+      allowed = ["status", "assignee"];
+    }
 
     const update: any = {};
     for (const k of Object.keys(payload)) {

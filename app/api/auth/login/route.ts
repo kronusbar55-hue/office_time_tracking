@@ -21,11 +21,11 @@ export async function POST(request: Request) {
 
   // Robust User model retrieval
   const UserModel = User || (mongoose.models && mongoose.models.User) || mongoose.model("User");
-
   const user = await UserModel.findOne({
     email: email.toLowerCase(),
     isDeleted: false
   });
+
 
   if (!user || !user.isActive) {
     return NextResponse.json(errorResp("Invalid credentials"), { status: 401 });
@@ -48,16 +48,6 @@ export async function POST(request: Request) {
     status: { $ne: "archived" }
   }, "name").lean();
 
-  // Check for today's entry in employeemonitors
-  const { EmployeeMonitor } = await import("@/models/EmployeeMonitor");
-  const today = new Date().toISOString().split('T')[0];
-  const firstEntry = await EmployeeMonitor.findOne({
-    userId: user._id.toString(),
-    date: today
-  }).sort({ time: 1 }).lean();
-
-  const isLogin = firstEntry ? 1 : 0;
-
   const res = NextResponse.json(successResp("Authenticated", {
     user: {
       id: user._id.toString(),
@@ -69,9 +59,7 @@ export async function POST(request: Request) {
         id: p._id.toString(),
         name: p.name
       }))
-    },
-    isLogin,
-    firstEntry
+    }
   }));
 
   // Log successful login

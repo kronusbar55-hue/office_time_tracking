@@ -34,6 +34,9 @@ export default function TaskForm({ initial, onSaved, onCancel, showHeader = true
   const [dragActive, setDragActive] = useState(false);
   const { user } = useAuth();
   const canManage = user?.role === "admin" || user?.role === "manager" || user?.role === "hr";
+  const isEmployee = user?.role === "employee";
+  const isEdit = !!(initial?._id || initial?.id);
+  const canEditToggle = canManage || (isEmployee && isEdit);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dragContainerRef = useRef<HTMLDivElement>(null);
@@ -204,7 +207,8 @@ export default function TaskForm({ initial, onSaved, onCancel, showHeader = true
             value={title} 
             onChange={(e) => setTitle(e.target.value)} 
             required 
-            className="mt-1 w-full rounded-md border border-border-color bg-bg-primary/60 px-3 py-2 text-sm text-text-primary focus:border-border-color focus:outline-none" 
+            disabled={!canManage}
+            className="mt-1 w-full rounded-md border border-border-color bg-bg-primary/20 px-3 py-2 text-sm text-text-primary focus:border-border-color focus:outline-none disabled:opacity-70 disabled:cursor-not-allowed" 
           />
         </div>
 
@@ -214,8 +218,8 @@ export default function TaskForm({ initial, onSaved, onCancel, showHeader = true
             value={projectId || ""} 
             onChange={(e) => setProjectId(e.target.value || null)} 
             required 
-            disabled={loadingMeta || (!!initial?.project && !(initial?._id || initial?.id))}
-            className="mt-1 w-full rounded-md border border-border-color bg-bg-primary/60 px-3 py-2 text-sm text-text-primary focus:border-border-color focus:outline-none"
+            disabled={loadingMeta || !canManage || (!!initial?.project && !isEdit)}
+            className="mt-1 w-full rounded-md border border-border-color bg-bg-primary/20 px-3 py-2 text-sm text-text-primary focus:border-border-color focus:outline-none disabled:opacity-70 disabled:cursor-not-allowed"
           >
             <option value="">Select project</option>
             {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -224,7 +228,12 @@ export default function TaskForm({ initial, onSaved, onCancel, showHeader = true
 
         <div>
           <label className="text-[11px] text-text-secondary uppercase">Type</label>
-          <select value={type} onChange={(e) => setType(e.target.value as any)} className="mt-1 w-full rounded-md border border-border-color bg-bg-primary/60 px-3 py-2 text-sm text-text-primary focus:border-border-color focus:outline-none">
+          <select 
+            value={type} 
+            onChange={(e) => setType(e.target.value as any)} 
+            disabled={!canManage}
+            className="mt-1 w-full rounded-md border border-border-color bg-bg-primary/20 px-3 py-2 text-sm text-text-primary focus:border-border-color focus:outline-none disabled:opacity-70 disabled:cursor-not-allowed"
+          >
             <option value="Task">Task</option>
             <option value="Bug">Bug</option>
             <option value="Improvement">Improvement</option>
@@ -233,7 +242,12 @@ export default function TaskForm({ initial, onSaved, onCancel, showHeader = true
 
         <div>
           <label className="text-[11px] text-text-secondary uppercase">Assignee</label>
-          <select value={assigneeId || ""} onChange={(e) => setAssigneeId(e.target.value || null)} className="mt-1 w-full rounded-md border border-border-color bg-bg-primary/60 px-3 py-2 text-sm text-text-primary focus:border-border-color focus:outline-none">
+          <select 
+            value={assigneeId || ""} 
+            onChange={(e) => setAssigneeId(e.target.value || null)} 
+            disabled={!canEditToggle}
+            className="mt-1 w-full rounded-md border border-border-color bg-bg-primary/20 px-3 py-2 text-sm text-text-primary focus:border-border-color focus:outline-none disabled:opacity-70 disabled:cursor-not-allowed"
+          >
             <option value="">Unassigned</option>
             {filteredUsers.map((u: any) => <option key={u.id} value={u.id}>{u.firstName} {u.lastName}</option>)}
           </select>
@@ -241,7 +255,12 @@ export default function TaskForm({ initial, onSaved, onCancel, showHeader = true
 
         <div>
           <label className="text-[11px] text-text-secondary uppercase">Priority</label>
-          <select value={priority} onChange={(e) => setPriority(e.target.value as any)} className="mt-1 w-full rounded-md border border-border-color bg-bg-primary/60 px-3 py-2 text-sm text-text-primary focus:border-border-color focus:outline-none">
+          <select 
+            value={priority} 
+            onChange={(e) => setPriority(e.target.value as any)} 
+            disabled={!canManage}
+            className="mt-1 w-full rounded-md border border-border-color bg-bg-primary/20 px-3 py-2 text-sm text-text-primary focus:border-border-color focus:outline-none disabled:opacity-70 disabled:cursor-not-allowed"
+          >
             <option value="Low">Low</option>
             <option value="Medium">Medium</option>
             <option value="High">High</option>
@@ -251,13 +270,24 @@ export default function TaskForm({ initial, onSaved, onCancel, showHeader = true
 
         <div>
           <label className="text-[11px] text-text-secondary uppercase">Due date</label>
-          <input type="date" value={dueDate || ""} onChange={(e) => setDueDate(e.target.value || null)} className="mt-1 w-full rounded-md border border-border-color bg-bg-primary/60 px-3 py-2 text-sm text-text-primary focus:border-border-color focus:outline-none" />
+          <input 
+            type="date" 
+            value={dueDate || ""} 
+            onChange={(e) => setDueDate(e.target.value || null)} 
+            disabled={!canManage}
+            className="mt-1 w-full rounded-md border border-border-color bg-bg-primary/20 px-3 py-2 text-sm text-text-primary focus:border-border-color focus:outline-none disabled:opacity-70 disabled:cursor-not-allowed" 
+          />
         </div>
 
         {initial?._id && (
           <div>
             <label className="text-[11px] text-text-secondary uppercase">Status</label>
-            <select value={status} onChange={(e) => setStatus(e.target.value)} className="mt-1 w-full rounded-md border border-border-color bg-bg-primary/60 px-3 py-2 text-sm text-text-primary focus:border-border-color focus:outline-none">
+            <select 
+              value={status} 
+              onChange={(e) => setStatus(e.target.value)} 
+              disabled={!canEditToggle}
+              className="mt-1 w-full rounded-md border border-border-color bg-bg-primary/20 px-3 py-2 text-sm text-text-primary focus:border-border-color focus:outline-none disabled:opacity-70 disabled:cursor-not-allowed"
+            >
               <option value="todo">To Do</option>
               <option value="in_progress">In Progress</option>
               <option value="qa">QA</option>
@@ -269,7 +299,7 @@ export default function TaskForm({ initial, onSaved, onCancel, showHeader = true
 
       <div>
         <label className="text-[11px] text-text-secondary uppercase block mb-1">Description</label>
-        <TaskEditor content={description} onChange={(json) => setDescription(json)} />
+        <TaskEditor content={description} onChange={(json) => setDescription(json)} editable={canManage} />
       </div>
 
       <div>
@@ -279,10 +309,10 @@ export default function TaskForm({ initial, onSaved, onCancel, showHeader = true
           onDragLeave={handleDrag}
           onDragOver={handleDrag}
           onDrop={handleDrop}
-          className={`relative rounded-lg border-2 border-dashed transition-colors p-6 text-center cursor-pointer ${
-            dragActive ? "border-slate-400 bg-card-bg/40" : "border-border-color bg-bg-secondary/20 h-32 flex flex-col items-center justify-center"
+          className={`relative rounded-lg border-2 border-dashed transition-colors p-6 text-center ${
+            !canManage ? "opacity-50 cursor-not-allowed border-border-color bg-bg-secondary/10" : dragActive ? "border-slate-400 bg-card-bg/40" : "border-border-color bg-bg-secondary/20 h-32 flex flex-col items-center justify-center cursor-pointer"
           }`}
-          onClick={() => fileInputRef.current?.click()}
+          onClick={() => canManage && fileInputRef.current?.click()}
         >
           <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={(e) => validateAndAddFiles(e.target.files)} className="hidden" />
           <Upload className="h-5 w-5 text-text-secondary mb-1" />
@@ -302,21 +332,28 @@ export default function TaskForm({ initial, onSaved, onCancel, showHeader = true
         )}
       </div>
 
-      {!canManage && (
+      {!canEditToggle && (
         <div className="flex items-center gap-3 rounded-xl bg-bg-secondary/40 border border-border-color/50 p-4 text-xs font-bold text-text-secondary uppercase tracking-widest">
            <AlertCircle className="h-4 w-4" />
            <span>Read Only: Only Admin, HR, and Managers can create or edit tasks.</span>
         </div>
       )}
 
+      {isEmployee && isEdit && (
+        <div className="flex items-center gap-3 rounded-xl bg-blue-500/10 border border-blue-500/20 p-4 text-xs font-bold text-blue-100 uppercase tracking-widest">
+           <AlertCircle className="h-4 w-4" />
+           <span>Employee Access: You can only update Status and Assignee.</span>
+        </div>
+      )}
+
       <div className="flex items-center gap-3 pt-4 border-t border-border-color/40">
-        {canManage && (
+        {canEditToggle && (
           <button
             type="submit"
             disabled={submitting}
             className="flex items-center gap-2 rounded-md bg-accent px-6 py-2.5 text-sm font-bold text-slate-900 hover:brightness-105 disabled:opacity-50"
           >
-            {submitting ? "Saving..." : <><Check size={18} /> Save Task</>}
+            {submitting ? "Saving..." : <><Check size={18} /> Save Changes</>}
           </button>
         )}
         <button
@@ -324,7 +361,7 @@ export default function TaskForm({ initial, onSaved, onCancel, showHeader = true
           onClick={onCancel}
           className="px-6 py-2.5 text-sm font-medium text-text-secondary hover:text-text-primary"
         >
-          {canManage ? "Cancel" : "Close"}
+          {canEditToggle ? "Cancel" : "Close"}
         </button>
       </div>
     </form>
