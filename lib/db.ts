@@ -53,6 +53,11 @@ let cached: MongooseGlobal = globalWithMongoose._mongoose ?? {
 };
 
 export async function connectDB() {
+  // Skip DB connection during build time
+  if (process.env.NEXT_PHASE === 'phase-production-build') {
+    return null;
+  }
+
   if (cached.conn) {
     return cached.conn;
   }

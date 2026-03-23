@@ -14,6 +14,61 @@ type Params = {
   };
 };
 
+function serializeProject(project: any) {
+  return {
+    id: project._id.toString(),
+    name: project.name,
+    key: project.key,
+    clientName: project.clientName,
+    description: project.description,
+    status: project.status,
+    logoUrl: project.logoUrl,
+    color: project.color,
+    members: ((project.members as any[]) || []).map((member) => ({
+      id: member._id.toString(),
+      name: `${member.firstName} ${member.lastName}`,
+      firstName: member.firstName,
+      lastName: member.lastName,
+      avatarUrl: member.avatarUrl
+    }))
+  };
+}
+
+export async function GET(_request: Request, { params }: Params) {
+  const cookieStore = cookies();
+  const token = cookieStore.get("auth_token")?.value;
+  const payload = token ? verifyAuthToken(token) : null;
+
+  if (!payload) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  await connectDB();
+  const user = (await User.findById(payload.sub).select("role").lean()) as {
+    role?: string;
+  } | null;
+
+  if (!user) {
+    return NextResponse.json({ error: "User not found" }, { status: 401 });
+  }
+
+  const role = String(user.role || "").toLowerCase();
+  const query = role === "employee" ? { _id: params.id, members: payload.sub } : { _id: params.id };
+
+  const project = await Project.findOne(query)
+    .populate({
+      path: "members",
+      select: "firstName lastName avatarUrl"
+    })
+    .lean();
+
+  if (!project) {
+    return NextResponse.json({ error: "Project not found" }, { status: 404 });
+  }
+
+  return NextResponse.json(serializeProject(project));
+}
+
 export async function PUT(request: Request, { params }: Params) {
   const cookieStore = cookies();
   const token = cookieStore.get("auth_token")?.value;
@@ -43,6 +98,8 @@ export async function PUT(request: Request, { params }: Params) {
       update.description = String(formData.get("description") || "");
     if (formData.has("status"))
       update.status = String(formData.get("status") || "active");
+    if (formData.has("key"))
+      update.key = String(formData.get("key") || "").trim().toUpperCase();
 
     const memberIds = formData.getAll("memberIds").map((v) => String(v));
     if (memberIds.length) {
@@ -53,18 +110,22 @@ export async function PUT(request: Request, { params }: Params) {
     if (logo && logo instanceof File && logo.size > 0) {
       try {
         const buffer = Buffer.from(await logo.arrayBuffer());
-        const base64 = buffer.toString('base64');
+        const base64 = buffer.toString("base64");
         const dataUri = `data:${logo.type};base64,${base64}`;
-        const res = await cloudinary.uploader.upload(dataUri, { folder: 'projects/logos', resource_type: 'image', transformation: { width: 400, height: 400, crop: 'limit' } });
+        const res = await cloudinary.uploader.upload(dataUri, {
+          folder: "projects/logos",
+          resource_type: "image",
+          transformation: { width: 400, height: 400, crop: "limit" }
+        });
         update.logoUrl = res.secure_url;
         (update as any).logoPublicId = res.public_id;
         (update as any).logoSize = res.bytes;
       } catch (e) {
-        console.warn('Cloudinary logo upload failed, falling back to local save', e);
+        console.warn("Cloudinary logo upload failed, falling back to local save", e);
         const buffer = Buffer.from(await logo.arrayBuffer());
-        const ext = logo.name.split('.').pop() || 'png';
+        const ext = logo.name.split(".").pop() || "png";
         const fileName = `${crypto.randomUUID()}.${ext}`;
-        const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+        const uploadDir = path.join(process.cwd(), "public", "uploads");
         await mkdir(uploadDir, { recursive: true });
         const filePath = path.join(uploadDir, fileName);
         await writeFile(filePath, buffer);
@@ -74,6 +135,7 @@ export async function PUT(request: Request, { params }: Params) {
   } else {
     const body = (await request.json()) as {
       name?: string;
+      key?: string;
       clientName?: string;
       description?: string;
       status?: string;
@@ -81,6 +143,7 @@ export async function PUT(request: Request, { params }: Params) {
       logoUrl?: string;
     };
     if (body.name !== undefined) update.name = body.name.trim();
+    if (body.key !== undefined) update.key = body.key.trim().toUpperCase();
     if (body.clientName !== undefined) update.clientName = body.clientName;
     if (body.description !== undefined) update.description = body.description;
     if (body.status !== undefined) update.status = body.status;
@@ -103,23 +166,7 @@ export async function PUT(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Project not found" }, { status: 404 });
   }
 
-  return NextResponse.json({
-    id: updated._id.toString(),
-    name: updated.name,
-    clientName: updated.clientName,
-    description: updated.description,
-    status: updated.status,
-    logoUrl: updated.logoUrl,
-    color: updated.color,
-    members: (updated.members as any[]).map((m) => ({
-      id: m._id.toString(),
-      name: `${m.firstName} ${m.lastName}`,
-      firstName: (m as any).firstName,
-      lastName: (m as any).lastName,
-      avatarUrl: (m as any).avatarUrl
-    }))
-
-  });
+  return NextResponse.json(serializeProject(updated));
 }
 
 export async function DELETE(_request: Request, { params }: Params) {
@@ -149,4 +196,3 @@ export async function DELETE(_request: Request, { params }: Params) {
 
   return NextResponse.json({ success: true });
 }
-
