@@ -26,8 +26,8 @@ export async function GET(req: Request) {
         const page = parseInt(searchParams.get("page") || "1");
         const limit = parseInt(searchParams.get("limit") || "12");
 
-        // Enforce "login user only" for employee and manager roles
-        if (payload.role !== "admin" && payload.role !== "hr") {
+        // Enforce "login user only" for non-admin roles (including HR)
+        if (payload.role !== "admin") {
             userId = payload.sub;
         }
 

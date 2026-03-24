@@ -2,6 +2,9 @@ import { connectDB } from "@/lib/db";
 import { TimeSession } from "@/models/TimeSession";
 import { LeaveBalance } from "@/models/LeaveBalance";
 import { Task } from "@/models/Task";
+import { TaskActivityLog } from "@/models/TaskActivityLog";
+import { Project } from "@/models/Project";
+import { LeaveRequest } from "@/models/LeaveRequest";
 import { User } from "@/models/User";
 import { Announcement } from "@/models/Announcement";
 import { Types } from "mongoose";
@@ -72,6 +75,36 @@ export default async function EmployeeDashboard({ userId }: Props) {
     done: taskStats.find((t: any) => t._id === "done")?.count || 0
   };
 
+  // New employee-specific metrics
+  const totalTasks = await Task.countDocuments({ assignee: userId, isDeleted: false });
+  const activeTasksCount = await Task.countDocuments({ assignee: userId, isDeleted: false, status: { $ne: "done" } });
+  const completedTasksCount = await Task.countDocuments({ assignee: userId, isDeleted: false, status: "done" });
+  const overdueTasksCount = await Task.countDocuments({ assignee: userId, isDeleted: false, dueDate: { $lt: new Date() }, status: { $ne: "done" } });
+
+  const weekLater = new Date();
+  weekLater.setDate(weekLater.getDate() + 7);
+  const tasksDueThisWeek = await Task.countDocuments({
+    assignee: userId,
+    isDeleted: false,
+    dueDate: { $gte: new Date(), $lte: weekLater }
+  });
+
+  const projectCount = await Project.countDocuments({ members: userId });
+
+  const pendingLeaveCount = await LeaveRequest.countDocuments({ user: userId, status: "pending" });
+  const leaveBalanceDoc = await LeaveBalance.findOne({ user: userId }).lean();
+  const leaveBalance = leaveBalanceDoc ? Math.max(0, (leaveBalanceDoc.totalAllocated - leaveBalanceDoc.used) / 60) : 0;
+
+  const completionRate = totalTasks > 0 ? Math.round((completedTasksCount / totalTasks) * 100) : 0;
+
+  const taskIds = await Task.find({ assignee: userId, isDeleted: false }).select("_id").lean();
+  const lastActivities = await TaskActivityLog.find({ task: { $in: taskIds.map((t: any) => t._id) } })
+    .sort({ createdAt: -1 })
+    .limit(5)
+    .populate("task", "key title project")
+    .populate("user", "firstName lastName")
+    .lean();
+
   // Calculate work hours today from monitor
   const hoursWorked = Math.round((monitorStats.workedMinutes / 60) * 10) / 10;
   const isActive = monitorStats.isActive;
@@ -98,7 +131,7 @@ export default async function EmployeeDashboard({ userId }: Props) {
           <WelcomeHeader
             firstName={(user as any)?.firstName}
             lastName={(user as any)?.lastName}
-            progress={85}
+            progress={Math.min(100, completionRate)}
           />
         </div>
         <div className="flex-shrink-0 flex flex-col justify-center">
@@ -106,10 +139,133 @@ export default async function EmployeeDashboard({ userId }: Props) {
         </div>
       </div>
 
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <StatsCard
+          label="Total Tasks"
+          value={totalTasks}
+          subtext="Assigned tasks"
+          icon={<FileText className="h-5 w-5" />}
+          color="blue"
+          delay={0.4}
+        />
 
+        <StatsCard
+          label="Active Tasks"
+          value={activeTasksCount}
+          subtext="Not completed"
+          icon={<Clock className="h-5 w-5" />}
+          color="orange"
+          delay={0.45}
+        />
+
+        <StatsCard
+          label="Completed Tasks"
+          value={completedTasksCount}
+          subtext="Total finished"
+          icon={<CheckCircle2 className="h-5 w-5" />}
+          color="green"
+          delay={0.5}
+        />
+
+        <StatsCard
+          label="Overdue Tasks"
+          value={overdueTasksCount}
+          subtext="Needs attention"
+          icon={<AlertCircle className="h-5 w-5" />}
+          color="orange"
+          delay={0.55}
+        />
+
+        <StatsCard
+          label="This Week Due"
+          value={tasksDueThisWeek}
+          subtext="Due soon"
+          icon={<Calendar className="h-5 w-5" />}
+          color="purple"
+          delay={0.6}
+        />
+
+        <StatsCard
+          label="Projects"
+          value={projectCount}
+          subtext="Assigned"
+          icon={<Briefcase className="h-5 w-5" />}
+          color="blue"
+          delay={0.65}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <DashboardCard delay={0.7} className="xl:col-span-2">
+          <h3 className="text-lg font-bold text-text-primary mb-4 flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-indigo-400" />
+            Task Overview + Project Activity
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">Assigned Tasks</p>
+              <ul className="space-y-2">
+                {assignedTasks.length === 0 ? (
+                  <li className="text-sm text-text-secondary">No open tasks assigned.</li>
+                ) : (
+                  assignedTasks.map((task: any) => (
+                    <li key={task._id} className="p-2 bg-card-bg/50 rounded-lg border border-border-color">
+                      <Link href={`/tasks/${task._id}`} className="font-semibold text-text-primary hover:text-accent hover:underline">{task.key || task.title}</Link>
+                      <p className="text-xs text-text-secondary mt-1">{task.title}</p>
+                      <p className="text-[11px] text-text-secondary mt-1">Project: {task.project?.name || "Unassigned"}</p>
+                    </li>
+                  ))
+                )}
+              </ul>
+            </div>
+
+            <div>
+              <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">Recent Activity by Project</p>
+              <div className="space-y-2">
+                {lastActivities.length === 0 ? (
+                  <p className="text-sm text-text-secondary">No recent activity yet.</p>
+                ) : (
+                  lastActivities.map((activity: any) => {
+                    const projectName = activity.task?.project?.name || "Unknown project";
+                    return (
+                      <div key={activity._id} className="p-2 bg-card-bg/50 rounded-lg border border-border-color">
+                        <p className="text-xs font-semibold text-text-primary truncate">{activity.task?.key} · {projectName}</p>
+                        <p className="text-[11px] text-text-secondary">{activity.eventType?.replace(/_/g, " ").toLowerCase()} by {activity.user?.firstName} {activity.user?.lastName}</p>
+                        <p className="text-[10px] text-text-secondary/70">{new Date(activity.createdAt).toLocaleString()}</p>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          </div>
+        </DashboardCard>
+
+        <DashboardCard delay={0.75}>
+          <h3 className="text-lg font-bold text-text-primary mb-4 flex items-center gap-2">
+            <Megaphone className="h-5 w-5 text-cyan-400" />
+            Notifications
+          </h3>
+          <div className="space-y-3">
+            {announcements.length === 0 ? (
+              <p className="text-text-secondary text-xs">No announcements at this time.</p>
+            ) : (
+              announcements.map((announcement: any) => (
+                <div key={announcement._id} className="p-3 rounded-lg border border-border-color bg-card-bg/40">
+                  <p className="text-sm font-semibold text-text-primary truncate">{announcement.title}</p>
+                  <p className="text-[11px] text-text-secondary mt-1">{announcement.body?.slice(0, 100) || "No details"}...</p>
+                </div>
+              ))
+            )}
+          </div>
+          <Link href="/announcements" className="mt-4 inline-block text-xs font-bold text-cyan-400 hover:text-cyan-300">
+            View all announcements →
+          </Link>
+        </DashboardCard>
+      </div>
 
       <div className="grid grid-cols-1 gap-6">
-        <DashboardCard className="w-full" delay={0.5}>
+        <DashboardCard className="w-full" delay={0.8}>
           <TrackedHoursChart />
         </DashboardCard>
       </div>

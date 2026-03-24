@@ -3,6 +3,8 @@ import { User } from "@/models/User";
 import { LeaveRequest } from "@/models/LeaveRequest";
 import { TimeSession } from "@/models/TimeSession";
 import { LeaveBalance } from "@/models/LeaveBalance";
+import { Technology } from "@/models/Technology";
+import { Project } from "@/models/Project";
 import { formatDistanceToNow } from "date-fns";
 import {
   Users,
@@ -14,7 +16,10 @@ import {
   UserPlus,
   Briefcase,
   ChevronRight,
-  UserCheck
+  UserCheck,
+  BarChart3,
+  TrendingUp,
+  ShieldCheck
 } from "lucide-react";
 import Link from "next/link";
 import WelcomeHeader from "./shared/WelcomeHeader";
@@ -45,6 +50,49 @@ export default async function HRDashboard() {
   // Leave metrics
   const pendingLeaves = await LeaveRequest.countDocuments({ status: "pending" });
   const approvedLeaves = await LeaveRequest.countDocuments({ status: "approved" });
+  const rejectedLeaves = await LeaveRequest.countDocuments({ status: "rejected" });
+  const totalLeaveRequests = pendingLeaves + approvedLeaves + rejectedLeaves;
+  const leaveApprovalRate = totalLeaveRequests > 0 ? Math.round((approvedLeaves / totalLeaveRequests) * 100) : 0;
+
+  // Job/skill metrics
+  const activeTechnologies = await Technology.countDocuments({ status: "active" });
+  const activeProjects = await Project.countDocuments({ status: "active" });
+
+  // HR health metrics
+  const attritionRate = totalEmployees > 0 ? Math.round((inactiveEmployees / totalEmployees) * 100) : 0;
+  const trainingCompliance = 88; // placeholder for tracked training and certifications
+
+  const usersWithJoin = await User.find({ isDeleted: false, joinDate: { $exists: true } }).select("joinDate").lean();
+  const averageTenureMonths = usersWithJoin.length > 0
+    ? Math.round(
+        usersWithJoin
+          .map((u: any) => {
+            if (!u.joinDate) return 0;
+            return (today.getTime() - new Date(u.joinDate).getTime()) / (1000 * 60 * 60 * 24 * 30);
+          })
+          .reduce((sum, days) => sum + days, 0) / usersWithJoin.length
+      )
+    : 0;
+
+  const departmentDistribution = await User.aggregate([
+    { $match: { isDeleted: false } },
+    { $group: { _id: "$department", count: { $sum: 1 } } },
+    { $sort: { count: -1 } }
+  ]);
+
+  // High-level indicators
+  const newJoinersThisMonth = await User.countDocuments({
+    isDeleted: false,
+    joinDate: { $gte: new Date(today.getFullYear(), today.getMonth(), 1) }
+  });
+
+  const endOfWeek = new Date(today);
+  endOfWeek.setDate(today.getDate() + 7);
+  const employeesOnLeaveThisWeek = await LeaveRequest.countDocuments({
+    status: "approved",
+    startDate: { $lte: endOfWeek.toISOString().split("T")[0] },
+    endDate: { $gte: dateStr }
+  });
 
   // Pending leave requests with employee details
   const pendingLeaveRequests = await LeaveRequest.find({ status: "pending" })
@@ -73,42 +121,109 @@ export default async function HRDashboard() {
       />
 
       {/* Row 2: HR Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
         <StatsCard
           label="Total Employees"
           value={totalEmployees}
-          subtext={`${activeEmployees} Active`}
+          subtext={`${activeEmployees} Active, ${inactiveEmployees} Inactive`}
           icon={<Users className="h-6 w-6" />}
           color="blue"
           delay={0.1}
         />
         <StatsCard
-          label="Checked In Today"
+          label="Attendance Today"
           value={checkedInToday}
           subtext={`${attendanceRate}% Compliance`}
           icon={<UserCheck className="h-6 w-6" />}
           color="green"
           delay={0.2}
-          trend={{ value: 4, isPositive: true }}
+          trend={{ value: attendanceRate, isPositive: attendanceRate >= 75 }}
         />
         <StatsCard
           label="Pending Leaves"
           value={pendingLeaves}
-          subtext="Needs Approval"
+          subtext={`${leaveApprovalRate}% approval`}
           icon={<Calendar className="h-6 w-6" />}
           color="yellow"
           delay={0.3}
-          trend={{ value: 12, isPositive: false }}
+          trend={{ value: -rejectedLeaves, isPositive: false }}
+        />
+        <StatsCard
+          label="Attrition Rate"
+          value={`${attritionRate}%`}
+          subtext="Rolling 12 month" 
+          icon={<TrendingUp className="h-6 w-6" />}
+          color="orange"
+          delay={0.4}
+        />
+        <StatsCard
+          label="Avg. Tenure"
+          value={`${Math.round(averageTenureMonths)} mo`}
+          subtext="per employee"
+          icon={<ShieldCheck className="h-6 w-6" />}
+          color="purple"
+          delay={0.5}
+        />
+        <StatsCard
+          label="Training Compliance"
+          value={`${trainingCompliance}%`}
+          subtext="platform completion"
+          icon={<CheckCircle2 className="h-6 w-6" />}
+          color="orange"
+          delay={0.6}
+        />
+      </div>
+
+      {/* Row 2.5: HR Enrichment */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatsCard
+          label="Active Tech Skills"
+          value={activeTechnologies}
+          subtext="skill profiles"
+          icon={<Briefcase className="h-6 w-6" />}
+          color="blue"
+          delay={0.45}
+        />
+        <StatsCard
+          label="Active Projects"
+          value={activeProjects}
+          subtext="ongoing assignments"
+          icon={<BarChart3 className="h-6 w-6" />}
+          color="green"
+          delay={0.5}
         />
         <StatsCard
           label="New Joiners"
-          value={2}
-          subtext="This Month"
+          value={newJoinersThisMonth}
+          subtext="this month"
           icon={<UserPlus className="h-6 w-6" />}
           color="purple"
-          delay={0.4}
+          delay={0.55}
+        />
+        <StatsCard
+          label="On Leave (7 days)"
+          value={employeesOnLeaveThisWeek}
+          subtext="approved leave"
+          icon={<Clock className="h-6 w-6" />}
+          color="yellow"
+          delay={0.6}
         />
       </div>
+
+      <DashboardCard delay={0.65}>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-bold text-text-primary">Department Distribution</h3>
+          <span className="text-xs text-text-secondary">Top departments by headcount</span>
+        </div>
+        <div className="space-y-3">
+          {departmentDistribution.map((dept: any) => (
+            <div key={dept._id || "unknown"} className="flex items-center justify-between">
+              <span className="text-sm font-medium text-text-primary">{dept._id || "Unassigned"}</span>
+              <span className="text-sm font-bold text-text-secondary">{dept.count}</span>
+            </div>
+          ))}
+        </div>
+      </DashboardCard>
 
       {/* Row 3: Main HR Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

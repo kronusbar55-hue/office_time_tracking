@@ -173,11 +173,11 @@ export default function EmployeeForm({ initialData, isNew = false }: EmployeeFor
             </h1>
             <p className="mt-1 text-sm text-text-secondary">
               {isNew
-                ? "Create a new employee profile with role, technology, and access details."
+                ? "Create a new employee profile with role, technology."
                 : "Update profile details, role access, and avatar from a dedicated full-page editor."}
             </p>
           </div>
-        </div>
+        </div> 
 
         <div className="grid gap-3 sm:grid-cols-3">
           <div className="rounded-2xl border border-border-color bg-bg-primary/70 px-4 py-3">

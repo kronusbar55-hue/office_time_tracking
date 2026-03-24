@@ -34,7 +34,7 @@ export default function MonitorDashboard() {
 
 
 
-    const isRestricted = user?.role !== "admin" && user?.role !== "hr";
+    const isRestricted = user?.role !== "admin";
 
     const fetchUsers = async () => {
         if (isRestricted) {

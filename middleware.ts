@@ -7,8 +7,11 @@ import type { NextRequest } from 'next/server';
 
 const ROLE_PATHS: Array<{ prefix: string; allowed: string[] }> = [
   { prefix: '/admin', allowed: ['admin'] },
-  { prefix: '/live-attendance', allowed: ['admin'] },
+  { prefix: '/live-attendance', allowed: ['admin', 'hr'] },
   { prefix: '/employees', allowed: ['admin', 'hr'] },
+  { prefix: '/monitor', allowed: ['admin', 'manager', 'employee', 'hr'] },
+  { prefix: '/technologies', allowed: ['admin', 'hr'] },
+  { prefix: '/project-updates', allowed: ['admin', 'manager'] },
   { prefix: '/reports', allowed: ['admin', 'hr'] },
   { prefix: '/projects', allowed: ['admin', 'manager', 'employee'] },
   { prefix: '/tasks', allowed: ['admin', 'manager', 'employee'] },
@@ -52,6 +55,9 @@ export const config = {
   matcher: [
     '/admin/:path*',
     '/live-attendance/:path*',
+    '/monitor/:path*',
+    '/technologies/:path*',
+    '/project-updates/:path*',
     '/employees/:path*',
     '/reports/:path*',
     '/projects/:path*',

@@ -80,13 +80,13 @@ export default function EmployeesPage() {
     return () => window.clearTimeout(timeoutId);
   }, [searchQuery]);
 
-  async function handleDelete(id: string) {
-    if (!window.confirm("Delete this user? They will be marked as removed.")) {
+  async function handleDelete(user: TeamUser) {
+    if (!window.confirm(`Are you sure you want to delete ${user.firstName} ${user.lastName}?`)) {
       return;
     }
 
     try {
-      const res = await fetch(`/api/users/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/users/${user.id}`, { method: "DELETE" });
       if (!res.ok) {
         throw new Error("Failed to delete user");
       }
@@ -104,6 +104,12 @@ export default function EmployeesPage() {
   }
 
   async function toggleActive(user: TeamUser) {
+    const nextStatus = user.isActive ? "inactive" : "active";
+
+    if (!window.confirm(`Are you sure you want to mark ${user.firstName} ${user.lastName} as ${nextStatus}?`)) {
+      return;
+    }
+
     try {
       const res = await fetch(`/api/users/${user.id}`, {
         method: "PUT",
@@ -136,29 +142,17 @@ export default function EmployeesPage() {
       <section className="overflow-hidden rounded-[28px] border border-border-color bg-[linear-gradient(135deg,rgba(var(--card-bg),0.98),rgba(var(--bg-secondary),0.92))] shadow-card">
         <div className="flex flex-col gap-5 border-b border-border-color px-6 py-6 lg:flex-row lg:items-end lg:justify-between">
           <div className="space-y-3">
-            <div className="inline-flex items-center gap-2 rounded-full border border-border-color bg-bg-primary/70 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-text-secondary">
-              <Users className="h-3.5 w-3.5" />
-              Employees
-            </div>
+
             <div>
               <h1 className="text-2xl font-semibold text-text-primary md:text-3xl">
                 Team Directory
               </h1>
-              <p className="mt-1 max-w-2xl text-sm text-text-secondary">
-                View every employee in one place, search quickly, and open full-page screens to create or edit team members.
-              </p>
+
             </div>
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row">
-            <div className="grid min-w-[140px] gap-1 rounded-2xl border border-border-color bg-bg-primary/60 px-4 py-3">
-              <span className="text-[11px] uppercase tracking-[0.2em] text-text-secondary">Visible</span>
-              <span className="text-2xl font-semibold text-text-primary">{users.length}</span>
-            </div>
-            <div className="grid min-w-[140px] gap-1 rounded-2xl border border-border-color bg-bg-primary/60 px-4 py-3">
-              <span className="text-[11px] uppercase tracking-[0.2em] text-text-secondary">Active</span>
-              <span className="text-2xl font-semibold text-text-primary">{activeUsers}</span>
-            </div>
+
             <Link
               href="/employees/new"
               className="inline-flex items-center justify-center gap-2 rounded-2xl bg-accent px-5 py-3 text-sm font-semibold text-slate-950 transition hover:brightness-110"
@@ -172,8 +166,7 @@ export default function EmployeesPage() {
         <div className="flex flex-col gap-4 px-6 py-5">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-sm font-medium text-text-primary">Employee table</p>
-              <p className="text-xs text-text-secondary">
+              <p className="text-sm font-medium text-text-primary">
                 {totalUsers} total records across the directory.
               </p>
             </div>
@@ -282,11 +275,10 @@ export default function EmployeesPage() {
                           <button
                             type="button"
                             onClick={() => void toggleActive(user)}
-                            className={`inline-flex min-w-24 items-center justify-center rounded-full px-3 py-2 text-xs font-medium transition ${
-                              user.isActive
+                            className={`inline-flex min-w-24 items-center justify-center rounded-full px-3 py-2 text-xs font-medium transition ${user.isActive
                                 ? "bg-emerald-500/12 text-emerald-300 ring-1 ring-emerald-500/30"
                                 : "bg-slate-500/10 text-text-secondary ring-1 ring-border-color"
-                            }`}
+                              }`}
                           >
                             {user.isActive ? "Active" : "Inactive"}
                           </button>
@@ -302,7 +294,7 @@ export default function EmployeesPage() {
                             </Link>
                             <button
                               type="button"
-                              onClick={() => void handleDelete(user.id)}
+                              onClick={() => void handleDelete(user)}
                               className="inline-flex items-center gap-2 rounded-xl border border-rose-500/30 px-3 py-2 text-xs font-medium text-rose-300 transition hover:border-rose-400 hover:text-rose-200"
                             >
                               <Trash2 className="h-3.5 w-3.5" />
@@ -337,11 +329,10 @@ export default function EmployeesPage() {
                     key={index}
                     type="button"
                     onClick={() => void loadUsers(index + 1)}
-                    className={`h-10 min-w-10 rounded-xl px-3 text-sm font-medium transition ${
-                      currentPage === index + 1
+                    className={`h-10 min-w-10 rounded-xl px-3 text-sm font-medium transition ${currentPage === index + 1
                         ? "bg-accent text-slate-950"
                         : "border border-border-color text-text-primary hover:border-accent"
-                    }`}
+                      }`}
                   >
                     {index + 1}
                   </button>

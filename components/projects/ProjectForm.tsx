@@ -347,7 +347,7 @@ export default function ProjectForm({ initialData, isNew = false }: ProjectFormP
             )}
           </div>
 
-          {!isNew && (
+          {/* {!isNew && (
             <div className="rounded-3xl bg-rose-500/5 border border-rose-500/20 p-8 space-y-4">
               <h3 className="text-xs font-black text-rose-500 uppercase tracking-widest">Danger Zone</h3>
               <p className="text-[10px] text-text-secondary leading-relaxed">Archiving this project will hide it from the active projects list and may affect ongoing tasks.</p>
@@ -374,7 +374,7 @@ export default function ProjectForm({ initialData, isNew = false }: ProjectFormP
                 Archive Project
               </button>
             </div>
-          )}
+          )} */}
 
           <div className="pt-4 flex flex-col gap-3">
              <button
