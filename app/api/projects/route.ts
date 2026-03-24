@@ -20,7 +20,7 @@ export async function GET(request: Request) {
   await connectDB();
   const userRecord = await User.findById(userId).select("role").lean() as any;
   if (!userRecord) return NextResponse.json({ error: "User not found" }, { status: 401 });
-  
+
   const userRole = String(userRecord.role || "").toLowerCase();
   // console.log("userRole", userRole);
   const isAdminOrHR = userRole === "admin" || userRole === "hr";
@@ -29,15 +29,15 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const forCurrentUser = url.searchParams.get("forCurrentUser") === "true";
 
-  const query: Record<string, any> = { 
+  const query: Record<string, any> = {
     status: { $ne: "archived" },
     name: { $nin: ["Other", "other", "OTHER"] }
   };
-  // console.log("forCurrentUser", forCurrentUser);
+  console.log("forCurrentUser", forCurrentUser);
 
   // Enforce filtering for managers and employees
   // Admins and HR still see everything unless they explicitly request forCurrentUser
-  if (forCurrentUser && (userRole === "employee" || userRole === "manager")) {
+  if (forCurrentUser && userRole == "admin" || (userRole === "employee" || userRole === "manager")) {
     query.members = userId;
   }
   // console.log("query", query);

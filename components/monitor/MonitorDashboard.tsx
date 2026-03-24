@@ -337,10 +337,7 @@ export default function MonitorDashboard() {
                 {/* Monitor Summary */}
                 {monitorSummary && (
                     <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 p-4 rounded-2xl ${getSummaryBorder(monitorSummary.avgDurationHours)}`}>
-                        <div className="text-xs text-text-secondary">
-                            <div className="font-semibold text-text-primary">Sessions tracked</div>
-                            <div className="text-lg font-black">{monitorSummary.sessionsTracked}</div>
-                        </div>
+ 
                         <div className="text-xs text-text-secondary">
                             <div className="font-semibold text-text-primary">Avg duration (h)</div>
                             <div className="text-lg font-black">{monitorSummary.avgDurationHours.toFixed(2)}</div>

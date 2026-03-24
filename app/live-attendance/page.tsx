@@ -15,7 +15,7 @@ import {
     ChevronRight
 } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { redirect } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import DashboardCard from "@/components/dashboard/shared/DashboardCard";
 
 interface Member {
@@ -38,6 +38,7 @@ interface Summary {
 
 export default function LiveAttendancePage() {
     const { user } = useAuth();
+    const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [data, setData] = useState<{ summary: Summary; members: Member[] } | null>(null);
     const [search, setSearch] = useState("");
@@ -200,7 +201,15 @@ export default function LiveAttendancePage() {
                 <AnimatePresence mode="popLayout">
                     {paginatedMembers.length > 0 ? (
                         paginatedMembers.map((member, idx) => (
-                            <MemberListItem key={member.userId} member={member} index={idx} />
+                            <MemberListItem
+                                key={member.userId}
+                                member={member}
+                                index={idx}
+                                onClick={() => {
+                                    const today = new Date().toISOString().split("T")[0];
+                                    router.push(`/monitor?userId=${encodeURIComponent(member.userId)}&date=${today}`);
+                                }}
+                            />
                         ))
                     ) : (
                         <motion.div
@@ -274,7 +283,15 @@ function StatCard({ label, value, icon, color, delay }: any) {
     );
 }
 
-function MemberListItem({ member, index }: { member: Member; index: number }) {
+function MemberListItem({
+    member,
+    index,
+    onClick
+}: {
+    member: Member;
+    index: number;
+    onClick: () => void;
+}) {
     const statusColors = {
         IN: "bg-emerald-500 shadow-emerald-500/50",
         BREAK: "bg-amber-500 shadow-amber-500/50",
@@ -301,7 +318,8 @@ function MemberListItem({ member, index }: { member: Member; index: number }) {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: index * 0.05 }}
-            className="group bg-bg-secondary/40 border border-border-color hover:border-border-color hover:bg-bg-secondary/60 p-4 rounded-2xl flex items-center justify-between transition-all backdrop-blur-sm"
+            onClick={onClick}
+            className="group bg-bg-secondary/40 border border-border-color hover:border-border-color hover:bg-bg-secondary/60 p-4 rounded-2xl flex items-center justify-between transition-all backdrop-blur-sm cursor-pointer"
         >
             <div className="flex items-center gap-4">
                 {/* Avatar */}
