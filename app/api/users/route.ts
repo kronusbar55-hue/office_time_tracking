@@ -48,6 +48,7 @@ export async function GET(request: Request) {
         lastName: u.lastName,
         email: u.email,
         role: u.role,
+        department: u.department,
         technology: u.technology
           ? { id: String(u.technology._id || u.technology), name: u.technology.name }
           : null,
@@ -76,6 +77,7 @@ export async function GET(request: Request) {
       lastName: u.lastName,
       email: u.email,
       role: u.role,
+      department: u.department,
       technology: u.technology
         ? { id: String(u.technology._id || u.technology), name: u.technology.name }
         : null,
@@ -174,6 +176,7 @@ export async function POST(request: Request) {
         lastName: created.lastName,
         email: created.email,
         role: created.role,
+        department: created.department,
         technology: created.technology ? String(created.technology) : null,
         joinDate: created.joinDate,
         avatarUrl: created.avatarUrl,
@@ -223,6 +226,7 @@ export async function POST(request: Request) {
       lastName: populated!.lastName,
       email: populated!.email,
       role: populated!.role,
+      department: populated!.department,
       technology: populated!.technology
         ? {
           id: String(

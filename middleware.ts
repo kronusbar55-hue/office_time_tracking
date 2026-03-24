@@ -6,6 +6,7 @@ import type { NextRequest } from 'next/server';
 // perform full authorization server-side.
 
 const ROLE_PATHS: Array<{ prefix: string; allowed: string[] }> = [
+  { prefix: '/dashboard/admin', allowed: ['admin'] },
   { prefix: '/admin', allowed: ['admin'] },
   { prefix: '/live-attendance', allowed: ['admin', 'hr'] },
   { prefix: '/employees', allowed: ['admin', 'hr'] },
@@ -54,6 +55,7 @@ export function middleware(req: NextRequest) {
 export const config = {
   matcher: [
     '/admin/:path*',
+    '/dashboard/admin/:path*',
     '/live-attendance/:path*',
     '/monitor/:path*',
     '/technologies/:path*',

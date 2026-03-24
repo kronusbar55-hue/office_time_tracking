@@ -44,10 +44,10 @@ export default function EmployeeActivityCard({ employee, viewMode, showName = tr
 
     const statusColor = getStatusColor(statusLabel);
 
-    // Mouse Activity Border Logic based on both Clicks and Key Presses
-    const getActivityBorderClass = (clicks: number, keyPresses: number) => {
-        const totalActivity = clicks + keyPresses;
-        
+    // Mouse Activity Border Logic based on Clicks, Key Presses, and Movements
+    const getActivityBorderClass = (clicks: number, keyPresses: number, movements: number) => {
+        const totalActivity = clicks + keyPresses + movements;
+
         // Threshold logic:
         // Red: Low activity (less than 20 total interactions)
         // Green: High activity (more than 100 total interactions)
@@ -57,11 +57,11 @@ export default function EmployeeActivityCard({ employee, viewMode, showName = tr
         return "border-4 border-yellow-500 shadow-[0_0_20px_rgba(234,179,8,0.5)]";
     };
 
-    const activityBorderClass = activity ? getActivityBorderClass(activity.mouseClicks, activity.keyPresses || 0) : "border-[4px] border-border-color";
+    const activityBorderClass = activity ? getActivityBorderClass(activity.mouseClicks, activity.keyPresses || 0, activity.mouseMovements || 0) : "border-[4px] border-border-color";
 
     if (viewMode === "list") {
         return (
-            <div className="flex items-center gap-6 p-2 pr-6 rounded-xl bg-bg-secondary/60 border border-border-color hover:border-accent/30 transition-all backdrop-blur-md group shadow-xl">
+            <div className={`flex items-center gap-6 p-2 pr-6 rounded-xl bg-bg-secondary/60 hover:border-accent/30 transition-all backdrop-blur-md group shadow-xl ${activityBorderClass}`}>
                 {/* Boxy Thumbnail for List View */}
                 <div
                     className={`relative h-20 w-32 rounded-lg bg-bg-primary overflow-hidden cursor-zoom-in border shrink-0 transition-all ${activityBorderClass}`}

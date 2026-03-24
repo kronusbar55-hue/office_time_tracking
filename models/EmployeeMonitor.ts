@@ -1,6 +1,9 @@
 import mongoose, { Schema, model, models, type Document } from "mongoose";
 
 export interface IEmployeeMonitor extends Document {
+    employeeId?: string;
+    organizationId?: string;
+    timestamp?: Date;
     userId: string;
     imageUrl: string;
     date: string; // Store as YYYY-MM-DD
@@ -29,6 +32,21 @@ export interface IEmployeeMonitor extends Document {
 
 const EmployeeMonitorSchema = new Schema<IEmployeeMonitor>(
     {
+        employeeId: {
+            type: String,
+            required: false,
+            index: true
+        },
+        organizationId: {
+            type: String,
+            required: false,
+            index: true
+        },
+        timestamp: {
+            type: Date,
+            required: false,
+            index: true
+        },
         userId: {
             type: String,
             required: true,
@@ -113,6 +131,10 @@ const EmployeeMonitorSchema = new Schema<IEmployeeMonitor>(
         timestamps: true
     }
 );
+
+EmployeeMonitorSchema.index({ userId: 1, date: 1 });
+EmployeeMonitorSchema.index({ userId: 1, timestamp: -1, createdAt: -1 });
+EmployeeMonitorSchema.index({ organizationId: 1, timestamp: -1 });
 
 export const EmployeeMonitor = (models && models.EmployeeMonitor) || model<IEmployeeMonitor>("EmployeeMonitor", EmployeeMonitorSchema);
 export default EmployeeMonitor;

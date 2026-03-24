@@ -16,10 +16,7 @@ export default async function DashboardPage() {
   const role = payload.role;
   const userId = payload.sub;
 
-  if (role === 'admin') {
-    const { redirect } = await import("next/navigation");
-    redirect('/live-attendance');
-  }
+  if (role === 'admin') return <AdminDashboard />;
   if (role === 'hr') return <HRDashboard />;
   if (role === 'manager') return <ManagerDashboard userId={userId} />;
   return <EmployeeDashboard userId={userId} />;

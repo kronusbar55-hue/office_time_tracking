@@ -1,10 +1,11 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useState, useRef } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthProvider";
 import TaskModal from "@/components/tasks/TaskModal";
 import TaskTable from "@/components/tasks/TaskTable";
+import { Search } from "lucide-react";
 
 function TasksPageContent() {
   const [tasks, setTasks] = useState<any[]>([]);
@@ -12,10 +13,18 @@ function TasksPageContent() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const [filterProject, setFilterProject] = useState<string | "all">("all");
-  const [filterStatus, setFilterStatus] = useState<string | "all">("all");
-  const [filterAssignee, setFilterAssignee] = useState<string | "all">("all");
-  const [filterPriority, setFilterPriority] = useState<string | "all">("all");
+  const [draftProject, setDraftProject] = useState<string | "all">("all");
+  const [projectSearch, setProjectSearch] = useState("");
+  const [projectDropdownOpen, setProjectDropdownOpen] = useState(false);
+  const [draftStatus, setDraftStatus] = useState<string | "all">("all");
+  const [draftAssignee, setDraftAssignee] = useState<string | "all">("all");
+  const [draftPriority, setDraftPriority] = useState<string | "all">("all");
+  const [appliedFilters, setAppliedFilters] = useState<{
+    project: string | "all";
+    status: string | "all";
+    assignee: string | "all";
+    priority: string | "all";
+  } | null>(null);
   const [me, setMe] = useState<any | null>(null);
   const { user } = useAuth();
   const [showModal, setShowModal] = useState(false);
@@ -34,6 +43,8 @@ function TasksPageContent() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const loadList = useCallback(async (page: number = 1, append: boolean = false) => {
+    if (!appliedFilters) return;
+
     if (append) {
       setLoadingMore(true);
     } else {
@@ -44,10 +55,10 @@ function TasksPageContent() {
 
     try {
       const params = new URLSearchParams();
-      if (filterProject && filterProject !== "all") params.set("project", filterProject);
-        if (filterStatus && filterStatus !== "all") params.set("status", filterStatus.toLowerCase());
-      if (filterAssignee && filterAssignee !== "all") params.set("assignee", filterAssignee);
-      if (filterPriority && filterPriority !== "all") params.set("priority", filterPriority);
+      if (appliedFilters.project && appliedFilters.project !== "all") params.set("project", appliedFilters.project);
+      if (appliedFilters.status && appliedFilters.status !== "all") params.set("status", appliedFilters.status.toLowerCase());
+      if (appliedFilters.assignee && appliedFilters.assignee !== "all") params.set("assignee", appliedFilters.assignee);
+      if (appliedFilters.priority && appliedFilters.priority !== "all") params.set("priority", appliedFilters.priority);
       params.set("page", page.toString());
       params.set("limit", "25"); // Load 25 tasks at a time
 
@@ -76,7 +87,7 @@ function TasksPageContent() {
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [filterProject, filterStatus, filterAssignee, filterPriority, tasks.length]);
+  }, [appliedFilters]);
 
   async function loadFilterData() {
     setLoadingFilters(true);
@@ -119,11 +130,12 @@ function TasksPageContent() {
     void loadFilterData();
   }, []);
 
-  // Load tasks when filters change (reset pagination)
+  // Load tasks only after filters are explicitly applied
   useEffect(() => {
+    if (!appliedFilters) return;
     setTotalTasks(0);
     void loadList(1, false);
-  }, [filterProject, filterStatus, filterAssignee, filterPriority]);
+  }, [appliedFilters, loadList]);
 
   // Scroll handler for infinite scroll (only for admin/manager)
   const handleScroll = useCallback(() => {
@@ -155,14 +167,14 @@ function TasksPageContent() {
     const fs = searchParams?.get("status");
     const fa = searchParams?.get("assignee");
     const fq = searchParams?.get("priority");
-    if (fp) setFilterProject(fp);
-    if (fs) setFilterStatus(fs);
-    if (fa) setFilterAssignee(fa);
-    if (fq) setFilterPriority(fq);
+    if (fp) setDraftProject(fp);
+    if (fs) setDraftStatus(fs);
+    if (fa) setDraftAssignee(fa);
+    if (fq) setDraftPriority(fq);
 
     // hydrate from AuthProvider instead of calling /api/auth/me directly
     setMe(user || null);
-    if (user?.role === "employee") setFilterAssignee(user.id);
+    if (user?.role === "employee") setDraftAssignee(user.id);
   // only run on mount
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -174,6 +186,17 @@ function TasksPageContent() {
     acc[projName].push(t);
     return acc;
   }, {});
+
+  const filteredProjects = useMemo(
+    () =>
+      projects.filter((proj: any) =>
+        String(proj.name || "").toLowerCase().includes(projectSearch.toLowerCase())
+      ),
+    [projects, projectSearch]
+  );
+
+  const selectedProject = projects.find((proj: any) => proj.id === draftProject);
+  const projectButtonLabel = draftProject === "all" ? "All Projects" : selectedProject?.name || "Select Project";
 
   function openCreate() {
     setEditingTask(null);
@@ -219,6 +242,44 @@ function TasksPageContent() {
     }
   }
 
+  function applyFilters() {
+    const nextFilters = {
+      project: draftProject,
+      status: draftStatus,
+      assignee: draftAssignee,
+      priority: draftPriority
+    };
+
+    setTasks([]);
+    setCurrentPage(1);
+    setHasMore(true);
+    setTotalTasks(0);
+    setAppliedFilters(nextFilters);
+
+    const params = new URLSearchParams();
+    if (nextFilters.project !== "all") params.set("project", nextFilters.project);
+    if (nextFilters.status !== "all") params.set("status", nextFilters.status);
+    if (nextFilters.assignee !== "all") params.set("assignee", nextFilters.assignee);
+    if (nextFilters.priority !== "all") params.set("priority", nextFilters.priority);
+    router.replace(`${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}`);
+  }
+
+  function clearFilters() {
+    const employeeDefault = me?.role === "employee" ? (me.id as string) : "all";
+    setDraftProject("all");
+    setProjectSearch("");
+    setProjectDropdownOpen(false);
+    setDraftStatus("all");
+    setDraftAssignee(employeeDefault);
+    setDraftPriority("all");
+    setAppliedFilters(null);
+    setTasks([]);
+    setCurrentPage(1);
+    setHasMore(true);
+    setTotalTasks(0);
+    router.replace(window.location.pathname);
+  }
+
   return (
     <div className="flex flex-col h-[calc(100vh-8rem)]">
       <div className="flex items-center justify-between p-6 pb-4">
@@ -231,33 +292,65 @@ function TasksPageContent() {
       </div>
 
       <div className="px-6 pb-4">
-        <div className="flex items-center gap-3">
-          <select
-            value={filterProject}
-            onChange={(e) => {
-              setFilterProject(e.target.value as any);
-              const p = new URLSearchParams(window.location.search);
-              if (e.target.value === "all") p.delete("project");
-              else p.set("project", e.target.value);
-              router.replace(`${window.location.pathname}?${p.toString()}`);
-            }}
-            className="rounded-md border border-border-color bg-bg-primary/60 px-3 py-2 text-sm text-text-primary"
-          >
-            <option value="all">All Projects</option>
-            {projects.map((proj: any) => (
-              <option key={proj.id} value={proj.id}>{proj.name}</option>
-            ))}
-          </select>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative min-w-[220px]">
+            <button
+              type="button"
+              onClick={() => setProjectDropdownOpen((value) => !value)}
+              className="flex w-full items-center justify-between rounded-md border border-border-color bg-bg-primary/60 px-3 py-2 text-sm text-text-primary"
+            >
+              <span className="truncate">{projectButtonLabel}</span>
+              <Search className="h-4 w-4 text-text-secondary" />
+            </button>
+
+            {projectDropdownOpen ? (
+              <div className="absolute left-0 right-0 top-full z-30 mt-2 rounded-xl border border-border-color bg-bg-primary shadow-xl">
+                <div className="border-b border-border-color p-2">
+                  <div className="flex items-center gap-2 rounded-md border border-border-color bg-bg-primary/70 px-3 py-2">
+                    <Search className="h-4 w-4 text-text-secondary" />
+                    <input
+                      value={projectSearch}
+                      onChange={(e) => setProjectSearch(e.target.value)}
+                      placeholder="Search projects"
+                      className="w-full bg-transparent text-sm text-text-primary outline-none placeholder:text-text-secondary"
+                    />
+                  </div>
+                </div>
+                <div className="max-h-64 overflow-y-auto p-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDraftProject("all");
+                      setProjectDropdownOpen(false);
+                    }}
+                    className="w-full rounded-md px-3 py-2 text-left text-sm text-text-primary hover:bg-hover-bg"
+                  >
+                    All Projects
+                  </button>
+                  {filteredProjects.map((proj: any) => (
+                    <button
+                      key={proj.id}
+                      type="button"
+                      onClick={() => {
+                        setDraftProject(proj.id);
+                        setProjectDropdownOpen(false);
+                      }}
+                      className="w-full rounded-md px-3 py-2 text-left text-sm text-text-primary hover:bg-hover-bg"
+                    >
+                      {proj.name}
+                    </button>
+                  ))}
+                  {!filteredProjects.length ? (
+                    <div className="px-3 py-2 text-sm text-text-secondary">No projects found</div>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
+          </div>
 
           <select
-            value={filterStatus}
-            onChange={(e) => {
-              setFilterStatus(e.target.value as any);
-              const p = new URLSearchParams(window.location.search);
-              if (e.target.value === "all") p.delete("status");
-              else p.set("status", e.target.value);
-              router.replace(`${window.location.pathname}?${p.toString()}`);
-            }}
+            value={draftStatus}
+            onChange={(e) => setDraftStatus(e.target.value as any)}
             className="rounded-md border border-border-color bg-bg-primary/60 px-3 py-2 text-sm text-text-primary"
           >
             <option value="all">All Statuses</option>
@@ -268,14 +361,8 @@ function TasksPageContent() {
           </select>
 
           <select
-            value={filterAssignee}
-            onChange={(e) => {
-              setFilterAssignee(e.target.value as any);
-              const p = new URLSearchParams(window.location.search);
-              if (e.target.value === "all") p.delete("assignee");
-              else p.set("assignee", e.target.value);
-              router.replace(`${window.location.pathname}?${p.toString()}`);
-            }}
+            value={draftAssignee}
+            onChange={(e) => setDraftAssignee(e.target.value as any)}
             className="rounded-md border border-border-color bg-bg-primary/60 px-3 py-2 text-sm text-text-primary"
           >
             <option value="all">All Assignees</option>
@@ -285,14 +372,8 @@ function TasksPageContent() {
           </select>
 
           <select
-            value={filterPriority}
-            onChange={(e) => {
-              setFilterPriority(e.target.value as any);
-              const p = new URLSearchParams(window.location.search);
-              if (e.target.value === "all") p.delete("priority");
-              else p.set("priority", e.target.value);
-              router.replace(`${window.location.pathname}?${p.toString()}`);
-            }}
+            value={draftPriority}
+            onChange={(e) => setDraftPriority(e.target.value as any)}
             className="rounded-md border border-border-color bg-bg-primary/60 px-3 py-2 text-sm text-text-primary"
           >
             <option value="all">All Priorities</option>
@@ -301,6 +382,20 @@ function TasksPageContent() {
             <option value="High">High</option>
             <option value="Critical">Critical</option>
           </select>
+
+          <button
+            onClick={applyFilters}
+            className="rounded-md bg-accent px-3 py-2 text-sm font-medium text-slate-900"
+          >
+            Apply Filters
+          </button>
+
+          <button
+            onClick={clearFilters}
+            className="rounded-md border border-border-color bg-bg-primary/60 px-3 py-2 text-sm font-medium text-text-primary"
+          >
+            Clear Filters
+          </button>
         </div>
       </div>
 
@@ -310,7 +405,12 @@ function TasksPageContent() {
       >
         {me?.role === "employee" ? (
           <div className="space-y-6">
-            {Object.keys(grouped).map((proj) => (
+            {!appliedFilters && !loading ? (
+              <div className="rounded-md border border-border-color/40 p-6 text-sm text-text-secondary">
+                Select filters and click Apply Filters to load tasks.
+              </div>
+            ) : null}
+            {appliedFilters ? Object.keys(grouped).map((proj) => (
               <div key={proj} className="rounded-md border border-border-color/40 p-4">
                 <div className="mb-3 flex items-center justify-between">
                   <h2 className="text-sm font-semibold text-text-primary">{proj}</h2>
@@ -318,24 +418,31 @@ function TasksPageContent() {
                 </div>
                 <TaskTable tasks={grouped[proj]} loading={loading} onDelete={handleDelete} onStatusChange={handleStatusChange} onEdit={handleEdit} user={me} />
               </div>
-            ))}
+            )) : null}
           </div>
         ) : (
           <div className="space-y-4">
-            <TaskTable tasks={tasks} loading={loading} onDelete={handleDelete} onStatusChange={handleStatusChange} onEdit={handleEdit} user={me} />
+            {!appliedFilters && !loading ? (
+              <div className="rounded-md border border-border-color/40 p-6 text-sm text-text-secondary">
+                Select filters and click Apply Filters to load tasks.
+              </div>
+            ) : null}
+            {appliedFilters ? (
+              <TaskTable tasks={tasks} loading={loading} onDelete={handleDelete} onStatusChange={handleStatusChange} onEdit={handleEdit} user={me} />
+            ) : null}
             
-            {loadingMore && (
+            {appliedFilters && loadingMore ? (
               <div className="flex items-center justify-center py-4">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-accent"></div>
                 <span className="ml-2 text-sm text-text-secondary">Loading more tasks...</span>
               </div>
-            )}
+            ) : null}
             
-            {!hasMore && tasks.length > 0 && !loading && (
+            {appliedFilters && !hasMore && tasks.length > 0 && !loading ? (
               <div className="text-center py-4 text-text-secondary text-sm">
                 No more tasks to load
               </div>
-            )}
+            ) : null}
           </div>
         )}
       </div>

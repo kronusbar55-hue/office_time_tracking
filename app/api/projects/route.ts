@@ -22,6 +22,7 @@ export async function GET(request: Request) {
   if (!userRecord) return NextResponse.json({ error: "User not found" }, { status: 401 });
   
   const userRole = String(userRecord.role || "").toLowerCase();
+  // console.log("userRole", userRole);
   const isAdminOrHR = userRole === "admin" || userRole === "hr";
   const canManage = isAdminOrHR || userRole === "manager";
 
@@ -32,12 +33,14 @@ export async function GET(request: Request) {
     status: { $ne: "archived" },
     name: { $nin: ["Other", "other", "OTHER"] }
   };
+  // console.log("forCurrentUser", forCurrentUser);
 
   // Enforce filtering for managers and employees
   // Admins and HR still see everything unless they explicitly request forCurrentUser
-  if (forCurrentUser || userRole === "employee" || userRole === "manager") {
+  if (forCurrentUser && (userRole === "employee" || userRole === "manager")) {
     query.members = userId;
   }
+  // console.log("query", query);
 
   const projects = await Project.find(query)
     .sort({ createdAt: -1 })

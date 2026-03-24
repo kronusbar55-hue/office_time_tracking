@@ -31,6 +31,7 @@ export default function MonitorDashboard() {
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalActiveRecords, setTotalActiveRecords] = useState(0);
+    const [monitorSummary, setMonitorSummary] = useState<any>(null);
 
 
 
@@ -91,6 +92,11 @@ export default function MonitorDashboard() {
             const data = await res.json();
             if (data.success) {
                 setEmployees(data.data);
+                if (data.summary) {
+                    setMonitorSummary(data.summary);
+                } else {
+                    setMonitorSummary(null);
+                }
                 if (data.pagination) {
                     setTotalPages(data.pagination.totalPages);
                     setTotalActiveRecords(data.pagination.totalActiveRecords);
@@ -142,6 +148,12 @@ export default function MonitorDashboard() {
     }, [selectedDate, selectedUserId, page]);
 
     const selectedUserData = allUsers.find(u => (u._id || u.id) === selectedUserId);
+
+    const getSummaryBorder = (avgDuration: number) => {
+        if (avgDuration < 0.1) return "border-2 border-red-500 bg-red-500/10";
+        if (avgDuration < 0.4) return "border-2 border-yellow-500 bg-yellow-500/10";
+        return "border-2 border-green-500 bg-green-500/10";
+    };
 
     return (
         <div className="flex flex-col gap-6 animate-in fade-in duration-700 min-h-[600px]">
@@ -321,6 +333,32 @@ export default function MonitorDashboard() {
                         </div>
                     </div>
                 </div>
+
+                {/* Monitor Summary */}
+                {monitorSummary && (
+                    <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 p-4 rounded-2xl ${getSummaryBorder(monitorSummary.avgDurationHours)}`}>
+                        <div className="text-xs text-text-secondary">
+                            <div className="font-semibold text-text-primary">Sessions tracked</div>
+                            <div className="text-lg font-black">{monitorSummary.sessionsTracked}</div>
+                        </div>
+                        <div className="text-xs text-text-secondary">
+                            <div className="font-semibold text-text-primary">Avg duration (h)</div>
+                            <div className="text-lg font-black">{monitorSummary.avgDurationHours.toFixed(2)}</div>
+                        </div>
+                        <div className="text-xs text-text-secondary">
+                            <div className="font-semibold text-text-primary">Total clicks</div>
+                            <div className="text-lg font-black">{monitorSummary.totalClicks}</div>
+                        </div>
+                        <div className="text-xs text-text-secondary">
+                            <div className="font-semibold text-text-primary">Total keypresses</div>
+                            <div className="text-lg font-black">{monitorSummary.totalKeyPresses}</div>
+                        </div>
+                        <div className="text-xs text-text-secondary">
+                            <div className="font-semibold text-text-primary">Total movements</div>
+                            <div className="text-lg font-black">{monitorSummary.totalMovements}</div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Timeline Popover */}
                 <AnimatePresence>

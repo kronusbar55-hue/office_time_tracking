@@ -68,6 +68,30 @@ export async function GET(req: Request) {
             .limit(limit)
             .lean();
 
+        const summaryAgg = await EmployeeMonitor.aggregate([
+            { $match: monitorMatch },
+            {
+                $group: {
+                    _id: null,
+                    totalClicks: { $sum: "$mouseClicks" },
+                    totalKeyPresses: { $sum: "$keyPresses" },
+                    totalMovements: { $sum: "$mouseMovements" },
+                    totalActiveSeconds: { $sum: "$activeSeconds" },
+                    totalIdleSeconds: { $sum: "$idleSeconds" }
+                }
+            }
+        ]);
+
+        const summary = summaryAgg && summaryAgg.length > 0 ? summaryAgg[0] : {
+            totalClicks: 0,
+            totalKeyPresses: 0,
+            totalMovements: 0,
+            totalActiveSeconds: 0,
+            totalIdleSeconds: 0
+        };
+
+        const averageDurationHours = totalRecords > 0 ? Number((summary.totalActiveSeconds / totalRecords / 3600).toFixed(2)) : 0;
+
         // Merge employee info with monitor data to return one object per record
         const results = monitorData.map(monitor => {
             const emp = employees.find((e: any) => e._id.toString() === monitor.userId.toString());
@@ -83,6 +107,15 @@ export async function GET(req: Request) {
         return NextResponse.json({
             success: true,
             data: results,
+            summary: {
+                sessionsTracked: totalRecords,
+                avgDurationHours: averageDurationHours,
+                totalClicks: summary.totalClicks,
+                totalKeyPresses: summary.totalKeyPresses,
+                totalMovements: summary.totalMovements,
+                totalActiveHours: Number((summary.totalActiveSeconds / 3600).toFixed(2)),
+                totalIdleHours: Number((summary.totalIdleSeconds / 3600).toFixed(2))
+            },
             pagination: {
                 totalActiveRecords: totalRecords,
                 totalPages,
