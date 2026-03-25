@@ -64,7 +64,7 @@ export default function TaskTable({ tasks, user, loading = false, onDelete, onSt
           </thead>
           <tbody>
             {Array.from({ length: 6 }).map((_, i) => (
-              <tr key={i} className="border-b border-border-color animate-pulse">
+              <tr key={i} className="border-b border-border-color animate-pulse bg-border-light dark:bg-bg-secondary/20">
                 <td className="px-3 py-4"><div className="h-4 w-12 rounded-lg bg-card-bg" /></td>
                 <td className="px-3 py-4"><div className="h-5 w-24 rounded-lg bg-card-bg/60" /></td>
                 <td className="px-3 py-4"><div className="h-5 w-48 rounded-lg bg-hover-bg" /></td>

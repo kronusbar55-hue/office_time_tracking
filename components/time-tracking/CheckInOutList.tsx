@@ -109,7 +109,7 @@ export default function CheckInOutList({ role, period = "today", limit = 50 }: C
     return (
       <div className="space-y-3">
         {[...Array(5)].map((_, i) => (
-          <div key={i} className="h-16 rounded-lg border border-border-color bg-card-bg/50 animate-pulse" />
+          <div key={i} className="h-16 rounded-lg border border-border-color bg-border-color dark:bg-bg-secondary/40 animate-pulse" />
         ))}
       </div>
     );

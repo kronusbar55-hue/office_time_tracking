@@ -25,9 +25,21 @@ import Link from "next/link";
 import WelcomeHeader from "./shared/WelcomeHeader";
 import StatsCard from "./shared/StatsCard";
 import DashboardCard from "./shared/DashboardCard";
+import TrackedHoursChart from "./shared/TrackedHoursChart";
+import { resolveDashboardDateRange, type DashboardFilterInput } from "@/lib/dashboardDateRange";
 
-export default async function HRDashboard() {
+type Props = {
+  userId: string;
+  filters?: DashboardFilterInput;
+};
+
+export default async function HRDashboard({ userId, filters }: Props) {
   await connectDB();
+
+  const dateRange = resolveDashboardDateRange(filters);
+  const { getMonitorStats } = await import("@/lib/monitorUtils");
+  const monitorStats = await getMonitorStats(userId, dateRange.startDate, dateRange.endDate);
+  const hoursWorked = Math.round((monitorStats.reduce((sum, day) => sum + day.workedMinutes, 0) / 60) * 10) / 10;
 
   // Simulated HR User details
   const hrUser = { firstName: "HR", lastName: "Specialist" };
@@ -65,13 +77,13 @@ export default async function HRDashboard() {
   const usersWithJoin = await User.find({ isDeleted: false, joinDate: { $exists: true } }).select("joinDate").lean();
   const averageTenureMonths = usersWithJoin.length > 0
     ? Math.round(
-        usersWithJoin
-          .map((u: any) => {
-            if (!u.joinDate) return 0;
-            return (today.getTime() - new Date(u.joinDate).getTime()) / (1000 * 60 * 60 * 24 * 30);
-          })
-          .reduce((sum, days) => sum + days, 0) / usersWithJoin.length
-      )
+      usersWithJoin
+        .map((u: any) => {
+          if (!u.joinDate) return 0;
+          return (today.getTime() - new Date(u.joinDate).getTime()) / (1000 * 60 * 60 * 24 * 30);
+        })
+        .reduce((sum, days) => sum + days, 0) / usersWithJoin.length
+    )
     : 0;
 
   const departmentDistribution = await User.aggregate([
@@ -121,7 +133,7 @@ export default async function HRDashboard() {
       />
 
       {/* Row 2: HR Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7 gap-6">
         <StatsCard
           label="Total Employees"
           value={totalEmployees}
@@ -149,34 +161,6 @@ export default async function HRDashboard() {
           trend={{ value: -rejectedLeaves, isPositive: false }}
         />
         <StatsCard
-          label="Attrition Rate"
-          value={`${attritionRate}%`}
-          subtext="Rolling 12 month" 
-          icon={<TrendingUp className="h-6 w-6" />}
-          color="orange"
-          delay={0.4}
-        />
-        <StatsCard
-          label="Avg. Tenure"
-          value={`${Math.round(averageTenureMonths)} mo`}
-          subtext="per employee"
-          icon={<ShieldCheck className="h-6 w-6" />}
-          color="purple"
-          delay={0.5}
-        />
-        <StatsCard
-          label="Training Compliance"
-          value={`${trainingCompliance}%`}
-          subtext="platform completion"
-          icon={<CheckCircle2 className="h-6 w-6" />}
-          color="orange"
-          delay={0.6}
-        />
-      </div>
-
-      {/* Row 2.5: HR Enrichment */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatsCard
           label="Active Tech Skills"
           value={activeTechnologies}
           subtext="skill profiles"
@@ -200,14 +184,20 @@ export default async function HRDashboard() {
           color="purple"
           delay={0.55}
         />
+
         <StatsCard
-          label="On Leave (7 days)"
-          value={employeesOnLeaveThisWeek}
-          subtext="approved leave"
+          label="Tracked Hours"
+          value={hoursWorked}
+          subtext={dateRange.label}
           icon={<Clock className="h-6 w-6" />}
-          color="yellow"
-          delay={0.6}
+          color="green"
+          delay={0.65}
         />
+      </div>
+
+      {/* Row 2.5: HR Enrichment */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+
       </div>
 
       <DashboardCard delay={0.65}>
@@ -306,55 +296,18 @@ export default async function HRDashboard() {
         </DashboardCard>
       </div>
 
-      {/* Employee Quick View */}
-      <DashboardCard delay={0.7}>
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-bold text-text-primary flex items-center gap-2">
-            <Users className="h-5 w-5 text-blue-400" />
-            Employee Overview
-          </h3>
-          <div className="flex gap-2">
-            <div className="px-3 py-1 rounded-full bg-green-500/10 border border-green-500/20 text-[10px] font-bold text-green-500 uppercase">
-              {activeEmployees} Active
-            </div>
-            <div className="px-3 py-1 rounded-full bg-slate-500/10 border border-slate-500/20 text-[10px] font-bold text-text-secondary uppercase">
-              {inactiveEmployees} Inactive
-            </div>
-          </div>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div className="p-4 rounded-2xl bg-card-bg/30 border border-border-color space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-xs text-text-secondary uppercase font-bold">Attendance Today</span>
-              <span className="text-xs font-bold text-blue-400">{attendanceRate}%</span>
-            </div>
-            <div className="h-1.5 w-full bg-bg-secondary rounded-full overflow-hidden">
-              <div className="h-full bg-blue-500" style={{ width: `${attendanceRate}%` }} />
-            </div>
+      <div className="grid grid-cols-1 gap-6">
+        <DashboardCard className="w-full" delay={0.8}>
+          <div className="mb-4">
+            <p className="text-lg font-bold text-text-primary">Tracked Hours</p>
+            <p className="text-xs text-text-secondary">
+              Selected range: {dateRange.label}. Total tracked time: {hoursWorked} hours.
+            </p>
           </div>
-
-          <div className="p-4 rounded-2xl bg-card-bg/30 border border-border-color space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-xs text-text-secondary uppercase font-bold">Leave Requests Rate</span>
-              <span className="text-xs font-bold text-yellow-400">14%</span>
-            </div>
-            <div className="h-1.5 w-full bg-bg-secondary rounded-full overflow-hidden">
-              <div className="h-full bg-yellow-500" style={{ width: '14%' }} />
-            </div>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-card-bg/30 border border-border-color space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-xs text-text-secondary uppercase font-bold">Hiring Progress</span>
-              <span className="text-xs font-bold text-purple-400">65%</span>
-            </div>
-            <div className="h-1.5 w-full bg-bg-secondary rounded-full overflow-hidden">
-              <div className="h-full bg-purple-500" style={{ width: '65%' }} />
-            </div>
-          </div>
-        </div>
-      </DashboardCard>
+          <TrackedHoursChart />
+        </DashboardCard>
+      </div>
     </div>
   );
 }

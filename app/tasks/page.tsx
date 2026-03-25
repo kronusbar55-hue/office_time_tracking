@@ -284,11 +284,6 @@ function TasksPageContent() {
     <div className="flex flex-col h-[calc(100vh-8rem)]">
       <div className="flex items-center justify-between p-6 pb-4">
         <h1 className="text-lg font-semibold text-text-primary">Tasks</h1>
-        <div>
-          {me && (me.role === "admin" || me.role === "manager") && (
-            <button onClick={openCreate} className="rounded-md bg-accent px-3 py-2 text-sm font-medium text-slate-900">Create Task</button>
-          )}
-        </div>
       </div>
 
       <div className="px-6 pb-4">

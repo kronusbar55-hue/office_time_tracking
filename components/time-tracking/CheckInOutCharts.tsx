@@ -60,7 +60,7 @@ export default function CheckInOutCharts({ period = "month", role }: CheckInOutC
     return (
       <div className="grid gap-4 md:grid-cols-2">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="h-64 rounded-lg border border-border-color bg-card-bg/50 animate-pulse" />
+          <div key={i} className="h-64 rounded-lg border border-border-color bg-border-color dark:bg-bg-secondary/40 animate-pulse" />
         ))}
       </div>
     );

@@ -4,36 +4,223 @@
 
 @layer base {
   :root {
+    /* ========== PRIMARY BACKGROUNDS ========== */
     --bg-primary: 255 255 255;
     --bg-secondary: 248 250 252;
+    --bg-tertiary: 241 245 249;
+    
+    /* ========== TEXT COLORS ========== */
     --text-primary: 15 23 42;
     --text-secondary: 100 116 139;
+    --text-tertiary: 148 163 184;
+    
+    /* ========== BORDER COLORS ========== */
     --border-color: 226 232 240;
+    --border-light: 241 245 249;
+    --border-dark: 203 213 225;
+    
+    /* ========== CARD STYLING ========== */
     --card-bg: 255 255 255;
+    --card-hover: 248 250 252;
+    --card-border: 226 232 240;
+    
+    /* ========== INTERACTIVE ELEMENTS ========== */
     --hover-bg: 241 245 249;
+    --focus-ring: 219 234 254;
+    --active-bg: 226 232 240;
+    
+    /* ========== STATUS COLORS ========== */
+    --success: 34 197 94;
+    --warning: 245 158 11;
+    --error: 239 68 68;
+    --info: 59 130 246;
+    
+    /* ========== ACCENT COLORS ========== */
     --accent: 14 165 233;
     --accent-soft: 224 242 254;
+    --accent-hover: 2 132 199;
+    
+    /* ========== SEMANTIC COLORS ========== */
+    --disabled: 226 232 240;
+    --disabled-text: 148 163 184;
+    --input-bg: 255 255 255;
+    --input-border: 226 232 240;
+    
+    /* ========== KANBAN COLORS ========== */
+    --kanban-column-bg: 248 250 252;
+    --kanban-card-bg: 255 255 255;
+    --kanban-drag-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    
+    /* ========== CHART COLORS ========== */
+    --chart-grid: 226 232 240;
+    --chart-axis: 100 116 139;
+    --chart-bar: 14 165 233;
+    --chart-bar-alt: 59 130 246;
+    --chart-bar-success: 34 197 94;
+    
+    /* ========== SCROLLBAR ========== */
+    --scrollbar-thumb: 203 213 225;
+    --scrollbar-track: 241 245 249;
   }
 
   .dark {
+    /* ========== PRIMARY BACKGROUNDS ========== */
     --bg-primary: 5 8 22;
     --bg-secondary: 11 16 32;
+    --bg-tertiary: 15 23 42;
+    
+    /* ========== TEXT COLORS ========== */
     --text-primary: 241 245 249;
     --text-secondary: 148 163 184;
+    --text-tertiary: 100 116 139;
+    
+    /* ========== BORDER COLORS ========== */
     --border-color: 30 41 59;
+    --border-light: 51 65 85;
+    --border-dark: 15 23 42;
+    
+    /* ========== CARD STYLING ========== */
     --card-bg: 15 23 42;
+    --card-hover: 30 41 59;
+    --card-border: 30 41 59;
+    
+    /* ========== INTERACTIVE ELEMENTS ========== */
     --hover-bg: 30 41 59;
+    --focus-ring: 15 23 42;
+    --active-bg: 51 65 85;
+    
+    /* ========== STATUS COLORS ========== */
+    --success: 52 211 153;
+    --warning: 251 146 60;
+    --error: 248 113 113;
+    --info: 96 165 250;
+    
+    /* ========== ACCENT COLORS ========== */
     --accent: 56 189 248;
     --accent-soft: 11 18 32;
+    --accent-hover: 34 211 238;
+    
+    /* ========== SEMANTIC COLORS ========== */
+    --disabled: 30 41 59;
+    --disabled-text: 100 116 139;
+    --input-bg: 15 23 42;
+    --input-border: 30 41 59;
+    
+    /* ========== KANBAN COLORS ========== */
+    --kanban-column-bg: 11 16 32;
+    --kanban-card-bg: 15 23 42;
+    --kanban-drag-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+    
+    /* ========== CHART COLORS ========== */
+    --chart-grid: 30 41 59;
+    --chart-axis: 148 163 184;
+    --chart-bar: 56 189 248;
+    --chart-bar-alt: 96 165 250;
+    --chart-bar-success: 52 211 153;
+    
+    /* ========== SCROLLBAR ========== */
+    --scrollbar-thumb: 51 65 85;
+    --scrollbar-track: 15 23 42;
   }
 }
 
-body {
-  @apply bg-background text-text-primary transition-colors duration-200;
+html {
+  color-scheme: light dark;
+  scroll-behavior: smooth;
 }
 
-.scrollbar-thin {
+body {
+  @apply bg-bg-primary text-text-primary transition-colors duration-200;
+  scrollbar-color: rgb(var(--scrollbar-thumb)) rgb(var(--scrollbar-track));
+}
+
+/* Chrome/Edge/Safari scrollbar styling */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgb(var(--scrollbar-track));
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgb(var(--scrollbar-thumb));
+  border-radius: 10px;
+  border: 2px solid rgb(var(--scrollbar-track));
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--text-secondary));
+}
+
+/* Firefox scrollbar styling */
+* {
+  scrollbar-color: rgb(var(--scrollbar-thumb)) rgb(var(--scrollbar-track));
   scrollbar-width: thin;
+}
+
+/* Smooth theme transitions */
+* {
+  @apply transition-colors duration-200;
+}
+
+/* Avoid transitions on specific elements */
+.no-theme-transition,
+.no-theme-transition * {
+  @apply !transition-none;
+}
+
+/* Input and form elements */
+input,
+textarea,
+select {
+  @apply bg-input-bg text-text-primary border border-input-border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-colors duration-200;
+}
+
+input::placeholder,
+textarea::placeholder {
+  @apply text-text-tertiary;
+}
+
+input:disabled,
+textarea:disabled {
+  @apply bg-disabled text-disabled-text cursor-not-allowed;
+}
+
+/* Button base styles */
+button {
+  @apply transition-colors duration-200;
+}
+
+/* Focus styles for accessibility */
+a:focus,
+button:focus {
+  @apply outline-none ring-2 ring-offset-2 ring-accent;
+}
+
+.dark a:focus,
+.dark button:focus {
+  @apply ring-offset-bg-primary;
+}
+
+/* Code blocks */
+code {
+  @apply text-sm font-mono text-accent bg-accent-soft/20 px-2 py-1 rounded;
+}
+
+.dark code {
+  @apply bg-accent/10;
+}
+
+/* Selection color */
+::selection {
+  @apply bg-accent text-white;
+}
+
+.dark ::selection {
+  @apply bg-accent text-bg-primary;
 }
 
 @keyframes glow-pulse {
@@ -141,4 +328,93 @@ body {
 
 .animate-glow-green-border {
   animation: glow-green-br 1.5s infinite;
-}
+}
+
+/* Theme transition animation */
+@keyframes theme-fade {
+  0% {
+    opacity: 0.95;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.animate-theme-fade {
+  animation: theme-fade 0.2s ease-in-out;
+}
+
+/* Scrollbar custom styling */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--scrollbar-thumb)) rgb(var(--scrollbar-track));
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgb(var(--scrollbar-track));
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgb(var(--scrollbar-thumb));
+  border-radius: 10px;
+  border: 2px solid rgb(var(--scrollbar-track));
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--text-secondary));
+}
+
+/* Kanban drag overlay shadow */
+.kanban-drag-overlay {
+  box-shadow: var(--kanban-drag-shadow);
+}
+
+/* ========== SKELETON LOADERS ========== */
+/* Skeleton base styling with theme awareness */
+.skeleton-base {
+  @apply rounded animate-pulse;
+}
+
+/* Light mode skeleton - darker backgrounds for visibility */
+.skeleton {
+  @apply bg-border-color dark:bg-bg-secondary/30;
+}
+
+.skeleton-sm {
+  @apply h-4 w-full bg-border-color dark:bg-bg-secondary/30 rounded animate-pulse;
+}
+
+.skeleton-md {
+  @apply h-6 w-full bg-border-color dark:bg-bg-secondary/30 rounded animate-pulse;
+}
+
+.skeleton-lg {
+  @apply h-10 w-full bg-border-color dark:bg-bg-secondary/30 rounded animate-pulse;
+}
+
+.skeleton-card {
+  @apply rounded-lg bg-border-light dark:bg-bg-tertiary border border-border-color dark:border-card-border p-4 animate-pulse;
+}
+
+.skeleton-text {
+  @apply rounded bg-border-color dark:bg-bg-secondary/40 animate-pulse;
+}
+
+.skeleton-circle {
+  @apply rounded-full bg-border-color dark:bg-bg-secondary/30 animate-pulse;
+}
+
+/* Skeleton line groups */
+.skeleton-lines {
+  @apply space-y-2;
+}
+
+.skeleton-lines > div {
+  @apply rounded bg-border-color dark:bg-bg-secondary/40 animate-pulse;
+}

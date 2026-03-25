@@ -134,7 +134,7 @@ export default function TechnologiesPage() {
               {loading ? (
                 <>
                   {Array.from({ length: 6 }).map((_, i) => (
-                    <tr key={i} className="animate-pulse border-t border-border-color/50 hover:bg-bg-secondary/40 transition-colors">
+                    <tr key={i} className="animate-pulse border-t border-border-color/50 hover:bg-bg-secondary/40 transition-colors bg-border-light dark:bg-bg-secondary/20">
                       <td className="px-4 py-3"><div className="h-4 w-4 rounded bg-card-bg" /></td>
                       <td className="px-4 py-3"><div className="h-4 w-32 rounded bg-card-bg" /></td>
                       <td className="px-4 py-3"><div className="h-5 w-16 rounded-full bg-card-bg/60" /></td>

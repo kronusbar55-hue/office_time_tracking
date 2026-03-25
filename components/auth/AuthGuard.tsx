@@ -32,11 +32,11 @@ export function AuthGuard({ children }: { children: ReactNode }) {
   if (loading) {
     return (
       <div className="flex-1 p-6">
-        <div className="h-6 w-48 animate-pulse rounded bg-card-bg" />
+        <div className="h-6 w-48 animate-pulse rounded bg-border-color dark:bg-bg-secondary/40" />
         <div className="mt-4 space-y-2">
-          <div className="h-4 w-full animate-pulse rounded bg-card-bg" />
-          <div className="h-4 w-5/6 animate-pulse rounded bg-card-bg" />
-          <div className="h-64 w-full animate-pulse rounded bg-card-bg" />
+          <div className="h-4 w-full animate-pulse rounded bg-border-color dark:bg-bg-secondary/40" />
+          <div className="h-4 w-5/6 animate-pulse rounded bg-border-color dark:bg-bg-secondary/40" />
+          <div className="h-64 w-full animate-pulse rounded bg-border-color dark:bg-bg-secondary/40" />
         </div>
       </div>
     );

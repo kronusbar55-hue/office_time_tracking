@@ -374,7 +374,7 @@ export default function MonitorDashboard() {
                 {loading && employees.length === 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
                         {[...Array(5)].map((_, i) => (
-                            <div key={i} className="aspect-video rounded-3xl bg-bg-secondary/40 animate-pulse border border-border-color" />
+                            <div key={i} className="aspect-video rounded-3xl bg-border-color dark:bg-bg-secondary/40 animate-pulse border border-border-color" />
                         ))}
                     </div>
                 ) : (
@@ -387,9 +387,9 @@ export default function MonitorDashboard() {
                                 // Skeleton placeholders while loading
                                 [...Array(5)].map((_, i) => (
                                     viewMode === "grid" ? (
-                                        <div key={i} className="aspect-video rounded-3xl bg-bg-secondary/40 animate-pulse border border-border-color" />
+                                        <div key={i} className="aspect-video rounded-3xl bg-border-color dark:bg-bg-secondary/40 animate-pulse border border-border-color" />
                                     ) : (
-                                        <div key={i} className="flex items-center gap-4 p-4 bg-bg-secondary/40 rounded-2xl animate-pulse border border-border-color">
+                                        <div key={i} className="flex items-center gap-4 p-4 bg-border-color dark:bg-bg-secondary/40 rounded-2xl animate-pulse border border-border-color">
                                             <div className="w-12 h-12 bg-card-bg rounded-full" />
                                             <div className="flex-1 space-y-2">
                                                 <div className="h-4 bg-card-bg rounded w-3/4" />

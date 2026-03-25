@@ -12,8 +12,8 @@ export async function GET(request: Request) {
         const token = cookieStore.get("auth_token")?.value;
         const payload = token ? verifyAuthToken(token) : null;
 
-        if (!payload || payload.role !== "admin") {
-            return NextResponse.json(errorResp("Unauthorized: Admin access only"), { status: 403 });
+        if (!payload || (payload.role !== "admin" && payload.role !== "hr")) {
+            return NextResponse.json(errorResp("Unauthorized: Admin or HR access only"), { status: 403 });
         }
 
         await connectDB();

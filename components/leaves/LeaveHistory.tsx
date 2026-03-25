@@ -57,28 +57,28 @@ export default function LeaveHistory({
   if (!leaves) {
     return (
       <div className="space-y-6">
-        <div className="h-8 w-48 animate-pulse rounded bg-card-bg" />
+        <div className="h-8 w-48 animate-pulse rounded bg-border-color dark:bg-bg-secondary/40" />
         <div className="space-y-4">
           {Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="flex flex-col gap-4 rounded-2xl border border-border-color bg-bg-secondary/40 p-5 animate-pulse">
                <div className="flex items-start justify-between">
                   <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-xl bg-card-bg" />
+                    <div className="h-12 w-12 rounded-xl bg-border-color dark:bg-bg-secondary/40" />
                     <div className="space-y-2">
-                       <div className="h-4 w-32 rounded bg-card-bg" />
-                       <div className="h-3 w-48 rounded bg-card-bg/60" />
+                       <div className="h-4 w-32 rounded bg-border-color dark:bg-bg-secondary/40" />
+                       <div className="h-3 w-48 rounded bg-border-color dark:bg-bg-secondary/60" />
                     </div>
                   </div>
-                  <div className="h-7 w-20 rounded-full bg-card-bg/60" />
+                  <div className="h-7 w-20 rounded-full bg-border-color dark:bg-bg-secondary/60" />
                </div>
-               <div className="h-8 w-full rounded-xl bg-card-bg/30" />
+               <div className="h-8 w-full rounded-xl bg-border-color dark:bg-bg-secondary/30" />
                <div className="flex items-center justify-between pt-2">
                   <div className="flex -space-x-2">
                     {Array.from({ length: 2 }).map((_, j) => (
-                      <div key={j} className="h-6 w-6 rounded-full border-2 border-slate-950 bg-card-bg" />
+                      <div key={j} className="h-6 w-6 rounded-full border-2 border-slate-950 bg-border-color dark:bg-bg-secondary/40" />
                     ))}
                   </div>
-                  <div className="h-4 w-24 rounded bg-card-bg/40" />
+                  <div className="h-4 w-24 rounded bg-border-color dark:bg-bg-secondary/40" />
                </div>
             </div>
           ))}

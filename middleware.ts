@@ -7,6 +7,7 @@ import type { NextRequest } from 'next/server';
 
 const ROLE_PATHS: Array<{ prefix: string; allowed: string[] }> = [
   { prefix: '/dashboard/admin', allowed: ['admin'] },
+  { prefix: '/dashboard/manager', allowed: ['manager'] },
   { prefix: '/admin', allowed: ['admin'] },
   { prefix: '/live-attendance', allowed: ['admin', 'hr'] },
   { prefix: '/employees', allowed: ['admin', 'hr'] },

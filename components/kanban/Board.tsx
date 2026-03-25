@@ -91,7 +91,7 @@ export default function Board({
     };
 
     return (
-        <div className="flex h-full w-full gap-6 overflow-x-auto p-6 scrollbar-hide">
+        <div className="flex h-full w-full gap-6 overflow-x-auto p-6 scrollbar-hide bg-bg-primary dark:bg-bg-primary transition-colors duration-200">
             <DndContext
                 sensors={sensors}
                 collisionDetection={closestCorners}

@@ -391,7 +391,7 @@ export default function AdminAnalyticsDashboard() {
 
   return (
     <div className="space-y-6">
-      <DashboardCard className="relative z-20 overflow-visible border-blue-500/20 bg-gradient-to-br from-sky-500/10 via-bg-secondary/70 to-emerald-500/10">
+      <DashboardCard className="relative z-50 overflow-visible border-blue-500/20 bg-gradient-to-br from-sky-500/10 via-bg-secondary/70 to-emerald-500/10">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-3">
@@ -406,10 +406,7 @@ export default function AdminAnalyticsDashboard() {
                 <Info className="h-4 w-4" />
               </button>
             </div>
-            <h1 className="text-3xl font-bold text-text-primary">Productivity analytics and behavior scoring</h1>
-            <p className="max-w-2xl text-sm text-text-secondary">
-              Choose a date range and employee scope, then apply filters to load analytics.
-            </p>
+             
           </div>
           <div className="flex items-center gap-3">
             <button
@@ -576,7 +573,7 @@ export default function AdminAnalyticsDashboard() {
 
           <div className="space-y-2">
             <span className="text-xs font-semibold uppercase tracking-wider text-text-secondary">Employee</span>
-            <div className="relative z-30">
+            <div className="relative z-[60]">
               <button
                 type="button"
                 onClick={() => setEmployeeDropdownOpen((value) => !value)}
@@ -587,7 +584,7 @@ export default function AdminAnalyticsDashboard() {
               </button>
 
               {employeeDropdownOpen ? (
-                <div className="absolute left-0 right-0 top-full z-50 mt-2 rounded-2xl border border-slate-700/80 bg-slate-950 shadow-2xl shadow-black/40">
+                <div className="absolute left-0 right-0 top-full z-[70] mt-2 rounded-2xl border border-slate-700/80 bg-slate-950 shadow-2xl shadow-black/40">
                   <div className="border-b border-slate-800 p-3">
                     <div className="flex items-center gap-3 rounded-xl border border-slate-700/80 bg-slate-900/80 px-3 py-2">
                       <Search className="h-4 w-4 text-text-secondary" />
@@ -672,15 +669,7 @@ export default function AdminAnalyticsDashboard() {
               Apply Filters
             </button>
           </div>
-          <div className="rounded-xl border border-emerald-400/20 bg-emerald-500/10 p-4 text-sm text-emerald-100">
-            <div className="flex items-center gap-2 font-semibold">
-              <ShieldCheck className="h-4 w-4" />
-              ADMIN only
-            </div>
-            <p className="mt-2 text-emerald-50/80">
-              Selected scope: {draftEmployeeId === "__all__" ? "All employees" : selectedEmployee ? `${selectedEmployee.firstName} ${selectedEmployee.lastName}` : "No employee selected"}.
-            </p>
-          </div>
+           
         </div>
       </DashboardCard>
 

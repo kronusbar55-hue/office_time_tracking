@@ -54,78 +54,58 @@ export default function DashboardDateFilter({
   };
 
   return (
-    <div className="rounded-3xl border border-border-color bg-card-bg/80 p-4 shadow-lg shadow-black/10 backdrop-blur-sm">
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-        <div className="space-y-1">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-300">Dashboard Filter</p>
-          <p className="text-sm text-text-secondary">
-            Pick a time range and apply it to refresh task activity and work-time summaries.
-          </p>
+    <div className="flex flex-wrap items-center gap-4 py-2">
+      <div className="flex items-center gap-2">
+        <CalendarDays className="h-4 w-4 text-text-secondary" />
+        <select
+          value={range}
+          onChange={(e) => setRange(e.target.value)}
+          className="h-10 rounded-lg border border-border-color bg-bg-secondary px-3 text-sm text-text-primary outline-none transition focus:border-accent/60"
+        >
+          <option value="today">Today</option>
+          <option value="yesterday">Yesterday</option>
+          <option value="week">Last 7 Days</option>
+          <option value="month">This Month</option>
+          <option value="custom">Custom Range</option>
+        </select>
+      </div>
+
+      {isCustom && (
+        <div className="flex items-center gap-2">
+          <input
+            type="date"
+            value={start}
+            onChange={(e) => setStart(e.target.value)}
+            className="h-10 rounded-lg border border-border-color bg-bg-secondary px-3 text-sm text-text-primary outline-none transition focus:border-accent/60"
+          />
+          <span className="text-text-secondary">to</span>
+          <input
+            type="date"
+            value={end}
+            onChange={(e) => setEnd(e.target.value)}
+            className="h-10 rounded-lg border border-border-color bg-bg-secondary px-3 text-sm text-text-primary outline-none transition focus:border-accent/60"
+          />
         </div>
+      )}
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-[220px_auto_auto]">
-          <label className="space-y-2">
-            <span className="text-xs font-semibold uppercase tracking-wider text-text-secondary">Date Range</span>
-            <div className="relative">
-              <CalendarDays className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary" />
-              <select
-                value={range}
-                onChange={(event) => setRange(event.target.value)}
-                className="h-11 w-full rounded-2xl border border-border-color bg-bg-secondary pl-10 pr-4 text-sm text-text-primary outline-none transition focus:border-cyan-400"
-              >
-                <option value="today">Today</option>
-                <option value="7d">Last 7 Days</option>
-                <option value="30d">Last 30 Days</option>
-                <option value="60d">Last 60 Days</option>
-                <option value="custom">Custom Range</option>
-              </select>
-            </div>
-          </label>
-
-          {isCustom && (
-            <>
-              <label className="space-y-2">
-                <span className="text-xs font-semibold uppercase tracking-wider text-text-secondary">Start Date</span>
-                <input
-                  type="date"
-                  value={start}
-                  onChange={(event) => setStart(event.target.value)}
-                  className="h-11 w-full rounded-2xl border border-border-color bg-bg-secondary px-4 text-sm text-text-primary outline-none transition focus:border-cyan-400"
-                />
-              </label>
-              <label className="space-y-2">
-                <span className="text-xs font-semibold uppercase tracking-wider text-text-secondary">End Date</span>
-                <input
-                  type="date"
-                  value={end}
-                  onChange={(event) => setEnd(event.target.value)}
-                  className="h-11 w-full rounded-2xl border border-border-color bg-bg-secondary px-4 text-sm text-text-primary outline-none transition focus:border-cyan-400"
-                />
-              </label>
-            </>
-          )}
-        </div>
-
-        <div className="flex flex-wrap gap-3">
+      <div className="flex items-center gap-2">
+        <button
+          onClick={applyFilters}
+          disabled={!canApply || !hasPendingChanges}
+          className="inline-flex h-10 items-center gap-2 rounded-lg bg-accent px-4 text-sm font-semibold text-slate-950 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <Filter className="h-4 w-4" />
+          Apply
+        </button>
+        {canClear && (
           <button
-            type="button"
-            onClick={applyFilters}
-            disabled={!canApply || !hasPendingChanges}
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-cyan-400/30 bg-cyan-500/10 px-4 text-sm font-semibold text-cyan-300 transition hover:bg-cyan-500/20 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <Filter className="h-4 w-4" />
-            Apply Filter
-          </button>
-          <button
-            type="button"
             onClick={clearFilters}
-            disabled={!canClear}
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-border-color bg-bg-secondary px-4 text-sm font-semibold text-text-secondary transition hover:border-border-color/80 hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex h-10 items-center gap-2 rounded-lg border border-border-color bg-bg-secondary px-4 text-sm font-semibold text-text-primary transition hover:border-accent/60"
           >
             <RotateCcw className="h-4 w-4" />
-            Clear
+            Reset
           </button>
-        </div>
+        )}
       </div>
     </div>
   );

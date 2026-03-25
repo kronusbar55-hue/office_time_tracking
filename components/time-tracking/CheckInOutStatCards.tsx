@@ -99,7 +99,7 @@ export default function CheckInOutStatCards({ period = "today", role }: CheckInO
     return (
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {[...Array(6)].map((_, i) => (
-          <div key={i} className="h-28 rounded-lg border border-border-color bg-card-bg/50 animate-pulse" />
+          <div key={i} className="h-28 rounded-lg border border-border-color bg-border-color dark:bg-bg-secondary/40 animate-pulse" />
         ))}
       </div>
     );

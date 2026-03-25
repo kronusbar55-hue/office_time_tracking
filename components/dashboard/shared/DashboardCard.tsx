@@ -7,16 +7,17 @@ interface DashboardCardProps {
     children: React.ReactNode;
     className?: string;
     delay?: number;
+    allowOverflow?: boolean;
 }
 
-export default function DashboardCard({ children, className = "", delay = 0 }: DashboardCardProps) {
+export default function DashboardCard({ children, className = "", delay = 0, allowOverflow = false }: DashboardCardProps) {
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay }}
             whileHover={{ scale: 1.01, transition: { duration: 0.2 } }}
-            className={`relative overflow-hidden rounded-2xl border border-border-color/50 bg-bg-secondary/40 p-6 backdrop-blur-xl transition-colors hover:border-blue-500/30 ${className}`}
+            className={`relative ${allowOverflow ? '' : 'overflow-hidden'} rounded-2xl border border-border-color/50 bg-bg-secondary/40 p-6 backdrop-blur-xl transition-colors hover:border-blue-500/30 ${className}`}
         >
             {/* Subtle Glow Effect */}
             <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-blue-500/5 blur-3xl" />

@@ -30,11 +30,18 @@ const getPriorityIcon = (priority: string) => {
 };
 
 const getTypeColor = (type: string) => {
+    // Theme-aware type badge colors with proper contrast in both light and dark modes
     switch (type) {
-        case "BUG": return "bg-rose-500/10 text-rose-500 border-rose-500/20";
-        case "STORY": return "bg-emerald-500/10 text-emerald-500 border-emerald-500/20";
-        case "EPIC": return "bg-purple-500/10 text-purple-500 border-purple-500/20";
-        default: return "bg-slate-500/10 text-text-secondary border-slate-500/20";
+        case "BUG": 
+            return "bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30 dark:border-rose-500/40";
+        case "STORY": 
+            return "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 dark:border-emerald-500/40";
+        case "EPIC": 
+            return "bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/30 dark:border-purple-500/40";
+        case "TASK":
+            return "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30 dark:border-blue-500/40";
+        default: 
+            return "bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20 dark:border-slate-500/30";
     }
 };
 
@@ -58,7 +65,7 @@ export default function TaskCard({ task, isOverlay, onClick }: TaskCardProps) {
             <div
                 ref={setNodeRef}
                 style={style}
-                className="h-28 rounded-xl bg-bg-secondary/50 border-2 border-dashed border-accent/30 opacity-40 shadow-xl"
+                className="h-28 rounded-xl bg-kanban-card-bg/30 border-2 border-dashed border-accent/30 opacity-50 shadow-2xl dark:shadow-xl dark:bg-kanban-card-bg/20 transition-all duration-200"
             />
         );
     }
@@ -70,8 +77,7 @@ export default function TaskCard({ task, isOverlay, onClick }: TaskCardProps) {
             {...attributes}
             {...listeners}
             onClick={() => onClick?.(task)}
-            className={`group relative rounded-xl bg-card-bg/80 border border-border-color p-4 transition-all hover:border-accent/40 hover:bg-card-bg shadow-lg cursor-pointer active:cursor-grabbing ${isOverlay ? "ring-2 ring-accent/50 shadow-2xl scale-105" : ""
-                }`}
+            className={`group relative rounded-xl bg-kanban-card-bg border border-card-border p-4 transition-all duration-200 hover:border-accent/50 hover:shadow-lg hover:dark:shadow-lg cursor-pointer active:cursor-grabbing ${isOverlay ? "ring-2 ring-accent/50 shadow-2xl scale-105 dark:shadow-2xl" : "shadow-sm dark:shadow-sm"}`}
         >
             <div className="flex flex-col gap-3">
                 {/* Header: Key & Type */}

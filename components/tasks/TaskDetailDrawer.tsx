@@ -42,9 +42,9 @@ export default function TaskDetailDrawer({ open, taskId, onClose }: { open: bool
 
         {loading ? (
           <div className="mt-4 space-y-3">
-            <div className="h-6 w-3/4 animate-pulse rounded bg-card-bg/40" />
-            <div className="h-4 w-1/2 animate-pulse rounded bg-card-bg/40" />
-            <div className="h-24 animate-pulse rounded bg-card-bg/40" />
+            <div className="h-6 w-3/4 animate-pulse rounded bg-border-color dark:bg-bg-secondary/40" />
+            <div className="h-4 w-1/2 animate-pulse rounded bg-border-color dark:bg-bg-secondary/40" />
+            <div className="h-24 animate-pulse rounded bg-border-color dark:bg-bg-secondary/40" />
           </div>
         ) : task ? (
           <div className="mt-4 space-y-3 text-sm text-text-primary">

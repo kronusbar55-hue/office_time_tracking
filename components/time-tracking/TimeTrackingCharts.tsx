@@ -119,13 +119,13 @@ export default function TimeTrackingCharts({ refreshKey }: { refreshKey?: number
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="flex h-64 animate-pulse items-center justify-center rounded-xl border border-border-color bg-bg-secondary/40">
+        <div className="flex h-64 animate-pulse items-center justify-center rounded-xl border border-border-color bg-border-color dark:bg-bg-secondary/40">
           <p className="text-text-secondary">Loading charts...</p>
         </div>
-        <div className="flex h-64 animate-pulse items-center justify-center rounded-xl border border-border-color bg-bg-secondary/40">
+        <div className="flex h-64 animate-pulse items-center justify-center rounded-xl border border-border-color bg-border-color dark:bg-bg-secondary/40">
           <p className="text-text-secondary">Loading productivity data...</p>
         </div>
-        <div className="flex h-56 animate-pulse items-center justify-center rounded-xl border border-border-color bg-bg-secondary/40">
+        <div className="flex h-56 animate-pulse items-center justify-center rounded-xl border border-border-color bg-border-color dark:bg-bg-secondary/40">
           <p className="text-text-secondary">Loading distribution...</p>
         </div>
       </div>

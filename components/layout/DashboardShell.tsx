@@ -20,7 +20,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
     // Return the minimum shell to match the server-side render structure
     // This helps avoid hydration mismatches by keeping the tree depth consistent
     return (
-      <div className="flex min-h-screen bg-background">
+      <div className="flex min-h-screen bg-bg-primary dark:bg-bg-primary transition-colors duration-200">
         <div className="flex flex-1 flex-col overflow-hidden">
           <main className="flex-1 overflow-y-auto px-6 pb-8 pt-4">
             <AuthGuard>{children}</AuthGuard>
@@ -31,7 +31,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
   }
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen bg-bg-primary dark:bg-bg-primary transition-colors duration-200">
       <Sidebar />
       <div className="flex flex-1 flex-col overflow-hidden">
         <Topbar />

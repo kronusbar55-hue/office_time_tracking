@@ -14,12 +14,16 @@ import {
   UserCheck,
   AlertCircle,
   Zap,
-  BarChart3
+  BarChart3,
+  Clock,
+  ListTodo,
+  PlayCircle
 } from "lucide-react";
 import Link from "next/link";
 import WelcomeHeader from "./shared/WelcomeHeader";
 import DashboardCard from "./shared/DashboardCard";
 import TaskDonutChart from "./shared/TaskDonutChart";
+import TrackedHoursChart from "./shared/TrackedHoursChart";
 import DashboardDateFilter from "./shared/DashboardDateFilter";
 import { resolveDashboardDateRange, type DashboardFilterInput } from "@/lib/dashboardDateRange";
 
@@ -95,6 +99,17 @@ export default async function ManagerDashboard({ userId, filters }: Props) {
     { $match: { assignee: { $in: teamIds }, isDeleted: false } },
     { $group: { _id: "$status", count: { $sum: 1 } } }
   ]);
+
+  const openTeamTasks = await Task.find({
+    assignee: { $in: teamIds },
+    isDeleted: false,
+    status: { $ne: "done" }
+  })
+    .populate("project", "name")
+    .populate("assignee", "firstName lastName")
+    .sort({ dueDate: 1 })
+    .limit(10)
+    .lean();
 
   const stats = {
     backlog: teamTasksByStatus.find((task: any) => task._id === "backlog")?.count || 0,
@@ -180,7 +195,7 @@ export default async function ManagerDashboard({ userId, filters }: Props) {
     createdAt: { $gte: dateRange.startDate, $lte: dateRange.endDate }
   })
     .sort({ createdAt: -1 })
-    .limit(5)
+    .limit(10)
     .populate("user", "firstName lastName email")
     .populate({
       path: "task",
@@ -193,120 +208,20 @@ export default async function ManagerDashboard({ userId, filters }: Props) {
     .lean();
 
   return (
-    <div className="mx-auto max-w-7xl space-y-8 p-4 md:p-3">
-      <WelcomeHeader
-        firstName={(manager as any)?.firstName}
-        lastName={(manager as any)?.lastName}
-        progress={teamAttendanceRate}
-      />
+     
 
-      <DashboardDateFilter
-        initialRange={dateRange.key}
-        initialStart={dateRange.key === "custom" ? dateRange.startInput : ""}
-        initialEnd={dateRange.key === "custom" ? dateRange.endInput : ""}
-      />
+       
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-6">
-        <DashboardCard delay={0.1} className="lg:col-span-1">
-          <div className="flex h-full flex-col">
-            <div className="mb-3 flex items-center gap-2">
-              <CheckSquare className="h-5 w-5 text-blue-400" />
-              <span className="text-xs font-bold uppercase tracking-wider text-text-secondary">Tasks</span>
-            </div>
-            <div className="text-3xl font-bold text-text-primary">{totalTasks}</div>
-            <div className="mt-2 text-xs text-text-secondary">{completedTasks} completed</div>
-            <div className="mt-auto border-t border-border-color/40 pt-3">
-              <span className="text-xs font-bold text-green-400">{completionRate}% Done</span>
-            </div>
+      <div className="grid grid-cols-1 gap-6">
+        <DashboardCard className="w-full" delay={0.55}>
+          <div className="mb-4">
+            <p className="text-lg font-bold text-text-primary">Tracked Hours</p>
+            <p className="text-xs text-text-secondary">
+              Selected range: {dateRange.label}. Team tracked time: {totalWorkHours} hours.
+            </p>
           </div>
-        </DashboardCard>
-
-        <DashboardCard delay={0.15} className="lg:col-span-1">
-          <div className="flex h-full flex-col">
-            <div className="mb-3 flex items-center gap-2">
-              <Briefcase className="h-5 w-5 text-indigo-400" />
-              <span className="text-xs font-bold uppercase tracking-wider text-text-secondary">Projects</span>
-            </div>
-            <div className="text-3xl font-bold text-text-primary">{projectStats.active}</div>
-            <div className="mt-2 text-xs text-text-secondary">{projectStats.total} total</div>
-            <div className="mt-auto border-t border-border-color/40 pt-3">
-              <span className="text-xs font-bold text-indigo-400">{projectStats.onHold} on hold</span>
-            </div>
-          </div>
-        </DashboardCard>
-
-        
-
-        <DashboardCard delay={0.25} className="lg:col-span-1">
-          <div className="flex h-full flex-col">
-            <div className="mb-3 flex items-center gap-2">
-              <Zap className="h-5 w-5 text-yellow-400" />
-              <span className="text-xs font-bold uppercase tracking-wider text-text-secondary">Priority</span>
-            </div>
-            <div className="text-3xl font-bold text-yellow-400">{highPriorityTasksCount}</div>
-            <div className="mt-2 text-xs text-text-secondary">high/critical</div>
-            {highPriorityTasksCount > 0 && (
-              <div className="mt-auto border-t border-border-color/40 pt-3">
-                <Link href="/tasks?priority=High" className="text-xs font-bold text-yellow-400 hover:text-yellow-300">
-                  View -
-                </Link>
-              </div>
-            )}
-          </div>
+          <TrackedHoursChart />
         </DashboardCard>
       </div>
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-    
-
-        <DashboardCard className="lg:col-span-2" delay={0.45}>
-          <div className="mb-6 flex items-center justify-between">
-            <h3 className="flex items-center gap-2 text-lg font-bold text-text-primary">
-              <TrendingUp className="h-5 w-5 text-indigo-400" />
-              Team Task Distribution
-            </h3>
-            <span className="rounded-full bg-bg-secondary/40 px-3 py-1 text-sm font-bold text-text-primary">
-              {totalTasks} tasks
-            </span>
-          </div>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-12">
-            <div className="flex items-center justify-center md:col-span-5">
-              <TaskDonutChart data={stats} />
-            </div>
-
-            <div className="space-y-3 md:col-span-7">
-              {[
-                { key: "backlog", label: "Backlog", color: "bg-blue-400" },
-                { key: "todo", label: "To Do", color: "bg-slate-400" },
-                { key: "inProgress", label: "In Progress", color: "bg-yellow-400" },
-                { key: "inReview", label: "In Review", color: "bg-orange-400" },
-                { key: "done", label: "Done", color: "bg-green-400" }
-              ].map(({ key, label, color }) => {
-                const count = stats[key as keyof typeof stats];
-                const percentage = totalTasks > 0 ? Math.round((count / totalTasks) * 100) : 0;
-                return (
-                  <div key={key} className="space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className={`h-3 w-3 rounded-full ${color}`} />
-                        <span className="text-sm font-medium text-text-secondary">{label}</span>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-sm font-bold text-text-primary">{count}</span>
-                        <span className="ml-2 text-[11px] text-text-secondary">({percentage}%)</span>
-                      </div>
-                    </div>
-                    <div className="h-2 w-full overflow-hidden rounded-full bg-bg-secondary">
-                      <div className={`h-full rounded-full transition-all ${color}`} style={{ width: `${percentage}%` }} />
-                    </div>
-                  </div>
-                );
-              })}
- 
-            </div>
-          </div>
-        </DashboardCard>
-      </div>      
-    </div>
-  );
+   );
 }

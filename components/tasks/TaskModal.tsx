@@ -24,19 +24,19 @@ export default function TaskModal({ open, onClose, onSaved, initial }: Props) {
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       {/* Overlay */}
       <div 
-        className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm transition-opacity" 
+        className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm transition-all duration-200" 
         onClick={onClose} 
       />
       
       {/* Modal Content */}
-      <div className="relative w-full max-w-4xl max-h-[90vh] overflow-hidden bg-bg-primary border border-border-color shadow-2xl rounded-3xl flex flex-col animate-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-4xl max-h-[90vh] overflow-hidden bg-bg-primary dark:bg-bg-primary border border-card-border shadow-2xl dark:shadow-2xl rounded-3xl flex flex-col animate-in zoom-in-95 duration-200">
         
         {/* Header with Tabs */}
-        <div className="px-8 pt-8 pb-4 border-b border-border-color bg-bg-secondary/10 flex items-center justify-between">
-          <div className="flex items-center gap-1 p-1 bg-bg-secondary/40 border border-border-color rounded-xl">
+        <div className="px-8 pt-8 pb-4 border-b border-card-border bg-card-hover/30 dark:bg-card-hover/20 flex items-center justify-between transition-colors duration-200">
+          <div className="flex items-center gap-1 p-1 bg-card-hover dark:bg-bg-tertiary border border-card-border rounded-xl transition-colors duration-200">
             <button
                onClick={() => setActiveTab("overview")}
-               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === "overview" ? "bg-accent text-slate-950 shadow-lg" : "text-text-secondary hover:text-text-primary"}`}
+               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 ${activeTab === "overview" ? "bg-accent dark:bg-accent text-white dark:text-bg-primary shadow-lg dark:shadow-lg" : "text-text-secondary hover:text-text-primary dark:hover:text-text-primary"}`}
             >
                <Layout size={14} />
                <span>Overview</span>
@@ -45,14 +45,14 @@ export default function TaskModal({ open, onClose, onSaved, initial }: Props) {
               <>
                 <button
                    onClick={() => setActiveTab("activity")}
-                   className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === "activity" ? "bg-accent text-slate-950 shadow-lg" : "text-text-secondary hover:text-text-primary"}`}
+                   className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 ${activeTab === "activity" ? "bg-accent dark:bg-accent text-white dark:text-bg-primary shadow-lg dark:shadow-lg" : "text-text-secondary hover:text-text-primary dark:hover:text-text-primary"}`}
                 >
                    <Activity size={14} />
                    <span>Activity</span>
                 </button>
                 <button
                    onClick={() => setActiveTab("comments")}
-                   className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === "comments" ? "bg-accent text-slate-950 shadow-lg" : "text-text-secondary hover:text-text-primary"}`}
+                   className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 ${activeTab === "comments" ? "bg-accent dark:bg-accent text-white dark:text-bg-primary shadow-lg dark:shadow-lg" : "text-text-secondary hover:text-text-primary dark:hover:text-text-primary"}`}
                 >
                    <MessageSquare size={14} />
                    <span>Comments</span>
@@ -61,7 +61,7 @@ export default function TaskModal({ open, onClose, onSaved, initial }: Props) {
             )}
           </div>
           
-          <button onClick={onClose} className="p-2 transition-colors hover:bg-bg-secondary/80 text-text-secondary hover:text-text-primary rounded-xl">
+          <button onClick={onClose} className="p-2 transition-colors duration-200 hover:bg-card-hover dark:hover:bg-card-hover text-text-secondary hover:text-text-primary dark:hover:text-text-primary rounded-xl">
             <X size={20} />
           </button>
         </div>

@@ -29,7 +29,7 @@ export default async function DashboardPage({ searchParams }: Props) {
   const userId = payload.sub;
 
   if (role === 'admin') return <AdminDashboard />;
-  if (role === 'hr') return <HRDashboard />;
+  if (role === 'hr') return <HRDashboard userId={userId} filters={filters} />;
   if (role === 'manager') return <ManagerDashboard userId={userId} filters={filters} />;
   return <EmployeeDashboard userId={userId} filters={filters} />;
 }

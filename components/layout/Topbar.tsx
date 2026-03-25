@@ -19,7 +19,7 @@ export function Topbar() {
 
   if (!mounted) {
     return (
-      <header className="flex h-14 items-center justify-between border-b border-border-color bg-header/95 px-4 shadow-lg shadow-black/40">
+      <header className="flex h-14 items-center justify-between border-b border-card-border bg-bg-secondary/80 dark:bg-bg-secondary/60 px-4 shadow-sm dark:shadow-sm backdrop-blur-sm transition-colors duration-200">
         <div className="flex flex-col">
           <span className="text-[11px] uppercase tracking-[0.18em] text-text-secondary">
             Overview
@@ -31,7 +31,7 @@ export function Topbar() {
   }
 
   return (
-    <header className="flex h-14 items-center justify-between border-b border-border-color bg-header/95 px-4 shadow-lg shadow-black/40">
+    <header className="flex h-14 items-center justify-between border-b border-card-border bg-bg-secondary/80 dark:bg-bg-secondary/60 px-4 shadow-sm dark:shadow-sm backdrop-blur-sm transition-colors duration-200">
       <div className="flex flex-col">
         <span className="text-[11px] uppercase tracking-[0.18em] text-text-secondary">
           Overview

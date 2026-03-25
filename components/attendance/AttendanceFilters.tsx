@@ -57,7 +57,7 @@ export function AttendanceFilters({
           />
 
           {techsLoading ? (
-            <div className="h-9 w-48 rounded-lg border border-border-color bg-bg-secondary/50 animate-pulse" />
+            <div className="h-9 w-48 rounded-lg border border-border-color bg-border-color dark:bg-bg-secondary/50 animate-pulse" />
           ) : (
             <select
               value={selectedTechnology}

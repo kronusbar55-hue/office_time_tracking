@@ -39,6 +39,7 @@ interface Summary {
 export default function LiveAttendancePage() {
     const { user } = useAuth();
     const router = useRouter();
+    const isHR = user?.role === "hr";
     const [loading, setLoading] = useState(true);
     const [data, setData] = useState<{ summary: Summary; members: Member[] } | null>(null);
     const [search, setSearch] = useState("");
@@ -49,7 +50,7 @@ export default function LiveAttendancePage() {
 
     // RBAC check
     useEffect(() => {
-        if (user && user.role !== "admin") {
+        if (user && user.role !== "admin" && user.role !== "hr") {
             redirect("/");
         }
     }, [user]);
@@ -206,9 +207,11 @@ export default function LiveAttendancePage() {
                                 member={member}
                                 index={idx}
                                 onClick={() => {
+                                    if (isHR) return;
                                     const today = new Date().toISOString().split("T")[0];
                                     router.push(`/monitor?userId=${encodeURIComponent(member.userId)}&date=${today}`);
                                 }}
+                                disabled={isHR}
                             />
                         ))
                     ) : (
@@ -286,11 +289,13 @@ function StatCard({ label, value, icon, color, delay }: any) {
 function MemberListItem({
     member,
     index,
-    onClick
+    onClick,
+    disabled = false
 }: {
     member: Member;
     index: number;
     onClick: () => void;
+    disabled?: boolean;
 }) {
     const statusColors = {
         IN: "bg-emerald-500 shadow-emerald-500/50",
@@ -319,7 +324,7 @@ function MemberListItem({
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: index * 0.05 }}
             onClick={onClick}
-            className="group bg-bg-secondary/40 border border-border-color hover:border-border-color hover:bg-bg-secondary/60 p-4 rounded-2xl flex items-center justify-between transition-all backdrop-blur-sm cursor-pointer"
+            className={`group bg-bg-secondary/40 border border-border-color hover:border-border-color hover:bg-bg-secondary/60 p-4 rounded-2xl flex items-center justify-between transition-all backdrop-blur-sm ${disabled ? "cursor-not-allowed opacity-80" : "cursor-pointer"}`}
         >
             <div className="flex items-center gap-4">
                 {/* Avatar */}
