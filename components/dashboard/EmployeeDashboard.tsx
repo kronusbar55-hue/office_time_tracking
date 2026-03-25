@@ -64,7 +64,7 @@ export default async function EmployeeDashboard({ userId, filters }: Props) {
   })
     .populate("project", "name")
     .sort({ dueDate: 1 })
-    .limit(10)
+    .limit(5)
     .lean();
 
   const taskStats = await Task.aggregate([
@@ -113,6 +113,7 @@ export default async function EmployeeDashboard({ userId, filters }: Props) {
             firstName={(user as any)?.firstName}
             lastName={(user as any)?.lastName}
             progress={Math.min(100, completionRate)}
+            variant="compact"
           />
         </div>
         <div className="flex flex-shrink-0 flex-col justify-center">

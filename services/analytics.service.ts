@@ -353,7 +353,7 @@ function normalizeRecord(record: RawMonitorRecord): NormalizedMonitorRecord {
     dominantAppShare: getDominantAppShare(appUsage),
     dayKey,
     weekKey,
-    hourOfDay: intervalStartAt.getHours(),
+    hourOfDay: record.time ? parseInt(record.time.split(":")[0]) : intervalStartAt.getHours(),
     dayOfWeek: intervalStartAt.getDay()
   };
 }
@@ -544,34 +544,52 @@ function deriveTrend(dailySeries: EmployeeMetrics["dailySeries"]) {
   return { trend: "flat" as const, delta };
 }
 
-export function getBehaviorPatterns(employees: EmployeeMetrics[]) {
-  const hourly = new Map<number, { productivityTotal: number; count: number; activeSeconds: number }>();
+export function getBehaviorPatterns(records: NormalizedMonitorRecord[], employees: EmployeeMetrics[]) {
+  const hourly = new Map<number, { scoreSum: number; interactionSum: number; count: number; activeSeconds: number; focusSeconds: number; mouseClicks: number; mouseMovements: number; keyPresses: number }>();
 
-  for (const employee of employees) {
-    for (const point of employee.heatmap) {
-      const current = hourly.get(point.hour) || { productivityTotal: 0, count: 0, activeSeconds: 0 };
-      current.productivityTotal += point.productivity;
-      current.count += 1;
-      current.activeSeconds += point.activeSeconds;
-      hourly.set(point.hour, current);
-    }
+  for (const record of records) {
+    const current = hourly.get(record.hourOfDay) || { scoreSum: 0, interactionSum: 0, count: 0, activeSeconds: 0, focusSeconds: 0, mouseClicks: 0, mouseMovements: 0, keyPresses: 0 };
+    
+    // We compute a momentary score for this 5-min block to help with the organization-wide average
+    const momentary = calculateProductivityScore({
+      activeSeconds: record.isActive ? record.durationSeconds : 0,
+      idleSeconds: record.isActive ? 0 : record.durationSeconds,
+      trackedSeconds: record.durationSeconds,
+      focusSeconds: 0, // moment score doesn't account for focus sessions
+      mouseClicks: record.mouseClicks,
+      mouseMovements: record.mouseMovements,
+      keyPresses: record.keyPresses
+    });
+
+    current.scoreSum += momentary.score;
+    current.interactionSum += momentary.interactionScore;
+    current.count += 1;
+    current.activeSeconds += record.isActive ? record.durationSeconds : 0;
+    current.mouseClicks += record.mouseClicks;
+    current.mouseMovements += record.mouseMovements;
+    current.keyPresses += record.keyPresses;
+    hourly.set(record.hourOfDay, current);
   }
 
-  const hourlyList = [...hourly.entries()].map(([hour, value]) => ({
-    hour,
-    label: formatHourLabel(hour),
-    productivity: Math.round(value.productivityTotal / Math.max(value.count, 1)),
-    activeTimeHours: Number((value.activeSeconds / 3600).toFixed(2))
-  }));
+  const hourlyList = [...hourly.entries()]
+    .filter(([hour]) => hour >= 10 && hour <= 19)
+    .map(([hour, value]) => ({
+      hour,
+      label: formatHourLabel(hour),
+      productivity: Math.round(value.scoreSum / Math.max(value.count, 1)),
+      interaction: Math.round(value.interactionSum / Math.max(value.count, 1)),
+      activeTimeHours: Number((value.activeSeconds / 3600).toFixed(2))
+    }));
 
   const bestWorkingHours = [...hourlyList]
-    .sort((left, right) => right.productivity - left.productivity)
+    .filter(h => h.activeTimeHours > 0)
+    .sort((left, right) => right.productivity - left.productivity || right.interaction - left.interaction)
     .slice(0, 3)
     .map(({ hour, label, productivity }) => ({ hour, label, productivity }));
 
   const lowProductivityHours = [...hourlyList]
     .filter((item) => item.activeTimeHours > 0)
-    .sort((left, right) => left.productivity - right.productivity)
+    .sort((left, right) => left.productivity - right.productivity || left.interaction - right.interaction)
     .slice(0, 3)
     .map(({ hour, label, productivity }) => ({ hour, label, productivity }));
 
@@ -676,7 +694,8 @@ async function getActiveEmployeesToday(userIds: string[], organizationId?: strin
   const today = format(new Date(), "yyyy-MM-dd");
   const match: Record<string, unknown> = {
     $or: [{ userId: { $in: userIds } }, { employeeId: { $in: userIds } }],
-    date: today
+    date: today,
+    status: { $ne: "ON_BREAK" }
   };
 
   if (organizationId) {
@@ -830,33 +849,53 @@ function computeEmployeeMetrics(employee: Awaited<ReturnType<typeof resolveEmplo
   };
 }
 
-function aggregateTimeline<T extends { productivityScore: number; activeTimeSeconds: number; focusTimeSeconds: number; interactionScore: number }>(
-  rows: T[],
-  keySelector: (row: T) => string
-) {
-  const grouped = new Map<string, { scoreTotal: number; interactionTotal: number; activeSeconds: number; focusSeconds: number; count: number }>();
+function aggregateRecordsToTimeline(records: NormalizedMonitorRecord[], keySelector: (record: NormalizedMonitorRecord) => string) {
+  const groups = new Map<string, { activeSeconds: number; idleSeconds: number; focusSeconds: number; mouseClicks: number; mouseMovements: number; keyPresses: number; count: number }>();
 
-  for (const row of rows) {
-    const key = keySelector(row);
-    const current = grouped.get(key) || { scoreTotal: 0, interactionTotal: 0, activeSeconds: 0, focusSeconds: 0, count: 0 };
-    current.scoreTotal += row.productivityScore;
-    current.interactionTotal += row.interactionScore;
-    current.activeSeconds += row.activeTimeSeconds;
-    current.focusSeconds += row.focusTimeSeconds;
+  for (const record of records) {
+    const key = keySelector(record);
+    const current = groups.get(key) || { activeSeconds: 0, idleSeconds: 0, focusSeconds: 0, mouseClicks: 0, mouseMovements: 0, keyPresses: 0, count: 0 };
+    
+    if (record.isActive) {
+      current.activeSeconds += record.durationSeconds;
+    } else {
+      current.idleSeconds += record.durationSeconds;
+    }
+    
+    current.mouseClicks += record.mouseClicks;
+    current.mouseMovements += record.mouseMovements;
+    current.keyPresses += record.keyPresses;
     current.count += 1;
-    grouped.set(key, current);
+    groups.set(key, current);
   }
 
-  return [...grouped.entries()]
+  // We still need focus time per group, but focus time calculation needs sorted sequences per user.
+  // To keep it simple and accurate, we can sum the focus time from employeeMetrics if we have it, 
+  // or re-calculate focus sessions for the group (harder due to interleaved user records).
+  // I'll take the sum from pre-calculated per-employee segments for the specific keys.
+
+  return [...groups.entries()]
     .sort(([left], [right]) => left.localeCompare(right))
-    .map(([key, value]) => ({
-      key,
-      productivityScore: Math.round(value.scoreTotal / Math.max(value.count, 1)),
-      activeTimeHours: Number((value.activeSeconds / 3600).toFixed(2)),
-      focusTimeHours: Number((value.focusSeconds / 3600).toFixed(2)),
-      interactionScore: Math.round(value.interactionTotal / Math.max(value.count, 1)),
-      activeEmployees: value.count
-    }));
+    .map(([key, value]) => {
+      const stats = calculateProductivityScore({
+        activeSeconds: value.activeSeconds,
+        idleSeconds: value.idleSeconds,
+        trackedSeconds: value.activeSeconds + value.idleSeconds,
+        focusSeconds: 0, // Focus will be added later or ignored for simple timeline
+        mouseClicks: value.mouseClicks,
+        mouseMovements: value.mouseMovements,
+        keyPresses: value.keyPresses
+      });
+
+      return {
+        key,
+        productivityScore: stats.score,
+        activeTimeHours: Number((value.activeSeconds / 3600).toFixed(2)),
+        focusTimeHours: 0, // Placeholder
+        interactionScore: stats.interactionScore,
+        activeEmployees: value.count // This is count of intervals, not unique employees
+      };
+    });
 }
 
 export class AnalyticsService {
@@ -873,7 +912,18 @@ export class AnalyticsService {
     const rawRecords = await fetchRawMonitorRecords(filters, userIds);
     const normalizedRecords = rawRecords
       .map(normalizeRecord)
-      .filter((record) => userIds.includes(record.userId))
+      .filter((record) => {
+        const isTargetUser = userIds.includes(record.userId);
+        const isNotOnBreak = record.status !== "ON_BREAK";
+        
+        // Filter for office hours: 10:30 AM to 8:00 PM
+        // Hour 10 is allowed if it's 10:30+, but for simplicity at this stage we allow the whole hour block
+        // Hour 19 is 7 PM to 7:59 PM.
+        const hour = record.hourOfDay;
+        const isOfficeHour = hour >= 10 && hour <= 19;
+        
+        return isTargetUser && isNotOnBreak && isOfficeHour;
+      })
       .sort((left, right) => left.intervalStartAt.getTime() - right.intervalStartAt.getTime());
 
     const recordsByEmployee = new Map<string, NormalizedMonitorRecord[]>();
@@ -885,29 +935,49 @@ export class AnalyticsService {
       computeEmployeeMetrics(employee, recordsByEmployee.get(employee.id) || [])
     );
 
-    const daily = aggregateTimeline(
-      employeeMetrics.flatMap((employee) => employee.dailySeries),
-      (row) => (row as EmployeeMetrics["dailySeries"][number]).date
-    ).map((row) => ({
-      date: row.key,
-      productivityScore: row.productivityScore,
-      activeTimeHours: row.activeTimeHours,
-      focusTimeHours: row.focusTimeHours,
-      interactionScore: row.interactionScore,
-      activeEmployees: row.activeEmployees
-    }));
+    const dailyIndices = new Map<string, { focusSeconds: number; employees: Set<string> }>();
+    for (const emp of employeeMetrics) {
+      for (const day of emp.dailySeries) {
+        const cur = dailyIndices.get(day.date) || { focusSeconds: 0, employees: new Set() };
+        cur.focusSeconds += day.focusTimeSeconds;
+        cur.employees.add(emp.employeeId);
+        dailyIndices.set(day.date, cur);
+      }
+    }
 
-    const weekly = aggregateTimeline(
-      employeeMetrics.flatMap((employee) => employee.weeklySeries),
-      (row) => (row as EmployeeMetrics["weeklySeries"][number]).week
-    ).map((row) => ({
-      week: row.key,
-      productivityScore: row.productivityScore,
-      activeTimeHours: row.activeTimeHours,
-      focusTimeHours: row.focusTimeHours,
-      interactionScore: row.interactionScore,
-      activeEmployees: row.activeEmployees
-    }));
+    const daily = aggregateRecordsToTimeline(normalizedRecords, (r) => r.dayKey).map((row) => {
+      const extra = dailyIndices.get(row.key) || { focusSeconds: 0, employees: new Set() };
+      return {
+        date: row.key,
+        productivityScore: row.productivityScore,
+        activeTimeHours: row.activeTimeHours,
+        focusTimeHours: Number((extra.focusSeconds / 3600).toFixed(2)),
+        interactionScore: row.interactionScore,
+        activeEmployees: extra.employees.size
+      };
+    });
+
+    const weeklyIndices = new Map<string, { focusSeconds: number; employees: Set<string> }>();
+    for (const emp of employeeMetrics) {
+      for (const week of emp.weeklySeries) {
+        const cur = weeklyIndices.get(week.week) || { focusSeconds: 0, employees: new Set() };
+        cur.focusSeconds += week.focusTimeSeconds;
+        cur.employees.add(emp.employeeId);
+        weeklyIndices.set(week.week, cur);
+      }
+    }
+
+    const weekly = aggregateRecordsToTimeline(normalizedRecords, (r) => r.weekKey).map((row) => {
+      const extra = weeklyIndices.get(row.key) || { focusSeconds: 0, employees: new Set() };
+      return {
+        week: row.key,
+        productivityScore: row.productivityScore,
+        activeTimeHours: row.activeTimeHours,
+        focusTimeHours: Number((extra.focusSeconds / 3600).toFixed(2)),
+        interactionScore: row.interactionScore,
+        activeEmployees: extra.employees.size
+      };
+    });
 
     const heatmapMap = new Map<string, { productivityTotal: number; activeSeconds: number; count: number }>();
     for (const employee of employeeMetrics) {
@@ -997,7 +1067,7 @@ export class AnalyticsService {
           totalPages: Math.max(1, Math.ceil(employeeRows.length / limit))
         }
       },
-      behavior: getBehaviorPatterns(employeeMetrics)
+      behavior: getBehaviorPatterns(normalizedRecords, employeeMetrics)
     };
 
     analyticsCache.set(cacheKey, {

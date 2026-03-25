@@ -5,6 +5,7 @@ import { TimeSession } from "@/models/TimeSession";
 import { LeaveBalance } from "@/models/LeaveBalance";
 import { Technology } from "@/models/Technology";
 import { Project } from "@/models/Project";
+import { Announcement } from "@/models/Announcement";
 import { formatDistanceToNow } from "date-fns";
 import {
   Users,
@@ -19,7 +20,8 @@ import {
   UserCheck,
   BarChart3,
   TrendingUp,
-  ShieldCheck
+  ShieldCheck,
+  Megaphone
 } from "lucide-react";
 import Link from "next/link";
 import WelcomeHeader from "./shared/WelcomeHeader";
@@ -123,6 +125,11 @@ export default async function HRDashboard({ userId, filters }: Props) {
     .limit(5)
     .lean();
 
+  const announcements = await Announcement.find({ isActive: true })
+    .sort({ isPinned: -1, createdAt: -1 })
+    .limit(5)
+    .lean();
+
   return (
     <div className="mx-auto max-w-7xl space-y-8 p-4 md:p-8">
       {/* Row 1: Welcome */}
@@ -130,90 +137,15 @@ export default async function HRDashboard({ userId, filters }: Props) {
         firstName={hrUser.firstName}
         lastName={hrUser.lastName}
         progress={attendanceRate}
+        variant="compact"
       />
 
-      {/* Row 2: HR Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7 gap-6">
-        <StatsCard
-          label="Total Employees"
-          value={totalEmployees}
-          subtext={`${activeEmployees} Active, ${inactiveEmployees} Inactive`}
-          icon={<Users className="h-6 w-6" />}
-          color="blue"
-          delay={0.1}
-        />
-        <StatsCard
-          label="Attendance Today"
-          value={checkedInToday}
-          subtext={`${attendanceRate}% Compliance`}
-          icon={<UserCheck className="h-6 w-6" />}
-          color="green"
-          delay={0.2}
-          trend={{ value: attendanceRate, isPositive: attendanceRate >= 75 }}
-        />
-        <StatsCard
-          label="Pending Leaves"
-          value={pendingLeaves}
-          subtext={`${leaveApprovalRate}% approval`}
-          icon={<Calendar className="h-6 w-6" />}
-          color="yellow"
-          delay={0.3}
-          trend={{ value: -rejectedLeaves, isPositive: false }}
-        />
-        <StatsCard
-          label="Active Tech Skills"
-          value={activeTechnologies}
-          subtext="skill profiles"
-          icon={<Briefcase className="h-6 w-6" />}
-          color="blue"
-          delay={0.45}
-        />
-        <StatsCard
-          label="Active Projects"
-          value={activeProjects}
-          subtext="ongoing assignments"
-          icon={<BarChart3 className="h-6 w-6" />}
-          color="green"
-          delay={0.5}
-        />
-        <StatsCard
-          label="New Joiners"
-          value={newJoinersThisMonth}
-          subtext="this month"
-          icon={<UserPlus className="h-6 w-6" />}
-          color="purple"
-          delay={0.55}
-        />
 
-        <StatsCard
-          label="Tracked Hours"
-          value={hoursWorked}
-          subtext={dateRange.label}
-          icon={<Clock className="h-6 w-6" />}
-          color="green"
-          delay={0.65}
-        />
-      </div>
 
       {/* Row 2.5: HR Enrichment */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
 
       </div>
-
-      <DashboardCard delay={0.65}>
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-text-primary">Department Distribution</h3>
-          <span className="text-xs text-text-secondary">Top departments by headcount</span>
-        </div>
-        <div className="space-y-3">
-          {departmentDistribution.map((dept: any) => (
-            <div key={dept._id || "unknown"} className="flex items-center justify-between">
-              <span className="text-sm font-medium text-text-primary">{dept._id || "Unassigned"}</span>
-              <span className="text-sm font-bold text-text-secondary">{dept.count}</span>
-            </div>
-          ))}
-        </div>
-      </DashboardCard>
 
       {/* Row 3: Main HR Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -266,33 +198,53 @@ export default async function HRDashboard({ userId, filters }: Props) {
           </div>
         </DashboardCard>
 
-        {/* Recent Activity/Approvals */}
-        <DashboardCard delay={0.6}>
-          <h3 className="text-xl font-bold text-text-primary mb-6 flex items-center gap-2">
-            <CheckCircle2 className="h-5 w-5 text-green-400" />
-            Recent Approvals
-          </h3>
-          <div className="space-y-6">
-            {recentApprovals.length > 0 ? (
-              recentApprovals.map((req: any) => (
-                <div key={req._id} className="flex gap-4">
-                  <div className="h-2 w-2 rounded-full bg-green-500 mt-2 shrink-0" />
-                  <div>
-                    <h4 className="text-sm font-bold text-text-primary">{req.user?.firstName} {req.user?.lastName}</h4>
-                    <p className="text-xs text-text-secondary mb-1">{req.leaveType?.name}</p>
-                    <p className="text-[10px] text-text-secondary">
-                      {formatDistanceToNow(new Date(req.updatedAt), { addSuffix: true })}
-                    </p>
+        {/* Announcements */}
+        <DashboardCard className="lg:col-span-1" delay={0.6}>
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-bold text-text-primary flex items-center gap-2">
+              <Megaphone className="h-5 w-5 text-cyan-400" />
+              Recent Announcements
+            </h3>
+            <Link href="/announcements" className="text-sm font-medium text-text-secondary hover:text-text-primary transition-colors focus:outline-none">
+              View All
+            </Link>
+          </div>
+
+          <div className="space-y-4">
+            {announcements.length > 0 ? (
+              announcements.map((ann) => (
+                <div
+                  key={ann._id.toString()}
+                  className="rounded-xl border border-border-color bg-card-bg/20 p-4 transition-all hover:bg-card-bg/40 group overflow-hidden relative"
+                >
+                  {ann.isPinned && (
+                    <div className="absolute top-0 right-0 p-1">
+                      <div className="h-1.5 w-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
+                    </div>
+                  )}
+                  <h4 className="text-sm font-bold text-text-primary group-hover:text-cyan-400 transition-colors truncate mb-1">
+                    {ann.title}
+                  </h4>
+                  <p className="text-xs text-text-secondary line-clamp-2 mb-2 leading-relaxed">
+                    {ann.description}
+                  </p>
+                  <div className="flex items-center justify-between mt-auto">
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-cyan-500/80 px-2 py-0.5 rounded-md bg-cyan-500/10">
+                      {ann.category}
+                    </span>
+                    <span className="text-[10px] text-text-tertiary">
+                      {formatDistanceToNow(new Date(ann.createdAt), { addSuffix: true })}
+                    </span>
                   </div>
                 </div>
               ))
             ) : (
-              <p className="text-text-secondary text-sm">No recent approvals found.</p>
+              <div className="flex flex-col items-center justify-center py-10 opacity-40">
+                <Megaphone className="h-10 w-10 mb-2" />
+                <p className="text-xs">No announcements yet</p>
+              </div>
             )}
           </div>
-          <Link href="/employees" className="w-full mt-8 block text-center py-3 rounded-xl bg-card-bg border border-border-color text-text-primary font-bold text-sm hover:bg-hover-bg transition-colors">
-            Manage Employees
-          </Link>
         </DashboardCard>
       </div>
 
