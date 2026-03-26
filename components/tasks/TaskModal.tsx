@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, Layout, Activity, MessageSquare } from "lucide-react";
 import ActivityTimeline from "./ActivityTimeline";
 import TaskComments from "./TaskComments";
@@ -15,6 +15,12 @@ type Props = {
 
 export default function TaskModal({ open, onClose, onSaved, initial }: Props) {
   const [activeTab, setActiveTab] = useState<"overview" | "activity" | "comments">("overview");
+
+  useEffect(() => {
+    if (open) {
+      setActiveTab("overview");
+    }
+  }, [open]);
 
   if (!open) return null;
 

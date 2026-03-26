@@ -3,6 +3,7 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Heading from "@tiptap/extension-heading";
 import Link from "@tiptap/extension-link";
+import Image from "@tiptap/extension-image";
 import { useEffect } from "react";
 import {
     Bold,
@@ -16,7 +17,8 @@ import {
     Redo,
     Strikethrough,
     Code,
-    Minus
+    Minus,
+    ImageIcon
 } from "lucide-react";
 
 interface TaskEditorProps {
@@ -30,6 +32,13 @@ const MenuBar = ({ editor }: { editor: any }) => {
 
     const btnClass = (active: boolean) =>
         `p-2 rounded-lg hover:bg-hover-bg transition-all ${active ? "text-accent bg-accent/15 border border-accent/20" : "text-text-secondary border border-transparent"}`;
+
+    const addImage = () => {
+        const url = window.prompt("URL");
+        if (url) {
+            editor.chain().focus().setImage({ src: url }).run();
+        }
+    };
 
     return (
         <div className="flex flex-wrap items-center gap-1 p-1.5 bg-bg-secondary/60 border-b border-border-color rounded-t-xl">
@@ -146,6 +155,14 @@ const MenuBar = ({ editor }: { editor: any }) => {
                 </button>
                 <button
                     type="button"
+                    title="Add Image"
+                    onClick={addImage}
+                    className="p-2 rounded-lg hover:bg-hover-bg text-text-secondary"
+                >
+                    <ImageIcon size={15} />
+                </button>
+                <button
+                    type="button"
                     title="Divider"
                     onClick={() => editor.chain().focus().setHorizontalRule().run()}
                     className="p-2 rounded-lg hover:bg-hover-bg text-text-secondary"
@@ -163,10 +180,39 @@ export default function TaskEditor({ content, onChange, editable = true }: TaskE
             StarterKit,
             Heading.configure({ levels: [1, 2, 3] }),
             Link.configure({ openOnClick: false }),
+            Image.configure({ inline: true, allowBase64: true }),
         ],
         content: content || "",
         editable,
         immediatelyRender: false,
+        editorProps: {
+            handlePaste: (view, event) => {
+                const items = event.clipboardData?.items;
+                if (!items) return false;
+
+                let hasImage = false;
+                Array.from(items).forEach((item) => {
+                    if (item.type.startsWith("image")) {
+                        hasImage = true;
+                        const file = item.getAsFile();
+                        if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (e) => {
+                                const result = e.target?.result as string;
+                                if (result) {
+                                    const node = view.state.schema.nodes.image.create({ src: result });
+                                    const tr = view.state.tr.replaceSelectionWith(node);
+                                    view.dispatch(tr);
+                                }
+                            };
+                            reader.readAsDataURL(file);
+                        }
+                    }
+                });
+
+                return hasImage;
+            },
+        },
         onUpdate: ({ editor }) => {
             const html = editor.getHTML();
             if (html !== content) {
@@ -239,6 +285,12 @@ export default function TaskEditor({ content, onChange, editable = true }: TaskE
                     padding: 0.1rem 0.3rem;
                     border-radius: 0.25rem;
                     font-size: 0.9em;
+                }
+                .tiptap-editor-content .tiptap img {
+                    max-width: 100%;
+                    height: auto;
+                    border-radius: 0.5rem;
+                    margin: 1rem 0;
                 }
             `}</style>
         </div>

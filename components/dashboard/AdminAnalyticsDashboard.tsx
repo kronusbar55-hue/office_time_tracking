@@ -209,8 +209,8 @@ function AnalyticsDashboardSkeleton() {
             </div>
             <div className="h-3 w-16 rounded-full bg-white/10" />
           </div>
-          <div className="grid grid-cols-[80px_repeat(12,minmax(28px,1fr))] gap-2">
-            {Array.from({ length: 7 * 13 }, (_, index) => (
+          <div className="grid grid-cols-[80px_repeat(14,minmax(28px,1fr))] gap-2">
+            {Array.from({ length: 7 * 15 }, (_, index) => (
               <div key={`heat-${index}`} className="h-8 rounded-lg bg-white/10" />
             ))}
           </div>
@@ -332,7 +332,8 @@ export default function AdminAnalyticsDashboard() {
     if (!productivity?.heatmap) return [];
 
     return HEATMAP_DAYS.flatMap((dayLabel, dayOfWeek) =>
-      Array.from({ length: 24 }, (_, hour) => {
+      Array.from({ length: 14 }, (_, index) => {
+        const hour = index + 10;
         const point = productivity.heatmap.find((item) => item.dayOfWeek === dayOfWeek && item.hour === hour);
         return {
           key: `${dayOfWeek}-${hour}`,
@@ -430,9 +431,9 @@ export default function AdminAnalyticsDashboard() {
           <div className="mt-5 rounded-3xl border border-sky-400/15 bg-slate-950/55 p-5 text-sm text-slate-200">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <h2 className="text-base font-semibold text-sky-100">How this dashboard works</h2>
+                <h2 className="text-base font-semibold text-sky-100">Technical Documentation: Dashboard Operations</h2>
                 <p className="mt-1 text-sm text-slate-400">
-                  This page turns everyday computer activity into simple work patterns.
+                  Data extraction, normalization, and scoring logic that powers the Admin Productivity Intelligence page.
                 </p>
               </div>
               <button
@@ -444,101 +445,113 @@ export default function AdminAnalyticsDashboard() {
               </button>
             </div>
 
-            <div className="mt-4 grid gap-4 lg:grid-cols-2">
-              <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
-                <h3 className="font-semibold text-slate-100">What we look at</h3>
-                <p className="mt-2 text-slate-300">
-                  We look at mouse clicks, mouse movement, and keyboard use during the selected time period. More activity usually means the person was actively working.
-                </p>
-                <p className="mt-2 text-slate-400">
-                  We do not depend on one single action. We look at the pattern across many small time blocks and then build the final picture from that overall behavior.
-                </p>
+            <div className="mt-6 space-y-6">
+              {/* 1. Raw Data Normalization */}
+              <div>
+                <h3 className="mb-3 text-lg font-bold text-sky-200 border-b border-sky-400/20 pb-2">1. Raw Data Normalization</h3>
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4 text-sm">
+                    <h4 className="font-semibold text-slate-100">Interaction Points Calculation</h4>
+                    <p className="mt-2 text-slate-400">
+                      We process 5-minute interval summaries converting physical actions into a unified metric:
+                    </p>
+                    <ul className="mt-2 list-inside list-disc text-slate-300 space-y-1">
+                      <li>Mouse Clicks × 4</li>
+                      <li>Key Presses × 2</li>
+                      <li>Mouse Movements × 0.05</li>
+                    </ul>
+                  </div>
+                  <div className="rounded-2xl border border-emerald-500/10 bg-emerald-500/[0.02] p-4 text-sm">
+                    <h4 className="font-semibold text-emerald-100">Activity Threshold (isActive)</h4>
+                    <p className="mt-2 text-slate-400">
+                      A record is marked as <strong className="text-emerald-300">Active</strong> if it meets at least one threshold (otherwise considered idle):
+                    </p>
+                    <ul className="mt-2 list-inside list-disc text-slate-300 space-y-1">
+                      <li>Mouse clicks ≥ 1</li>
+                      <li>Mouse movements ≥ 40</li>
+                      <li>Key presses ≥ 3</li>
+                      <li>Interaction points ≥ 12</li>
+                    </ul>
+                  </div>
+                </div>
               </div>
-              <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
-                <h3 className="font-semibold text-slate-100">Active time</h3>
-                <p className="mt-2 text-slate-300">
-                  Active time means the employee was interacting with the computer. If there is little or no activity for a while, that time is treated as idle.
-                </p>
-                <p className="mt-2 text-slate-400">
-                  In simple terms: if the system sees regular mouse or keyboard activity, that period counts as active. If activity stops for a noticeable gap, that period starts to count as idle instead.
-                </p>
+
+              {/* 2. Core Time Metrics */}
+              <div>
+                <h3 className="mb-3 text-lg font-bold text-sky-200 border-b border-sky-400/20 pb-2">2. Core Time Metrics</h3>
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4 text-sm">
+                    <h4 className="font-semibold text-slate-100">Active & Idle Time</h4>
+                    <p className="mt-2 text-slate-400">
+                      <strong className="text-slate-200">Active Time:</strong> Total duration of Active records.<br />
+                      <strong className="text-slate-200">Idle Time:</strong> Sum of inactive records. If there is an unrecorded void ≥ 120s, it&apos;s added to idle (capped at 300s max per gap).<br />
+                      <strong className="text-slate-200">Tracked Time:</strong> Active + Idle.
+                    </p>
+                  </div>
+                  <div className="rounded-2xl border border-sky-500/10 bg-sky-500/[0.02] p-4 text-sm">
+                    <h4 className="font-semibold text-sky-100">Focus Time</h4>
+                    <p className="mt-2 text-slate-400">
+                      Continuous active work with minimal interruptions. Must meet conditions for at least <strong className="text-sky-300">10 minutes (600s)</strong>:
+                    </p>
+                    <ul className="mt-2 list-inside list-disc text-slate-300 space-y-1">
+                      <li>Consecutive active records (with zero chronological gaps ≥ 120s).</li>
+                      <li>Low context switching: ≤ 3 applications used, with the main app driving ≥ 45% of usage.</li>
+                    </ul>
+                  </div>
+                </div>
               </div>
-              <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
-                <h3 className="font-semibold text-slate-100">Focus time</h3>
-                <p className="mt-2 text-slate-300">
-                  Focus time means the employee stayed active for a longer stretch without too many breaks or too much jumping around. It is our best signal for deep concentration.
-                </p>
-                <p className="mt-2 text-slate-400">
-                  We count focus time when work continues steadily for a meaningful stretch. If there is a longer pause or too much switching around, that focus stretch ends.
-                </p>
+
+              {/* 3. The Scoring Engine */}
+              <div>
+                <h3 className="mb-3 text-lg font-bold text-sky-200 border-b border-sky-400/20 pb-2">3. The Scoring Engine (0-100 Scale)</h3>
+                <div className="grid gap-4 lg:grid-cols-3">
+                  <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
+                    <h4 className="font-semibold text-amber-200 mb-2">Primary Components</h4>
+                    <p className="text-sm text-slate-300"><strong className="text-slate-100">Active Score:</strong><br />(Active Time ÷ Tracked Time) × 100</p>
+                    <hr className="my-2 border-slate-700" />
+                    <p className="text-sm text-slate-300"><strong className="text-slate-100">Focus Score:</strong><br />(Focus Time ÷ Active Time) × 100</p>
+                    <hr className="my-2 border-slate-700" />
+                    <p className="text-sm text-slate-300"><strong className="text-slate-100">Interaction Score:</strong><br />((Interaction Points ÷ Active Mins) ÷ 60) × 100</p>
+                  </div>
+                  <div className="lg:col-span-2 rounded-2xl border border-sky-500/20 bg-sky-500/10 p-5 flex flex-col justify-center">
+                    <h4 className="font-semibold text-sky-100 mb-2 text-lg">Final Productivity Score</h4>
+                    <p className="text-slate-300 text-sm mb-4">
+                      The &quot;Average Score&quot; displayed on all top cards and comparisons is a dynamically clamped, weighted composition of the metrics:
+                    </p>
+                    <div className="grid grid-cols-3 gap-2 text-center text-sm font-bold">
+                      <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-700/80">Focus<br /><span className="text-sky-300 text-xl font-black mt-1 block">50%</span></div>
+                      <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-700/80">Active<br /><span className="text-emerald-300 text-xl font-black mt-1 block">30%</span></div>
+                      <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-700/80">Interaction<br /><span className="text-amber-300 text-xl font-black mt-1 block">20%</span></div>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
-                <h3 className="font-semibold text-slate-100">Productivity score</h3>
-                <p className="mt-2 text-slate-300">
-                  The productivity score is a combined view of active time, focus time, and how regularly the employee interacted with the computer. A higher score means steadier and more focused work.
-                </p>
-                <p className="mt-2 text-slate-400">
-                  The score is built in three parts:
-                </p>
-                <p className="mt-2 text-slate-400">
-                  1. Focus time has the biggest influence because steady, uninterrupted work usually shows stronger productivity.
-                </p>
-                <p className="mt-1 text-slate-400">
-                  2. Active time also matters because it shows how much of the selected period was spent actually interacting with the system.
-                </p>
-                <p className="mt-1 text-slate-400">
-                  3. Interaction level matters too, because regular clicks, movement, and typing show ongoing engagement.
-                </p>
-                <p className="mt-2 text-slate-400">
-                  After combining these three parts, the final score is shown on a 0 to 100 scale so it is easy to compare.
-                </p>
-              </div>
-              <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
-                <h3 className="font-semibold text-slate-100">Daily and weekly charts</h3>
-                <p className="mt-2 text-slate-300">
-                  These charts show how work patterns change over time. They help spot strong days, slower days, and whether performance is improving or dropping.
-                </p>
-                <p className="mt-2 text-slate-400">
-                  Each day or week is created by grouping all captured activity in that period, then calculating active time, focus time, and the final score for that period.
-                </p>
-              </div>
-              <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
-                <h3 className="font-semibold text-slate-100">Employee comparison</h3>
-                <p className="mt-2 text-slate-300">
-                  This compares employees using the same scoring method so managers can understand who is working most consistently during the selected period.
-                </p>
-                <p className="mt-2 text-slate-400">
-                  Everyone is measured using the same activity rules, so the comparison is based on the same kind of active time, focus time, and interaction pattern.
-                </p>
-              </div>
-              <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
-                <h3 className="font-semibold text-slate-100">Best hours and low hours</h3>
-                <p className="mt-2 text-slate-300">
-                  We identify the times of day when work is usually strongest and the times when energy or activity tends to drop.
-                </p>
-                <p className="mt-2 text-slate-400">
-                  We do this by checking which hours repeatedly show stronger scores and more active work, and which hours show lower activity or weaker work patterns.
-                </p>
-              </div>
-              <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
-                <h3 className="font-semibold text-slate-100">Irregular patterns</h3>
-                <p className="mt-2 text-slate-300">
-                  Irregular patterns mean unusual work behavior, such as many breaks, sudden spikes, or activity at unusual times. This helps highlight where someone may need support.
-                </p>
-                <p className="mt-2 text-slate-400">
-                  We flag these patterns when work behavior is less steady than usual, for example when there are repeated pauses, unusual bursts of activity, or work happening at unexpected times.
-                </p>
+
+              {/* 4. Insight Visualizations */}
+              <div>
+                <h3 className="mb-3 text-lg font-bold text-sky-200 border-b border-sky-400/20 pb-2">4. Insight Visualizations</h3>
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
+                    <h4 className="font-semibold text-slate-100">Trends & Heatmaps</h4>
+                    <p className="mt-2 text-sm text-slate-400">
+                      <strong className="text-slate-200">Daily/Weekly Trends:</strong> Aggregates metrics linearly to timeline groupings.<br /><br />
+                      <strong className="text-slate-200">Heatmap Density:</strong> Maps momentary 5-min productivity scores globally. Shading: &lt;40% Dark &rarr; ≥40% Amber &rarr; ≥60% Blue &rarr; ≥80% Emerald.
+                    </p>
+                  </div>
+                  <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
+                    <h4 className="font-semibold text-amber-100">Irregular Patterns</h4>
+                    <p className="mt-2 text-sm text-slate-400">
+                      <strong className="text-slate-200">Context Switches:</strong> Triggered (+1) if appDiversity ≥ 4 within 5 mins.<br /><br />
+                      <strong className="text-slate-200">Breaks:</strong> Triggered (+1) for inactive periods breaking deep flows.<br /><br />
+                      <strong className="text-slate-200">Working Hour Rankings:</strong> Hourly buckets sorted strictly by momentary scores + interaction tie-breakers.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
-
-            <div className="mt-4 rounded-2xl border border-emerald-400/15 bg-emerald-500/8 p-4 text-slate-200">
-              <h3 className="font-semibold text-emerald-200">Simple way to read the page</h3>
-              <p className="mt-2 text-slate-300">
-                Think of this dashboard as a work rhythm view. It does not judge one single click or one short break. It looks at the overall pattern of activity, focus, and consistency across the chosen time range.
-              </p>
-              <p className="mt-2 text-slate-400">
-                In short: we first measure activity, then we look for longer focused work, then we combine those signals into one score and trend view that is easier to understand.
-              </p>
+            
+            <div className="mt-6 rounded-2xl border border-emerald-400/15 bg-emerald-500/8 p-4 text-emerald-100/90 text-sm italic">
+              <strong>Dashboard Architecture Note:</strong> No single click or interval explicitly judges an employee. The system aggregates cross-dimensional behaviors (focus overlap, interaction intensity, app density patterns) over sustained minimum 10 minute blocks to derive performance trends.
             </div>
           </div>
         ) : null}
@@ -894,10 +907,10 @@ export default function AdminAnalyticsDashboard() {
               <div className="text-xs uppercase tracking-wider text-text-secondary">0-100 score scale</div>
             </div>
             <div className="overflow-x-auto">
-              <div className="grid min-w-[920px] grid-cols-[80px_repeat(24,minmax(28px,1fr))] gap-2 text-xs">
+              <div className="grid min-w-[620px] grid-cols-[80px_repeat(14,minmax(28px,1fr))] gap-2 text-xs">
                 <div />
-                {Array.from({ length: 24 }, (_, hour) => (
-                  <div key={hour} className="text-center text-text-secondary">{hour}</div>
+                {Array.from({ length: 14 }, (_, index) => (
+                  <div key={index} className="text-center text-text-secondary">{index + 10}</div>
                 ))}
                 {HEATMAP_DAYS.map((dayLabel) => (
                   <div key={`${dayLabel}-label`} className="contents">

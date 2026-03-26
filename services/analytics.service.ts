@@ -572,7 +572,7 @@ export function getBehaviorPatterns(records: NormalizedMonitorRecord[], employee
   }
 
   const hourlyList = [...hourly.entries()]
-    .filter(([hour]) => hour >= 10 && hour <= 19)
+    .filter(([hour]) => hour >= 10 && hour <= 23)
     .map(([hour, value]) => ({
       hour,
       label: formatHourLabel(hour),
@@ -916,11 +916,9 @@ export class AnalyticsService {
         const isTargetUser = userIds.includes(record.userId);
         const isNotOnBreak = record.status !== "ON_BREAK";
         
-        // Filter for office hours: 10:30 AM to 8:00 PM
-        // Hour 10 is allowed if it's 10:30+, but for simplicity at this stage we allow the whole hour block
-        // Hour 19 is 7 PM to 7:59 PM.
+        // Filter for office hours: 10:00 AM to 11:59 PM
         const hour = record.hourOfDay;
-        const isOfficeHour = hour >= 10 && hour <= 19;
+        const isOfficeHour = hour >= 10 && hour <= 23;
         
         return isTargetUser && isNotOnBreak && isOfficeHour;
       })

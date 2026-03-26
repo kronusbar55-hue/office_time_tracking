@@ -113,15 +113,15 @@ function KanbanContent({ projectId }: { projectId: string }) {
                         <div className="flex items-center gap-3">
                             <span className="text-[10px] font-black text-text-secondary uppercase tracking-[2px]">Team Filter</span>
                             <div className="flex items-center -space-x-2">
-                                <button 
+                                <button
                                     onClick={() => setAssigneeFilter("all")}
                                     className={`h-8 px-3 rounded-full border-2 transition-all text-[10px] font-black uppercase tracking-tighter ${assigneeFilter === "all" ? 'bg-accent border-accent text-text-primary shadow-lg shadow-accent/30' : 'bg-bg-secondary border-border-color text-text-secondary hover:border-slate-500'}`}
                                 >
                                     All
                                 </button>
                                 {project?.members?.map((m: any) => (
-                                    <div 
-                                        key={m.id} 
+                                    <div
+                                        key={m.id}
                                         title={m.name}
                                         onClick={() => setAssigneeFilter(m.id)}
                                         className={`h-8 w-8 rounded-full border-2 flex items-center justify-center overflow-hidden cursor-pointer transition-all relative group ${assigneeFilter === m.id ? 'border-accent ring-4 ring-accent/20 z-10 scale-110' : 'border-border-color hover:border-border-color hover:z-10'}`}
@@ -141,19 +141,6 @@ function KanbanContent({ projectId }: { projectId: string }) {
                                 </span>
                             )}
                         </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                        <button className="p-2 rounded-lg bg-hover-bg border border-border-color text-text-secondary hover:text-text-primary transition-colors">
-                            <Filter size={18} />
-                        </button>
-                        <button className="p-2 rounded-lg bg-hover-bg border border-border-color text-text-secondary hover:text-text-primary transition-colors">
-                            <Layers size={18} />
-                        </button>
-                        <div className="w-px h-6 bg-hover-bg mx-1" />
-                        <button className="p-2 rounded-lg bg-hover-bg border border-border-color text-text-secondary hover:text-text-primary transition-colors">
-                            <Settings size={18} />
-                        </button>
                     </div>
                 </div>
             </div>
