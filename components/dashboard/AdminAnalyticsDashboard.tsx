@@ -241,6 +241,7 @@ export default function AdminAnalyticsDashboard() {
   const [behavior, setBehavior] = useState<BehaviorResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [refreshTick, setRefreshTick] = useState(0);
+  const [tableSearchQuery, setTableSearchQuery] = useState("");
   const [showExplanation, setShowExplanation] = useState(false);
 
   useEffect(() => {
@@ -263,10 +264,6 @@ export default function AdminAnalyticsDashboard() {
     loadEmployees();
   }, [employeeSearchQuery]);
 
-  useEffect(() => {
-    const interval = window.setInterval(() => setRefreshTick((value) => value + 1), 30_000);
-    return () => window.clearInterval(interval);
-  }, []);
 
   useEffect(() => {
     if (!appliedFilters) return;
@@ -281,8 +278,9 @@ export default function AdminAnalyticsDashboard() {
         const params = new URLSearchParams({
           startDate: appliedFilters.startDate,
           endDate: appliedFilters.endDate,
-          page: String(page),
-          limit: "10"
+          page: "1",
+          limit: "500", // Show all employees
+          ...(tableSearchQuery ? { search: tableSearchQuery } : {})
         });
 
         if (appliedFilters.employeeId) params.set("employeeId", appliedFilters.employeeId);
@@ -325,7 +323,7 @@ export default function AdminAnalyticsDashboard() {
       window.clearTimeout(timeoutId);
       controller.abort();
     };
-  }, [appliedFilters, page, refreshTick]);
+  }, [appliedFilters, refreshTick, tableSearchQuery]);
 
   const selectedEmployee = employees.find((employee) => employee.id === draftEmployeeId);
   const heatmapCells = useMemo(() => {
@@ -407,7 +405,7 @@ export default function AdminAnalyticsDashboard() {
                 <Info className="h-4 w-4" />
               </button>
             </div>
-             
+
           </div>
           <div className="flex items-center gap-3">
             <button
@@ -549,7 +547,7 @@ export default function AdminAnalyticsDashboard() {
                 </div>
               </div>
             </div>
-            
+
             <div className="mt-6 rounded-2xl border border-emerald-400/15 bg-emerald-500/8 p-4 text-emerald-100/90 text-sm italic">
               <strong>Dashboard Architecture Note:</strong> No single click or interval explicitly judges an employee. The system aggregates cross-dimensional behaviors (focus overlap, interaction intensity, app density patterns) over sustained minimum 10 minute blocks to derive performance trends.
             </div>
@@ -682,7 +680,7 @@ export default function AdminAnalyticsDashboard() {
               Apply Filters
             </button>
           </div>
-           
+
         </div>
       </DashboardCard>
 
@@ -715,7 +713,12 @@ export default function AdminAnalyticsDashboard() {
                     <XAxis dataKey="date" stroke="rgb(var(--text-secondary))" fontSize={12} />
                     <YAxis yAxisId="left" stroke="rgb(var(--text-secondary))" fontSize={12} />
                     <YAxis yAxisId="right" orientation="right" stroke="rgb(var(--text-secondary))" fontSize={12} />
-                    <Tooltip contentStyle={{ backgroundColor: "rgba(15,23,42,0.95)", border: "1px solid rgba(56,189,248,0.2)", borderRadius: 16 }} />
+                    <Tooltip
+                      cursor={{ strokeDasharray: "3 3", stroke: "rgba(56,189,248,0.5)" }}
+                      contentStyle={{ backgroundColor: "rgba(15,23,42,0.95)", border: "1px solid rgba(56,189,248,0.2)", borderRadius: 16, boxShadow: "0 10px 15px -3px rgba(0,0,0,0.4)" }}
+                      itemStyle={{ color: "rgb(var(--text-primary))", fontSize: 12, fontWeight: 600 }}
+                      labelStyle={{ color: "rgb(var(--text-secondary))", marginBottom: 4, fontSize: 11, fontWeight: 700, textTransform: "uppercase" }}
+                    />
                     <Legend />
                     <Line yAxisId="left" type="monotone" dataKey="productivityScore" name="Productivity" stroke="#38bdf8" strokeWidth={3} dot={false} />
                     <Line yAxisId="right" type="monotone" dataKey="activeTimeHours" name="Active Hours" stroke="#34d399" strokeWidth={2} dot={false} />
@@ -739,7 +742,12 @@ export default function AdminAnalyticsDashboard() {
                     <CartesianGrid stroke="rgba(148,163,184,0.15)" vertical={false} />
                     <XAxis dataKey="week" stroke="rgb(var(--text-secondary))" fontSize={12} />
                     <YAxis stroke="rgb(var(--text-secondary))" fontSize={12} />
-                    <Tooltip contentStyle={{ backgroundColor: "rgba(15,23,42,0.95)", border: "1px solid rgba(56,189,248,0.2)", borderRadius: 16 }} />
+                    <Tooltip
+                      cursor={{ fill: "rgba(148, 163, 184, 0.08)", radius: 8 }}
+                      contentStyle={{ backgroundColor: "rgba(15,23,42,0.95)", border: "1px solid rgba(56,189,248,0.2)", borderRadius: 16, boxShadow: "0 10px 15px -3px rgba(0,0,0,0.4)" }}
+                      itemStyle={{ color: "rgb(var(--text-primary))", fontSize: 12, fontWeight: 600 }}
+                      labelStyle={{ color: "rgb(var(--text-secondary))", marginBottom: 4, fontSize: 11, fontWeight: 700, textTransform: "uppercase" }}
+                    />
                     <Legend />
                     <Bar dataKey="productivityScore" name="Productivity" fill="#38bdf8" radius={[8, 8, 0, 0]} />
                     <Bar dataKey="interactionScore" name="Interaction" fill="#f59e0b" radius={[8, 8, 0, 0]} />
@@ -760,14 +768,50 @@ export default function AdminAnalyticsDashboard() {
               </div>
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart layout="vertical" data={productivity?.employeeComparison || []} margin={{ left: 20, right: 20 }}>
-                    <CartesianGrid stroke="rgba(148,163,184,0.15)" horizontal={false} />
-                    <XAxis type="number" stroke="rgb(var(--text-secondary))" fontSize={12} />
-                    <YAxis type="category" dataKey="name" width={120} stroke="rgb(var(--text-secondary))" fontSize={12} />
-                    <Tooltip contentStyle={{ backgroundColor: "rgba(15,23,42,0.95)", border: "1px solid rgba(56,189,248,0.2)", borderRadius: 16 }} />
-                    <Legend />
-                    <Bar dataKey="productivityScore" name="Productivity" fill="#34d399" radius={[0, 8, 8, 0]} />
-                    <Bar dataKey="focusTimeHours" name="Focus Hours" fill="#38bdf8" radius={[0, 8, 8, 0]} />
+                  <BarChart 
+                    layout="vertical" 
+                    data={productivity?.employeeComparison || []} 
+                    margin={{ left: 30, right: 40, top: 10, bottom: 10 }}
+                    barGap={8}
+                    barSize={12}
+                  >
+                    <CartesianGrid stroke="rgba(148,163,184,0.1)" horizontal={false} />
+                    <XAxis 
+                      type="number" 
+                      domain={[0, 100]}
+                      stroke="rgb(var(--text-secondary))" 
+                      fontSize={11}
+                      tickFormatter={(val) => `${val}%`}
+                    />
+                    <YAxis 
+                      type="category" 
+                      dataKey="name" 
+                      width={140} 
+                      stroke="rgb(var(--text-primary))" 
+                      fontSize={11}
+                      fontWeight={600}
+                    />
+                    <Tooltip
+                      cursor={{ fill: "rgba(148, 163, 184, 0.08)", radius: 8 }}
+                      contentStyle={{ backgroundColor: "rgba(15,23,42,0.95)", border: "1px solid rgba(56,189,248,0.2)", borderRadius: 16, boxShadow: "0 10px 15px -3px rgba(0,0,0,0.4)" }}
+                      itemStyle={{ color: "rgb(var(--text-primary))", fontSize: 12, fontWeight: 600 }}
+                      labelStyle={{ color: "rgb(var(--text-secondary))", marginBottom: 4, fontSize: 11, fontWeight: 700, textTransform: "uppercase" }}
+                    />
+                    <Legend iconType="circle" />
+                    <Bar 
+                      dataKey="productivityScore" 
+                      name="Productivity" 
+                      fill="#34d399" 
+                      radius={[0, 4, 4, 0]} 
+                      background={{ fill: 'rgba(var(--text-secondary), 0.03)', radius: 4 }}
+                    />
+                    <Bar 
+                      dataKey="interactionScore" 
+                      name="Interaction" 
+                      fill="#38bdf8" 
+                      radius={[0, 4, 4, 0]} 
+                      background={{ fill: 'rgba(var(--text-secondary), 0.03)', radius: 4 }}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -821,15 +865,27 @@ export default function AdminAnalyticsDashboard() {
           </div>
 
           <div className="grid gap-6 xl:grid-cols-[1.35fr_0.65fr]">
-            <DashboardCard>
-              <div className="mb-4 flex items-center justify-between">
+            <DashboardCard allowOverflow={true}>
+              <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h2 className="text-lg font-semibold text-text-primary">Employee productivity table</h2>
                   <p className="text-sm text-text-secondary">Calculated from active time, focus continuity, and interaction score</p>
                 </div>
-                <span className="text-xs font-semibold uppercase tracking-wider text-text-secondary">{employeeTable?.pagination.total || 0} employees</span>
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary" />
+                    <input
+                      type="text"
+                      placeholder="Search employees..."
+                      value={tableSearchQuery}
+                      onChange={(e) => setTableSearchQuery(e.target.value)}
+                      className="h-9 w-64 rounded-xl border border-border-color bg-bg-secondary pl-9 pr-3 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/50"
+                    />
+                  </div>
+                  <span className="text-xs font-semibold uppercase tracking-wider text-text-secondary">{employeeTable?.pagination.total || 0} employees</span>
+                </div>
               </div>
-              <div className="overflow-x-auto">
+              <div className="max-h-[500px] overflow-y-auto overflow-x-auto pr-2 custom-scrollbar">
                 <table className="min-w-full text-sm">
                   <thead>
                     <tr className="border-b border-border-color text-left text-text-secondary">
@@ -865,13 +921,6 @@ export default function AdminAnalyticsDashboard() {
                   </tbody>
                 </table>
               </div>
-              <div className="mt-4 flex items-center justify-between text-sm text-text-secondary">
-                <span>Page {employeeTable?.pagination.page || 1} of {employeeTable?.pagination.totalPages || 1}</span>
-                <div className="flex gap-2">
-                  <button onClick={() => setPage((value) => Math.max(1, value - 1))} disabled={(employeeTable?.pagination.page || 1) <= 1} className="rounded-lg border border-border-color px-3 py-2 disabled:cursor-not-allowed disabled:opacity-50">Previous</button>
-                  <button onClick={() => setPage((value) => Math.min(employeeTable?.pagination.totalPages || value, value + 1))} disabled={(employeeTable?.pagination.page || 1) >= (employeeTable?.pagination.totalPages || 1)} className="rounded-lg border border-border-color px-3 py-2 disabled:cursor-not-allowed disabled:opacity-50">Next</button>
-                </div>
-              </div>
             </DashboardCard>
 
             <DashboardCard>
@@ -898,10 +947,40 @@ export default function AdminAnalyticsDashboard() {
             </DashboardCard>
           </div>
 
-          <DashboardCard>
+          <DashboardCard allowOverflow={true}>
             <div className="mb-4 flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-semibold text-text-primary">Working-hour heatmap</h2>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg font-semibold text-text-primary">Working-hour heatmap</h2>
+                  <div className="group relative">
+                    <Info className="h-4 w-4 cursor-help text-text-secondary transition-colors hover:text-accent" />
+                    <div className="absolute bottom-full left-0 mb-3 hidden w-48 rounded-2xl border border-border-color bg-bg-primary p-4 shadow-2xl group-hover:block animate-in fade-in zoom-in duration-200 z-[100]">
+                      <p className="mb-3 text-[10px] font-black uppercase tracking-widest text-text-secondary border-b border-border-color pb-2">Productivity Scale</p>
+                      <div className="space-y-2.5">
+                        <div className="flex items-center gap-3">
+                          <div className="h-3 w-3 rounded-full bg-emerald-500/80 ring-2 ring-emerald-500/20" />
+                          <span className="text-xs font-semibold text-text-primary">80-100 <span className="text-[10px] text-text-secondary font-medium ml-1">(Efficient)</span></span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="h-3 w-3 rounded-full bg-sky-500/75 ring-2 ring-sky-500/20" />
+                          <span className="text-xs font-semibold text-text-primary">60-80 <span className="text-[10px] text-text-secondary font-medium ml-1">(Active)</span></span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="h-3 w-3 rounded-full bg-amber-500/70 ring-2 ring-amber-500/20" />
+                          <span className="text-xs font-semibold text-text-primary">40-60 <span className="text-[10px] text-text-secondary font-medium ml-1">(Steady)</span></span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="h-3 w-3 rounded-full bg-rose-500/70 ring-2 ring-rose-500/20" />
+                          <span className="text-xs font-semibold text-text-primary">1-40 <span className="text-[10px] text-text-secondary font-medium ml-1">(Low)</span></span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="h-3 w-3 rounded-full bg-slate-800/40 border border-white/5" />
+                          <span className="text-xs font-semibold text-text-primary">0 <span className="text-[10px] text-text-secondary font-medium ml-1">(No Activity)</span></span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 <p className="text-sm text-text-secondary">Hourly productivity density across the week</p>
               </div>
               <div className="text-xs uppercase tracking-wider text-text-secondary">0-100 score scale</div>

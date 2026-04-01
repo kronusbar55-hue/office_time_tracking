@@ -7,6 +7,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { Clock3, LayoutDashboard, CalendarCheck, FileSpreadsheet, BarChart3, Code, UserSquare2, ListChecks, Megaphone, Users, Settings, CalendarDays, Monitor, FileText } from "lucide-react";
 import { NAV_CONFIG, ROLES } from "@/lib/roles";
 import { LogOut } from "lucide-react";
+import LogoutConfirmModal from "./LogoutConfirmModal";
 
 type NavItem = {
   label: string;
@@ -33,6 +34,7 @@ const ICON_MAP: Record<string, any> = {
 
 export function Sidebar() {
   const { user, isAuthenticated, logout } = useAuth();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const pathname = usePathname();
 
   const role = user?.role ?? null;
@@ -44,7 +46,7 @@ export function Sidebar() {
   if (!isAuthenticated) return null;
 
   return (
-    <aside className="sticky top-0 h-screen hidden w-64 flex-col border-r border-card-border bg-bg-secondary px-4 pb-4 pt-6 shadow-lg dark:shadow-lg md:flex transition-colors duration-200">
+    <aside className="sticky top-0 h-screen hidden w-64 flex-col border-r border-card-border bg-bg-secondary px-4 pb-4 pt-6 shadow-lg dark:shadow-lg md:flex transition-colors duration-200 z-[100]">
       <div className="mb-8 flex items-center gap-2 px-2">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-slate-950">
           <Clock3 className="h-5 w-5" />
@@ -88,7 +90,7 @@ export function Sidebar() {
         )}
 
         <button
-          onClick={logout}
+          onClick={() => setShowLogoutModal(true)}
           type="button"
           className="w-full flex items-center justify-center gap-2 rounded-lg bg-error/10 dark:bg-error/5 border border-error/20 dark:border-error/15 px-3 py-2 text-[11px] font-semibold text-error hover:bg-error/15 dark:hover:bg-error/10 hover:border-error/30 dark:hover:border-error/25 transition-all duration-200"
         >
@@ -96,6 +98,12 @@ export function Sidebar() {
           Logout
         </button>
       </div>
+
+      <LogoutConfirmModal 
+        isOpen={showLogoutModal} 
+        onClose={() => setShowLogoutModal(false)} 
+        onConfirm={logout} 
+      />
     </aside>
   );
 }

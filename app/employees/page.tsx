@@ -287,18 +287,18 @@ export default function EmployeesPage() {
                           <div className="flex items-center justify-end gap-2">
                             <Link
                               href={`/employees/${user.id}/edit`}
-                              className="inline-flex items-center gap-2 rounded-xl border border-border-color px-3 py-2 text-xs font-medium text-text-primary transition hover:border-accent hover:text-accent"
+                              className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-border-color text-text-secondary transition hover:border-accent hover:text-accent"
+                              title="Edit Employee"
                             >
-                              <PencilLine className="h-3.5 w-3.5" />
-                              Edit
+                              <PencilLine className="h-4 w-4" />
                             </Link>
                             <button
                               type="button"
                               onClick={() => void handleDelete(user)}
-                              className="inline-flex items-center gap-2 rounded-xl border border-rose-500/30 px-3 py-2 text-xs font-medium text-rose-300 transition hover:border-rose-400 hover:text-rose-200"
+                              className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-rose-500/30 text-rose-300 transition hover:border-rose-400 hover:text-rose-200"
+                              title="Delete Employee"
                             >
-                              <Trash2 className="h-3.5 w-3.5" />
-                              Delete
+                              <Trash2 className="h-4 w-4" />
                             </button>
                           </div>
                         </td>

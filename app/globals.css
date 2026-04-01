@@ -179,6 +179,16 @@ select {
   @apply bg-input-bg text-text-primary border border-input-border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-colors duration-200;
 }
 
+select option {
+  background-color: rgb(var(--bg-primary));
+  color: rgb(var(--text-primary));
+}
+
+.dark select option {
+  background-color: rgb(var(--bg-primary));
+  color: rgb(var(--text-primary));
+}
+
 input::placeholder,
 textarea::placeholder {
   @apply text-text-tertiary;

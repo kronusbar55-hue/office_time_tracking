@@ -36,6 +36,7 @@ export function parseAnalyticsFilters(request: Request): AnalyticsFilters {
     employeeId: searchParams.get("employeeId") || undefined,
     department: searchParams.get("department") || undefined,
     organizationId: searchParams.get("organizationId") || undefined,
+    search: searchParams.get("search") || undefined,
     page: Number(searchParams.get("page") || "1"),
     limit: Number(searchParams.get("limit") || "10")
   };

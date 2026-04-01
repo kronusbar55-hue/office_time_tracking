@@ -1,5 +1,6 @@
 "use client";
 
+import { Eye, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "react-toastify";
 
@@ -170,16 +171,31 @@ export default function TaskTable({ tasks, user, loading = false, onDelete, onSt
                 </td>
                 <td className="px-3 py-2 align-top">
                   <div className="flex items-center gap-3">
-                    <a href={`/tasks/${taskId}`} className="text-text-secondary hover:text-text-primary">View</a>
+                    <a href={`/tasks/${taskId}`} className="text-text-secondary hover:text-sky-400 transition-colors" title="View">
+                      <Eye className="h-4 w-4" />
+                    </a>
                     {user?.role !== "employee" && (
                       <>
                         {onEdit ? (
-                          <button onClick={() => onEdit(t)} className="text-sky-400 hover:brightness-110">Edit</button>
+                          <button onClick={() => onEdit(t)} className="text-text-secondary hover:text-sky-400 transition-colors" title="Edit">
+                            <Pencil className="h-4 w-4" />
+                          </button>
                         ) : (
-                          <a href={`/tasks/${taskId}/edit`} className="text-sky-400 hover:brightness-110">Edit</a>
+                          <a href={`/tasks/${taskId}/edit`} className="text-text-secondary hover:text-sky-400 transition-colors" title="Edit">
+                            <Pencil className="h-4 w-4" />
+                          </a>
                         )}
-                        <button onClick={() => handleDelete(t)} disabled={deleting === taskId} className="text-rose-400 hover:brightness-110 disabled:opacity-50">
-                          {deleting === taskId ? "Deleting..." : "Delete"}
+                        <button 
+                          onClick={() => handleDelete(t)} 
+                          disabled={deleting === taskId} 
+                          className="text-text-secondary hover:text-rose-400 transition-colors disabled:opacity-50" 
+                          title="Delete"
+                        >
+                          {deleting === taskId ? (
+                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-rose-400 border-t-transparent"></div>
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
                         </button>
                       </>
                     )}

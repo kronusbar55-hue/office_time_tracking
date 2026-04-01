@@ -458,7 +458,7 @@ export default function ManagerAnalyticsDashboard() {
         </div>
 
         <DashboardCard className="relative z-50 p-4" allowOverflow={true}>
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-8">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-8">
             <FilterMultiSelect
               label="Project"
               placeholder="Select Project"
@@ -500,7 +500,7 @@ export default function ManagerAnalyticsDashboard() {
               onChange={(priorities) => setFilters((current) => ({ ...current, priorities }))}
             />
 
-            <div className="flex flex-col gap-1.5 min-w-[140px]">
+            <div className="flex flex-col gap-1.5 w-full">
               <input
                 type="date"
                 value={filters.startDate}
@@ -508,7 +508,7 @@ export default function ManagerAnalyticsDashboard() {
                 className="h-12 w-full rounded-lg border border-border-color bg-bg-primary/40 px-3 text-sm text-text-primary outline-none transition focus:border-accent/60"
               />
             </div>
-            <div className="flex flex-col gap-1.5 min-w-[140px]">
+            <div className="flex flex-col gap-1.5 w-full">
               <input
                 type="date"
                 value={filters.endDate}
@@ -521,7 +521,7 @@ export default function ManagerAnalyticsDashboard() {
               type="button"
               onClick={applyFilters}
               disabled={loadingFilters || loadingAnalytics}
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-accent px-5 text-sm font-semibold text-slate-950 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex h-12 items-center justify-center gap-2 w-full rounded-lg bg-accent px-5 text-sm font-semibold text-slate-950 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60 lg:w-auto"
             >
               <Filter className="h-4 w-4" />
               Apply Filters
@@ -530,7 +530,7 @@ export default function ManagerAnalyticsDashboard() {
               type="button"
               onClick={clearFilters}
               disabled={loadingFilters}
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-lg border border-border-color bg-bg-primary/40 px-5 text-sm font-semibold text-text-primary transition hover:border-accent/60 hover:bg-card-bg/40 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex h-12 items-center justify-center gap-2 w-full rounded-lg border border-border-color bg-bg-primary/40 px-5 text-sm font-semibold text-text-primary transition hover:border-accent/60 hover:bg-card-bg/40 disabled:cursor-not-allowed disabled:opacity-60 lg:w-auto"
             >
               <RefreshCcw className="h-4 w-4" />
               Clear Filters
@@ -559,6 +559,21 @@ export default function ManagerAnalyticsDashboard() {
 
       {!loadingAnalytics && hasApplied && !error && data ? (
         <div className="space-y-6">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <DashboardCard className="rounded-2xl border border-border-color bg-bg-secondary/40 p-4">
+              <p className="text-xs font-bold uppercase tracking-widest text-text-secondary">Total Filtered Tasks</p>
+              <p className="mt-1 text-2xl font-black text-accent">{data.meta.totalFilteredTasks}</p>
+            </DashboardCard>
+            <DashboardCard className="rounded-2xl border border-border-color bg-bg-secondary/40 p-4">
+              <p className="text-xs font-bold uppercase tracking-widest text-text-secondary">Total Bug Issues</p>
+              <p className="mt-1 text-2xl font-black text-rose-500">{data.meta.totalBugIssues}</p>
+            </DashboardCard>
+            <DashboardCard className="rounded-2xl border border-border-color bg-bg-secondary/40 p-4">
+              <p className="text-xs font-bold uppercase tracking-widest text-text-secondary">Team Members</p>
+              <p className="mt-1 text-2xl font-black text-text-primary">{availableAssigneeOptions.length}</p>
+            </DashboardCard>
+          </div>
+
           <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.05fr_1fr]">
             <DashboardCard className="border-t-[4px] border-t-accent bg-bg-secondary/55 p-6">
               <SectionHeader

@@ -122,6 +122,7 @@ export type AnalyticsFilters = {
   employeeId?: string;
   department?: string;
   organizationId?: string;
+  search?: string;
   page?: number;
   limit?: number;
 };
@@ -236,9 +237,10 @@ function formatDuration(totalSeconds: number) {
 }
 
 function formatHourLabel(hour: number) {
-  const suffix = hour >= 12 ? "PM" : "AM";
-  const normalized = hour % 12 || 12;
-  return `${normalized}:00 ${suffix}`;
+  if (hour === 10) return "10:30 AM";
+  const period = hour >= 12 ? "PM" : "AM";
+  const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
+  return `${displayHour}:00 ${period}`;
 }
 
 function normalizeAppUsage(appUsage: RawMonitorRecord["appUsage"]) {
@@ -258,6 +260,7 @@ function buildCacheKey(filters: AnalyticsFilters) {
     employeeId: filters.employeeId || "",
     department: filters.department || "",
     organizationId: filters.organizationId || "",
+    search: filters.search || "",
     page: filters.page || 1,
     limit: filters.limit || 10
   });
@@ -572,7 +575,19 @@ export function getBehaviorPatterns(records: NormalizedMonitorRecord[], employee
   }
 
   const hourlyList = [...hourly.entries()]
-    .filter(([hour]) => hour >= 10 && hour <= 23)
+    .filter(([hour, value]) => {
+      const isOfficeHour = hour >= 10 && hour < 20;
+      const isLunch = hour === 14;
+      
+      // Determine if the hour has enough data to be 'Exact'
+      // A full hour has 12 intervals (5-mins each). 
+      // The 10:30-11:00 window only has 6 intervals.
+      // We filter out any hour with < 8 intervals (~40 mins) to ensure 'Best Hours' are sustained.
+      const intervalsPerEmployee = value.count / Math.max(1, employees.length);
+      const isSignificant = intervalsPerEmployee >= 8;
+
+      return isOfficeHour && !isLunch && isSignificant;
+    })
     .map(([hour, value]) => ({
       hour,
       label: formatHourLabel(hour),
@@ -646,6 +661,14 @@ async function resolveEmployees(filters: AnalyticsFilters) {
 
   if (filters.department && filters.department !== "all") {
     query.department = filters.department;
+  }
+
+  if (filters.search) {
+    const searchRegex = { $regex: filters.search, $options: "i" };
+    query.$or = [
+      { firstName: searchRegex },
+      { lastName: searchRegex }
+    ];
   }
 
   const users = await User.find(query)
@@ -916,11 +939,16 @@ export class AnalyticsService {
         const isTargetUser = userIds.includes(record.userId);
         const isNotOnBreak = record.status !== "ON_BREAK";
         
-        // Filter for office hours: 10:00 AM to 11:59 PM
-        const hour = record.hourOfDay;
-        const isOfficeHour = hour >= 10 && hour <= 23;
+        // Filter for precise office hours: 10:30 AM to 8:00 PM
+        const start = record.intervalStartAt;
+        const hour = start.getHours();
+        const mins = start.getMinutes();
+        const decimalHour = hour + mins / 60;
         
-        return isTargetUser && isNotOnBreak && isOfficeHour;
+        const isWorkingHour = decimalHour >= 10.5 && decimalHour < 20;
+        const isLunch = hour === 14; // 2:00 PM to 3:00 PM
+        
+        return isTargetUser && isNotOnBreak && isWorkingHour && !isLunch;
       })
       .sort((left, right) => left.intervalStartAt.getTime() - right.intervalStartAt.getTime());
 
@@ -1040,6 +1068,7 @@ export class AnalyticsService {
           name: employee.name,
           department: employee.department,
           productivityScore: employee.productivityScore,
+          interactionScore: employee.interactionScore,
           activeTimeHours: Number((employee.activeTimeSeconds / 3600).toFixed(2)),
           focusTimeHours: Number((employee.focusTimeSeconds / 3600).toFixed(2))
         })),
