@@ -19,7 +19,9 @@ export function DashboardShell({ children }: DashboardShellProps) {
   }, []);
 
   const PUBLIC_ROUTES = ["/login", "/register", "/forgot-password", "/auth/super-admin/login"];
+  const SUPER_ADMIN_ROUTES = ["/super-admin"];
   const isPublic = PUBLIC_ROUTES.some(r => pathname === r || pathname.startsWith(r + "/"));
+  const isSuperAdmin = SUPER_ADMIN_ROUTES.some(r => pathname === r || pathname.startsWith(r + "/"));
 
   if (!mounted) {
     return <AuthGuard>{children}</AuthGuard>;
@@ -27,6 +29,11 @@ export function DashboardShell({ children }: DashboardShellProps) {
 
   // Pure login pages don't need sidebar/topbar
   if (isPublic) {
+    return <AuthGuard>{children}</AuthGuard>;
+  }
+
+  // Super admin routes use their own layout
+  if (isSuperAdmin) {
     return <AuthGuard>{children}</AuthGuard>;
   }
 

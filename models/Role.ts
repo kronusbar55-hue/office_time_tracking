@@ -1,6 +1,6 @@
 import { Schema, model, models, type Model } from "mongoose";
 
-export type RoleName = "admin" | "manager" | "employee" | "hr";
+export type RoleName = "ADMIN" | "MANAGER" | "EMPLOYEE" | "SUPER_ADMIN";
 
 export interface IRole {
   _id: string;
@@ -12,7 +12,7 @@ const RoleSchema = new Schema<IRole>(
   {
     name: {
       type: String,
-      enum: ["admin", "manager", "employee", "hr"],
+      enum: ["ADMIN", "MANAGER", "EMPLOYEE", "SUPER_ADMIN"],
       required: true,
       unique: true
     },

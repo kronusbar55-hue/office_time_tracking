@@ -47,6 +47,7 @@ export interface ITask {
   order?: number;
   isDeleted?: boolean;
   attachments?: IAttachment[];
+  createdAt?: Date;
   updatedAt?: Date;
   organizationId: Types.ObjectId;
 }

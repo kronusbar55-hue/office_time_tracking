@@ -1,17 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Users, Search, Globe, Shield, Loader2, Mail, Building2 } from "lucide-react";
+import { Search, Loader2, Building2 } from "lucide-react";
 import { toast } from "react-toastify";
 
 export default function SuperAdminUsersPage() {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [organizationId, setOrganizationId] = useState("");
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch(`/api/super-admin/users?search=${encodeURIComponent(search)}`);
+      const params = new URLSearchParams();
+      if (search) params.set("search", search);
+      if (organizationId) params.set("organizationId", organizationId);
+      const res = await fetch(`/api/super-admin/users?${params.toString()}`);
       const data = await res.json();
       if (data.success && Array.isArray(data.data)) setUsers(data.data);
     } catch (e) {
@@ -21,7 +25,7 @@ export default function SuperAdminUsersPage() {
     }
   };
 
-  useEffect(() => { fetchUsers(); }, [search]);
+  useEffect(() => { fetchUsers(); }, [search, organizationId]);
 
   if (loading) return (
     <div className="flex h-screen items-center justify-center text-accent gap-2">
@@ -37,14 +41,23 @@ export default function SuperAdminUsersPage() {
          <p className="mt-2 text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">Cross-Tenant User Registry</p>
       </div>
 
-      <div className="relative max-w-lg">
-         <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-         <input 
-            type="text" 
-            placeholder="Search users by name, email, or domain..." 
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="w-full bg-slate-900/50 border border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-xs font-bold text-white placeholder:text-slate-600 focus:outline-none focus:border-accent/40"
+      <div className="grid max-w-4xl gap-4 md:grid-cols-2">
+         <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+            <input 
+               type="text" 
+               placeholder="Search users by name, email, or domain..." 
+               value={search}
+               onChange={e => setSearch(e.target.value)}
+               className="w-full bg-slate-900/50 border border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-xs font-bold text-white placeholder:text-slate-600 focus:outline-none focus:border-accent/40"
+            />
+         </div>
+         <input
+            type="text"
+            placeholder="Filter by organization id"
+            value={organizationId}
+            onChange={e => setOrganizationId(e.target.value)}
+            className="w-full bg-slate-900/50 border border-slate-800 rounded-2xl py-4 px-4 text-xs font-bold text-white placeholder:text-slate-600 focus:outline-none focus:border-accent/40"
          />
       </div>
 
@@ -87,7 +100,7 @@ export default function SuperAdminUsersPage() {
                 </td>
                 <td className="px-6 py-5">
                    <span className={`inline-flex rounded-lg px-2 py-1 text-[9px] font-black uppercase tracking-[1px] ${u.role === 'SUPER_ADMIN' ? 'bg-accent/20 text-accent outline outline-1 outline-accent/40' : 'bg-slate-800 text-slate-400'}`}>
-                      {u.role}
+                      {u.roleLabel || u.role}
                    </span>
                 </td>
                 <td className="px-6 py-5">

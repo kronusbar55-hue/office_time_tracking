@@ -1,13 +1,12 @@
 "use client";
 
-import { ReactNode, useState, useEffect } from "react";
+import { ReactNode, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { 
   Shield, 
   Globe, 
   Users, 
-  BarChart3, 
   Settings, 
   LogOut, 
   LayoutDashboard,
@@ -15,11 +14,37 @@ import {
   X
 } from "lucide-react";
 import { toast } from "react-toastify";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 export default function SuperAdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { user, isAuthenticated, loading } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Show loading while checking authentication
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-950 text-slate-200">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent mx-auto mb-4"></div>
+          <p className="text-sm">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect if not authenticated
+  if (!isAuthenticated) {
+    router.replace("/auth/super-admin/login");
+    return null;
+  }
+
+  // If user data is loaded and not super admin, redirect
+  if (user && user.role !== "SUPER_ADMIN") {
+    router.replace("/auth/super-admin/login");
+    return null;
+  }
 
   const handleLogout = async () => {
      try {
@@ -34,9 +59,8 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
   const menuItems = [
     { label: "Dashboard", href: "/super-admin/dashboard", icon: LayoutDashboard },
     { label: "Organizations", href: "/super-admin/organizations", icon: Globe },
-    { label: "Platform Users", href: "/api/users?organizationId=all", icon: Users }, // Mocking user viewing cross-platform
-    { label: "System Health", href: "#", icon: Shield },
-    { label: "Settings", href: "#", icon: Settings },
+    { label: "Users", href: "/super-admin/users", icon: Users },
+    { label: "Settings", href: "/super-admin/settings", icon: Settings },
   ];
 
   return (
@@ -91,8 +115,10 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
            </button>
            <div className="flex items-center gap-4 ml-auto">
               <div className="flex items-center gap-3 rounded-full bg-slate-800/50 border border-slate-700/50 px-4 py-1.5 cursor-pointer hover:bg-slate-800 transition-colors">
-                  <div className="h-6 w-6 rounded-full bg-accent/20 flex items-center justify-center text-[10px] font-black text-accent">PK</div>
-                  <span className="text-[10px] uppercase font-black tracking-widest">Master Admin</span>
+                  <div className="h-6 w-6 rounded-full bg-accent/20 flex items-center justify-center text-[10px] font-black text-accent">
+                    {(user?.firstName?.[0] || "P").toUpperCase()}
+                  </div>
+                  <span className="text-[10px] uppercase font-black tracking-widest">{user?.email || "Master Admin"}</span>
               </div>
            </div>
         </header>

@@ -9,6 +9,13 @@ type User = {
   lastName?: string;
   email?: string;
   role?: string;
+  roleLabel?: string;
+  status?: string;
+  organizationId?: string | null;
+  organizationName?: string | null;
+  organizationStatus?: string | null;
+  plan?: string | null;
+  sessionType?: string | null;
   permissions?: string[];
 };
 
@@ -158,9 +165,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
     // navigate to login and replace history
     try {
-      router.replace("/login");
+      router.replace(user?.role === "SUPER_ADMIN" ? "/auth/super-admin/login" : "/login");
     } catch {
-      window.location.href = "/login";
+      window.location.href = user?.role === "SUPER_ADMIN" ? "/auth/super-admin/login" : "/login";
     }
   };
 

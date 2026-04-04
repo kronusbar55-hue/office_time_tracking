@@ -24,8 +24,10 @@ export function AuthGuard({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (isPublicRoute(pathname)) return; // don't redirect when on public pages
     if (!loading && !isAuthenticated) {
-      // redirect to login if loading completed and no session
-      router.replace("/login");
+      const target = pathname?.startsWith("/super-admin")
+        ? "/auth/super-admin/login"
+        : "/login";
+      router.replace(target);
     }
   }, [loading, isAuthenticated, router, pathname]);
 

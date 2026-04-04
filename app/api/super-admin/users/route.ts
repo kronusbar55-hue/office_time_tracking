@@ -3,6 +3,7 @@ import { requireAuth, requireRole } from "@/lib/authz";
 import { connectDB } from "@/lib/db";
 import { User } from "@/models/User";
 import { successResp, errorResp } from "@/lib/apiResponse";
+import { toRoleLabel } from "@/lib/roles";
 
 export async function GET(request: Request) {
   try {
@@ -12,8 +13,12 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url);
     const search = (searchParams.get("search") || "").trim();
+    const organizationId = (searchParams.get("organizationId") || "").trim();
 
     const query: any = { isDeleted: false };
+    if (organizationId) {
+      query.organizationId = organizationId;
+    }
     if (search) {
       query.$or = [
         { firstName: { $regex: search, $options: "i" } },
@@ -36,6 +41,7 @@ export async function GET(request: Request) {
           lastName: u.lastName,
           email: u.email,
           role: u.role,
+          roleLabel: toRoleLabel(u.role),
           isActive: u.isActive,
           status: u.status,
           organizationId: u.organizationId?._id?.toString() || null,

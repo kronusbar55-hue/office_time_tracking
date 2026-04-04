@@ -4,6 +4,9 @@ import { connectDB } from "@/lib/db";
 import { requireAuth, requireRole, requireActiveOrganization } from "@/lib/authz";
 import { OrganizationInvite } from "@/models/OrganizationInvite";
 import { successResp, errorResp } from "@/lib/apiResponse";
+import { User } from "@/models/User";
+import { buildCredentialDeliveryPayload } from "@/lib/platform";
+import { normalizeRoleInput, toRoleLabel } from "@/lib/roles";
 
 export async function POST(request: Request) {
   try {
@@ -14,6 +17,20 @@ export async function POST(request: Request) {
 
     const { email, role } = await request.json();
     if (!email) return NextResponse.json(errorResp("Email required"), { status: 400 });
+    const normalizedEmail = String(email).toLowerCase();
+    const inviteRole = normalizeRoleInput(role) || "employee";
+    if (inviteRole === "SUPER_ADMIN") {
+      return NextResponse.json(errorResp("SUPER_ADMIN cannot be invited into an organization"), { status: 400 });
+    }
+
+    const existingUser = await User.findOne({
+      email: normalizedEmail,
+      organizationId: ctx.token.orgId,
+      isDeleted: false
+    }).lean();
+    if (existingUser) {
+      return NextResponse.json(errorResp("User already exists in this organization"), { status: 409 });
+    }
 
     const rawToken = crypto.randomBytes(24).toString("hex");
     const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
@@ -21,8 +38,8 @@ export async function POST(request: Request) {
 
     const invite = await OrganizationInvite.create({
       organizationId: ctx.token.orgId,
-      email: String(email).toLowerCase(),
-      role: role || "employee",
+      email: normalizedEmail,
+      role: inviteRole,
       invitedBy: ctx.token.sub,
       tokenHash,
       expiresAt
@@ -33,8 +50,16 @@ export async function POST(request: Request) {
         inviteId: invite._id.toString(),
         email: invite.email,
         role: invite.role,
-        // In production, send via email provider; returning temporarily for integration.
-        inviteToken: rawToken
+        roleLabel: toRoleLabel(invite.role),
+        inviteToken: rawToken,
+        inviteUrl: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/auth/login?invite=${rawToken}`,
+        credentialDelivery: buildCredentialDeliveryPayload({
+          loginPath: "/auth/login",
+          email: invite.email,
+          organizationName: String(ctx.organization?.name || ""),
+          organizationSlug: String(ctx.organization?.slug || ""),
+          role: toRoleLabel(invite.role)
+        })
       }),
       { status: 201 }
     );

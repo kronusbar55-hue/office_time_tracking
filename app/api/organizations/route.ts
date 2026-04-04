@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { Organization } from "@/models/Organization";
 import { User } from "@/models/User";
+import { Permission } from "@/models/Permission";
 import bcrypt from "bcryptjs";
+import { Types } from "mongoose";
 import { successResp, errorResp } from "@/lib/apiResponse";
 import { requireAuth, requireRole } from "@/lib/authz";
 import { Subscription } from "@/models/Subscription";
@@ -40,7 +42,7 @@ export async function POST(request: Request) {
         slug: slug.toLowerCase(),
         plan: plan || "FREE",
         status: "ACTIVE",
-        owner: new (require('mongoose').Types.ObjectId)() // Temporary placeholder
+        owner: new Types.ObjectId() // Temporary placeholder
     });
 
     const passwordHash = await bcrypt.hash(ownerPassword, 10);
@@ -49,7 +51,7 @@ export async function POST(request: Request) {
         lastName: ownerLastName || "Owner",
         email: ownerEmail.toLowerCase(),
         passwordHash,
-        role: "admin", // Organization Admin
+        role: "ADMIN", // Organization Admin
         organizationId: org._id,
         status: "ACTIVE",
         isActive: true,
@@ -60,11 +62,43 @@ export async function POST(request: Request) {
     org.owner = user._id;
     await org.save();
 
-    const plan = org.plan || "FREE";
-    const priceMonthly = plan === "PRO" ? 49 : plan === "ENTERPRISE" ? 199 : 0;
+    // Create default permissions
+    const defaultPermissions = [
+      // ADMIN has all permissions
+      { role: "ADMIN", module: "dashboard", actions: ["view"] },
+      { role: "ADMIN", module: "kanban", actions: ["view", "create", "edit", "delete", "assign"] },
+      { role: "ADMIN", module: "projects", actions: ["view", "create", "edit", "delete", "assign"] },
+      { role: "ADMIN", module: "tasks", actions: ["view", "create", "edit", "delete", "assign"] },
+      { role: "ADMIN", module: "users", actions: ["view", "create", "edit", "delete", "assign"] },
+      { role: "ADMIN", module: "reports", actions: ["view", "create", "edit", "delete", "assign"] },
+      { role: "ADMIN", module: "settings", actions: ["view", "create", "edit", "delete", "assign"] },
+
+      // MANAGER permissions
+      { role: "MANAGER", module: "dashboard", actions: ["view"] },
+      { role: "MANAGER", module: "kanban", actions: ["view", "create", "edit", "assign"] },
+      { role: "MANAGER", module: "projects", actions: ["view", "create", "edit", "assign"] },
+      { role: "MANAGER", module: "tasks", actions: ["view", "create", "edit", "assign"] },
+      { role: "MANAGER", module: "reports", actions: ["view"] },
+
+      // EMPLOYEE permissions
+      { role: "EMPLOYEE", module: "dashboard", actions: ["view"] },
+      { role: "EMPLOYEE", module: "kanban", actions: ["view", "create", "edit"] },
+      { role: "EMPLOYEE", module: "projects", actions: ["view", "create", "edit"] },
+      { role: "EMPLOYEE", module: "tasks", actions: ["view", "create", "edit"] }
+    ];
+
+    await Permission.insertMany(
+      defaultPermissions.map(perm => ({
+        organizationId: org._id,
+        ...perm
+      }))
+    );
+
+    const selectedPlan = org.plan || "FREE";
+    const priceMonthly = selectedPlan === "PRO" ? 49 : selectedPlan === "ENTERPRISE" ? 199 : 0;
     await Subscription.create({
       organizationId: org._id,
-      plan,
+      plan: selectedPlan,
       status: "ACTIVE",
       priceMonthly,
       startsAt: new Date()

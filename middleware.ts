@@ -3,16 +3,25 @@ import type { NextRequest } from 'next/server';
 
 const ROLE_PATHS: Array<{ prefix: string; allowed: string[] }> = [
   { prefix: '/super-admin', allowed: ['SUPER_ADMIN'] },
-  { prefix: '/admin', allowed: ['admin'] },
-  { prefix: '/live-attendance', allowed: ['admin'] },
-  { prefix: '/employees', allowed: ['admin', 'hr'] },
-  { prefix: '/reports', allowed: ['admin', 'hr'] },
-  { prefix: '/projects', allowed: ['admin', 'manager', 'employee'] },
-  { prefix: '/tasks', allowed: ['admin', 'manager', 'employee'] },
-  { prefix: '/leaves', allowed: ['admin', 'hr', 'manager', 'employee'] },
-  { prefix: '/check-in-out', allowed: ['manager'] },
-  { prefix: '/dashboard', allowed: ['admin', 'manager', 'employee', 'hr'] }
+  { prefix: '/admin', allowed: ['ADMIN'] },
+  { prefix: '/live-attendance', allowed: ['ADMIN'] },
+  { prefix: '/employees', allowed: ['ADMIN'] },
+  { prefix: '/reports', allowed: ['ADMIN'] },
+  { prefix: '/projects', allowed: ['ADMIN', 'MANAGER', 'EMPLOYEE'] },
+  { prefix: '/tasks', allowed: ['ADMIN', 'MANAGER', 'EMPLOYEE'] },
+  { prefix: '/leaves', allowed: ['ADMIN', 'MANAGER', 'EMPLOYEE'] },
+  { prefix: '/check-in-out', allowed: ['MANAGER'] },
+  { prefix: '/dashboard', allowed: ['ADMIN', 'MANAGER', 'EMPLOYEE'] }
 ];
+
+const PUBLIC_PATHS = new Set([
+  '/login',
+  '/auth/login',
+  '/auth/super-admin/login',
+  '/register',
+  '/forgot-password',
+  '/unauthorized'
+]);
 
 function parseJwtPayload(token?: string) {
   if (!token) return null;
@@ -32,15 +41,15 @@ function parseJwtPayload(token?: string) {
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // 1. Skip middleware for static assets, public auth pages, and API
+  // 1. Skip middleware for static assets and API
   if (
     pathname.includes('.') || 
-    pathname.startsWith('/api') || 
-    pathname === '/login' ||
-    pathname === '/auth/login' ||
-    pathname === '/auth/super-admin/login' ||
-    pathname === '/unauthorized'
+    pathname.startsWith('/api')
   ) {
+    return NextResponse.next();
+  }
+
+  if (PUBLIC_PATHS.has(pathname)) {
     return NextResponse.next();
   }
 
@@ -48,6 +57,9 @@ export function middleware(req: NextRequest) {
   const payload = parseJwtPayload(token);
   const role = payload?.role ?? null;
   const orgId = payload?.orgId ?? null;
+  const sessionType = payload?.sessionType ?? null;
+  const userStatus = payload?.userStatus ?? null;
+  const orgStatus = payload?.orgStatus ?? null;
 
   // 2. Auth checks
   if (!token || !role) {
@@ -71,6 +83,18 @@ export function middleware(req: NextRequest) {
       return NextResponse.redirect(url);
   }
 
+  if (pathname.startsWith('/super-admin') && sessionType && sessionType !== 'super-admin') {
+    const url = req.nextUrl.clone();
+    url.pathname = '/unauthorized';
+    return NextResponse.redirect(url);
+  }
+
+  if (!pathname.startsWith('/super-admin') && role !== 'SUPER_ADMIN' && sessionType && sessionType !== 'organization') {
+    const url = req.nextUrl.clone();
+    url.pathname = '/login';
+    return NextResponse.redirect(url);
+  }
+
   // 4. Role-based Route Guarding
   const match = ROLE_PATHS.find((p) => pathname.startsWith(p.prefix));
   if (match && !match.allowed.includes(role)) {
@@ -84,6 +108,13 @@ export function middleware(req: NextRequest) {
       const url = req.nextUrl.clone();
       url.pathname = '/login';
       return NextResponse.redirect(url);
+  }
+
+  if (role !== 'SUPER_ADMIN' && (userStatus === 'INACTIVE' || userStatus === 'SUSPENDED' || orgStatus === 'INACTIVE' || orgStatus === 'SUSPENDED')) {
+    const url = req.nextUrl.clone();
+    url.pathname = '/login';
+    url.searchParams.set('blocked', '1');
+    return NextResponse.redirect(url);
   }
 
   return NextResponse.next();

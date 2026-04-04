@@ -45,6 +45,9 @@ export default function EmployeesPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState("employee");
+  const [inviteLoading, setInviteLoading] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -237,6 +240,39 @@ export default function EmployeesPage() {
     setForm(emptyForm);
     setAvatarFile(null);
     setError(null);
+  }
+
+  async function handleInvite(e: React.FormEvent) {
+    e.preventDefault();
+    setInviteLoading(true);
+    try {
+      const res = await fetch("/api/users/invite", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          email: inviteEmail,
+          role: inviteRole
+        })
+      });
+      const body = await res.json().catch(() => null) as any;
+      if (!res.ok) {
+        throw new Error(body?.message || "Failed to create invite");
+      }
+      const inviteUrl = body?.data?.inviteUrl;
+      if (inviteUrl) {
+        await navigator.clipboard.writeText(inviteUrl).catch(() => null);
+      }
+      toast.success(inviteUrl ? "Invite created and copied to clipboard" : "Invite created");
+      setInviteEmail("");
+      setInviteRole("employee");
+    } catch (e) {
+      const errorMessage = e instanceof Error ? e.message : "Failed to create invite";
+      toast.error(errorMessage);
+    } finally {
+      setInviteLoading(false);
+    }
   }
 
   return (
@@ -471,6 +507,39 @@ export default function EmployeesPage() {
 
 
         <section className="rounded-xl border border-border-color bg-card/70 p-3 shadow-card">
+          <div className="mb-4 rounded-lg border border-border-color bg-bg-secondary/40 p-3">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-text-secondary">Invite user</p>
+            <p className="mt-1 text-[11px] text-text-secondary">
+              Generate an email invite for a new team member without creating the full account manually.
+            </p>
+            <form onSubmit={(e) => void handleInvite(e)} className="mt-3 grid gap-2 md:grid-cols-[minmax(0,1fr)_140px_120px]">
+              <input
+                type="email"
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+                placeholder="new.user@company.com"
+                className="h-8 rounded-md border border-border-color bg-bg-primary/60 px-2 text-[11px] text-text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent/40"
+                required
+              />
+              <select
+                value={inviteRole}
+                onChange={(e) => setInviteRole(e.target.value)}
+                className="h-8 rounded-md border border-border-color bg-bg-primary/60 px-2 text-[11px] text-text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent/40"
+              >
+                <option value="admin">Admin</option>
+                <option value="manager">Manager</option>
+                <option value="hr">HR</option>
+                <option value="employee">Employee</option>
+              </select>
+              <button
+                type="submit"
+                disabled={inviteLoading}
+                className="rounded-md bg-accent px-3 py-1 text-[11px] font-semibold text-slate-950 shadow-md shadow-cyan-500/40 hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {inviteLoading ? "Inviting..." : "Send invite"}
+              </button>
+            </form>
+          </div>
           <p className="text-[11px] font-semibold uppercase tracking-wide text-text-secondary">
             {editingId ? "Edit member" : "Add member"}
           </p>

@@ -6,10 +6,12 @@ import { signAuthToken } from "@/lib/auth";
 import { successResp, errorResp } from "@/lib/apiResponse";
 import crypto from "crypto";
 import { UserSession } from "@/models/UserSession";
+import { ensurePlatformSuperAdmin } from "@/lib/platform";
 
 export async function POST(request: Request) {
   try {
     await connectDB();
+    await ensurePlatformSuperAdmin();
     const { email, password } = await request.json();
 
     if (!email || !password) {
@@ -33,16 +35,24 @@ export async function POST(request: Request) {
 
     const token = signAuthToken({
       sub: user._id.toString(),
+      email: user.email,
       name: `${user.firstName} ${user.lastName}`,
-      role: "SUPER_ADMIN"
+      role: "SUPER_ADMIN",
+      userStatus: user.status,
+      orgStatus: null,
+      plan: null,
+      sessionType: "super-admin"
     });
 
     const res = NextResponse.json(successResp("Super Admin Login successful", {
       user: {
         id: user._id.toString(),
+        firstName: user.firstName,
+        lastName: user.lastName,
         name: `${user.firstName} ${user.lastName}`,
         email: user.email,
-        role: "SUPER_ADMIN"
+        role: "SUPER_ADMIN",
+        sessionType: "super-admin"
       }
     }));
 

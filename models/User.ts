@@ -48,9 +48,9 @@ const UserSchema = new Schema<IUser>(
         },
         role: {
             type: String,
-            enum: ["admin", "manager", "employee", "hr", "SUPER_ADMIN"],
+            enum: ["ADMIN", "MANAGER", "EMPLOYEE", "SUPER_ADMIN"],
             required: true,
-            default: "employee"
+            default: "EMPLOYEE"
         },
         organizationId: {
             type: Schema.Types.ObjectId,

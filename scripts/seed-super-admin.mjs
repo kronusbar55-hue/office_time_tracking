@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 
-const MONGODB_URI = process.env.MONGODB_URI;
+const MONGODB_URI = process.env.MONGODB_URI || "mongodb+srv://doadmin:X2NO37Us0D65Q48W@Broot-Linkedin-Test-7de8163b.mongo.ondigitalocean.com/admin?tls=true&authSource=admin";
 if (!MONGODB_URI) {
   throw new Error("MONGODB_URI is required");
 }

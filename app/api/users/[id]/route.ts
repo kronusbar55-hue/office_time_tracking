@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { User } from "@/models/User";
 import cloudinary from "@/lib/cloudinary";
-import { verifyAuthToken } from "@/lib/auth";
-import { cookies } from "next/headers";
+import { requireActiveOrganization, requireAuth, requireRole } from "@/lib/authz";
+import { normalizeRoleInput } from "@/lib/roles";
 
 type Params = {
   params: {
@@ -12,14 +12,13 @@ type Params = {
 };
 
 export async function GET(_request: Request, { params }: Params) {
-  const token = cookies().get("auth_token")?.value;
-  const payload = token ? verifyAuthToken(token) : null;
-  if (!payload) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const ctx = await requireAuth();
+  await requireActiveOrganization(ctx);
 
   await connectDB();
   const query: any = { _id: params.id, isDeleted: false };
-  if (payload.role !== "SUPER_ADMIN") {
-    query.organizationId = payload.orgId;
+  if (ctx.token.role !== "SUPER_ADMIN") {
+    query.organizationId = ctx.token.orgId;
   }
   
   const user = await User.findOne(query).populate({ path: "technology", select: "name" }).lean();
@@ -43,14 +42,14 @@ export async function GET(_request: Request, { params }: Params) {
 }
 
 export async function PUT(request: Request, { params }: Params) {
-  const token = cookies().get("auth_token")?.value;
-  const payload = token ? verifyAuthToken(token) : null;
-  if (!payload) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const ctx = await requireAuth();
+  await requireActiveOrganization(ctx);
+  requireRole(ctx, ["admin", "hr", "SUPER_ADMIN"]);
 
   await connectDB();
   const query: any = { _id: params.id, isDeleted: false };
-  if (payload.role !== "SUPER_ADMIN") {
-    query.organizationId = payload.orgId;
+  if (ctx.token.role !== "SUPER_ADMIN") {
+    query.organizationId = ctx.token.orgId;
   }
 
   const contentType = request.headers.get("content-type") || "";
@@ -60,7 +59,7 @@ export async function PUT(request: Request, { params }: Params) {
     const formData = await request.formData();
     if (formData.has("firstName")) update.firstName = String(formData.get("firstName"));
     if (formData.has("lastName")) update.lastName = String(formData.get("lastName"));
-    if (formData.has("role")) update.role = String(formData.get("role"));
+    if (formData.has("role")) update.role = normalizeRoleInput(String(formData.get("role"))) || undefined;
     if (formData.has("technology")) update.technology = String(formData.get("technology"));
     if (formData.has("joinDate")) update.joinDate = new Date(String(formData.get("joinDate")));
     if (formData.has("isActive")) update.isActive = String(formData.get("isActive")) !== "false";
@@ -75,6 +74,16 @@ export async function PUT(request: Request, { params }: Params) {
   } else {
     const body = await request.json();
     Object.assign(update, body);
+    if (body.role) {
+      update.role = normalizeRoleInput(body.role) || undefined;
+    }
+    if (body.email) {
+      update.email = String(body.email).toLowerCase();
+    }
+  }
+
+  if (update.role === "SUPER_ADMIN") {
+    return NextResponse.json({ error: "SUPER_ADMIN cannot belong to an organization" }, { status: 400 });
   }
 
   const updated = await User.findOneAndUpdate(query, { $set: update }, { new: true }).lean();
@@ -92,14 +101,14 @@ export async function PUT(request: Request, { params }: Params) {
 }
 
 export async function DELETE(_request: Request, { params }: Params) {
-  const token = cookies().get("auth_token")?.value;
-  const payload = token ? verifyAuthToken(token) : null;
-  if (!payload) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const ctx = await requireAuth();
+  await requireActiveOrganization(ctx);
+  requireRole(ctx, ["admin", "hr", "SUPER_ADMIN"]);
 
   await connectDB();
   const query: any = { _id: params.id, isDeleted: false };
-  if (payload.role !== "SUPER_ADMIN") {
-    query.organizationId = payload.orgId;
+  if (ctx.token.role !== "SUPER_ADMIN") {
+    query.organizationId = ctx.token.orgId;
   }
 
   const deleted = await User.findOneAndUpdate(query, { $set: { isDeleted: true, isActive: false } }, { new: true }).lean();

@@ -10,7 +10,9 @@ export async function POST(request: Request) {
   const { email } = await request.json();
   if (!email) return NextResponse.json(successResp("If account exists, reset link sent"));
 
-  const user = await User.findOne({ email: String(email).toLowerCase(), isDeleted: false }).lean();
+  const user = await User.findOne({ email: String(email).toLowerCase(), isDeleted: false })
+    .select("_id")
+    .lean() as any;
   if (!user) return NextResponse.json(successResp("If account exists, reset link sent"));
 
   const rawToken = crypto.randomBytes(24).toString("hex");

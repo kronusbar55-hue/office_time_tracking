@@ -1,18 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Globe, Settings, Trash2, Shield, Loader2, Search, Filter, ExternalLink, Activity } from "lucide-react";
+import { Plus, Globe, Trash2, Search, Filter, ExternalLink } from "lucide-react";
 import { toast } from "react-toastify";
 
 export default function OrganizationsPage() {
   const [orgs, setOrgs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [search, setSearch] = useState("");
   const [formData, setFormData] = useState({
      name: "",
      slug: "",
      ownerEmail: "",
      ownerPassword: "",
+     ownerFirstName: "",
+     ownerLastName: "",
      plan: "FREE"
   });
 
@@ -64,6 +67,27 @@ export default function OrganizationsPage() {
      }
   };
 
+  const handleDelete = async (id: string) => {
+    if (!window.confirm("Delete this organization? Users will be deactivated and subscriptions cancelled.")) return;
+    try {
+      const res = await fetch(`/api/super-admin/organizations/${id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Delete failed");
+      toast.success("Organization deleted");
+      fetchOrgs();
+    } catch (error: any) {
+      toast.error(error.message || "Delete failed");
+    }
+  };
+
+  const filteredOrgs = orgs.filter((org) => {
+    const needle = search.trim().toLowerCase();
+    if (!needle) return true;
+    return [org.name, org.slug, org.owner?.email, org.owner?.name]
+      .filter(Boolean)
+      .some((value) => String(value).toLowerCase().includes(needle));
+  });
+
   if (loading) return <div className="p-20 text-center text-accent animate-pulse font-black uppercase tracking-[0.3em] italic">Accessing Ledger...</div>;
 
   return (
@@ -88,6 +112,8 @@ export default function OrganizationsPage() {
             <input 
                type="text" 
                placeholder="Search Organizations by ID or Slug..." 
+               value={search}
+               onChange={(e) => setSearch(e.target.value)}
                className="w-full bg-black/50 border border-slate-800 rounded-xl py-3 pl-12 pr-4 text-xs font-bold text-white placeholder:text-slate-600 focus:outline-none focus:border-accent/40"
             />
          </div>
@@ -111,8 +137,8 @@ export default function OrganizationsPage() {
             </tr>
           </thead>
           <tbody>
-            {orgs.map((org) => (
-              <tr key={org._id} className="border-b border-slate-800/50 hover:bg-slate-800/20 transition-colors">
+            {filteredOrgs.map((org) => (
+              <tr key={org.id} className="border-b border-slate-800/50 hover:bg-slate-800/20 transition-colors">
                 <td className="px-6 py-5">
                    <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-800 text-accent outline outline-1 outline-accent/20">
@@ -121,6 +147,7 @@ export default function OrganizationsPage() {
                       <div>
                          <p className="text-sm font-black text-white">{org.name}</p>
                          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{org.slug}.ott.com</p>
+                         <p className="text-[10px] font-bold text-slate-600">{org.owner?.email || "No owner linked"}</p>
                       </div>
                    </div>
                 </td>
@@ -131,16 +158,17 @@ export default function OrganizationsPage() {
                 </td>
                 <td className="px-6 py-5">
                    <p className="text-[10px] font-black uppercase tracking-widest text-white">{org.plan}</p>
-                   <p className="text-[10px] font-bold text-slate-500">$49.00 / mo</p>
+                   <p className="text-[10px] font-bold text-slate-500">${org.activeSubscription?.priceMonthly ?? 0}.00 / mo</p>
                 </td>
                 <td className="px-6 py-5">
                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Created: {new Date(org.createdAt).toLocaleDateString()}</p>
+                   <p className="text-[10px] font-bold text-slate-600 uppercase tracking-tighter">{org.activeUsers}/{org.totalUsers} active users</p>
                 </td>
                 <td className="px-6 py-5 text-right">
                    <div className="flex items-center justify-end gap-3">
                       <select 
                          value={org.status}
-                         onChange={(e) => handleStatusUpdate(org._id, e.target.value)}
+                         onChange={(e) => handleStatusUpdate(org.id, e.target.value)}
                          className="rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-slate-400 focus:outline-none focus:border-accent/40"
                       >
                          <option value="ACTIVE">Activate</option>
@@ -150,7 +178,7 @@ export default function OrganizationsPage() {
                       <button className="rounded-xl border border-slate-800 bg-slate-900 p-2.5 text-slate-500 hover:text-white transition-colors">
                          <ExternalLink size={16} />
                       </button>
-                      <button className="rounded-xl border border-slate-800 bg-slate-900 p-2.5 text-rose-500 hover:bg-rose-500 hover:text-white transition-colors">
+                      <button onClick={() => handleDelete(org.id)} className="rounded-xl border border-slate-800 bg-slate-900 p-2.5 text-rose-500 hover:bg-rose-500 hover:text-white transition-colors">
                          <Trash2 size={16} />
                       </button>
                    </div>
@@ -177,6 +205,16 @@ export default function OrganizationsPage() {
                      <div className="space-y-2">
                         <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Entity Slug (Unique)</label>
                         <input className="w-full bg-black/50 border border-slate-800 rounded-xl py-3 px-4 text-sm text-white focus:outline-none focus:border-accent" placeholder="acme" onChange={e => setFormData({...formData, slug: e.target.value})} required />
+                     </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-6">
+                     <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Admin First Name</label>
+                        <input className="w-full bg-black/50 border border-slate-800 rounded-xl py-3 px-4 text-sm text-white focus:outline-none focus:border-accent" placeholder="John" onChange={e => setFormData({...formData, ownerFirstName: e.target.value})} required />
+                     </div>
+                     <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Admin Last Name</label>
+                        <input className="w-full bg-black/50 border border-slate-800 rounded-xl py-3 px-4 text-sm text-white focus:outline-none focus:border-accent" placeholder="Doe" onChange={e => setFormData({...formData, ownerLastName: e.target.value})} required />
                      </div>
                   </div>
                   <div className="grid grid-cols-2 gap-6">

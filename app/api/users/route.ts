@@ -2,8 +2,10 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { User } from "@/models/User";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import cloudinary from "@/lib/cloudinary";
 import { requireAuth, requireActiveOrganization, requireRole, withTenantQuery } from "@/lib/authz";
+import { normalizeRoleInput, toRoleLabel } from "@/lib/roles";
 
 export async function GET(request: Request) {
   const ctx = await requireAuth();
@@ -42,12 +44,13 @@ export async function GET(request: Request) {
     return NextResponse.json({
       users: users.map((u: any) => ({
         id: u._id.toString(),
-        firstName: u.firstName,
-        lastName: u.lastName,
-        email: u.email,
-        role: u.role,
-        organizationId: u.organizationId?._id?.toString() || null,
-        organizationName: u.organizationId?.name || null,
+          firstName: u.firstName,
+          lastName: u.lastName,
+          email: u.email,
+          role: u.role,
+          roleLabel: toRoleLabel(u.role),
+          organizationId: u.organizationId?._id?.toString() || null,
+          organizationName: u.organizationId?.name || null,
         technology: u.technology
           ? { id: String(u.technology._id || u.technology), name: u.technology.name }
           : null,
@@ -77,6 +80,7 @@ export async function GET(request: Request) {
       lastName: u.lastName,
       email: u.email,
       role: u.role,
+      roleLabel: toRoleLabel(u.role),
       organizationId: u.organizationId?._id?.toString() || null,
       organizationName: u.organizationId?.name || null,
       technology: u.technology
@@ -104,7 +108,7 @@ export async function POST(request: Request) {
     const lastName = String(formData.get("lastName") || "");
     const email = String(formData.get("email") || "");
     const password = String(formData.get("password") || "");
-    const role = String(formData.get("role") || "employee");
+    const role = normalizeRoleInput(String(formData.get("role") || "employee")) || "employee";
     const technology = formData.get("technology")
       ? String(formData.get("technology"))
       : undefined;
@@ -120,11 +124,14 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+    if (role === "SUPER_ADMIN") {
+      return NextResponse.json({ error: "SUPER_ADMIN cannot belong to an organization" }, { status: 400 });
+    }
 
     const orgId = ctx.token.orgId;
     if (!orgId) return NextResponse.json({ error: "Organization required" }, { status: 400 });
 
-    const existing = await User.findOne({ email, organizationId: orgId, isDeleted: false }).lean();
+    const existing = await User.findOne({ email: email.toLowerCase(), organizationId: orgId, isDeleted: false }).lean();
     if (existing) {
       return NextResponse.json(
         { error: "User with this email already exists" },
@@ -165,7 +172,7 @@ export async function POST(request: Request) {
     const created = await User.create({
       firstName,
       lastName,
-      email,
+      email: email.toLowerCase(),
       passwordHash,
       role,
       technology,
@@ -207,7 +214,11 @@ export async function POST(request: Request) {
   const orgId = ctx.token.orgId;
   if (!orgId) return NextResponse.json({ error: "Organization required" }, { status: 400 });
 
-  const existing = await User.findOne({ email, organizationId: orgId, isDeleted: false }).lean();
+  const normalizedRole = normalizeRoleInput(role) || "employee";
+  if (normalizedRole === "SUPER_ADMIN") {
+    return NextResponse.json({ error: "SUPER_ADMIN cannot belong to an organization" }, { status: 400 });
+  }
+  const existing = await User.findOne({ email: String(email).toLowerCase(), organizationId: orgId, isDeleted: false }).lean();
   if (existing) {
     return NextResponse.json(
       { error: "User with this email already exists" },
@@ -220,9 +231,9 @@ export async function POST(request: Request) {
   const created = await User.create({
     firstName,
     lastName,
-    email,
+    email: String(email).toLowerCase(),
     passwordHash,
-    role: role || "employee",
+    role: normalizedRole,
     technology,
     joinDate: joinDate ? new Date(joinDate) : undefined,
     organizationId: orgId

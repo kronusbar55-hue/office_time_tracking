@@ -58,9 +58,14 @@ export async function POST(request: Request) {
 
   const token = signAuthToken({
     sub: user._id.toString(),
+    email: user.email,
     name: `${user.firstName} ${user.lastName}`,
     role: user.role as any,
-    orgId: org._id.toString()
+    orgId: org._id.toString(),
+    orgStatus: org.status,
+    userStatus: user.status,
+    plan: org.plan,
+    sessionType: "organization"
   });
 
   // Fetch assigned projects (scoped to organization naturally because users/projects are org-bound)
@@ -86,8 +91,11 @@ export async function POST(request: Request) {
       lastName: user.lastName,
       email: user.email,
       role: user.role,
+      status: user.status,
       organizationId: org._id.toString(),
       organizationName: org.name,
+      organizationStatus: org.status,
+      plan: org.plan,
       assignedProjects: projects.map((p: any) => ({
         id: p._id.toString(),
         name: p.name
