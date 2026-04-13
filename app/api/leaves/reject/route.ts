@@ -2,8 +2,10 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { verifyAuthToken } from "@/lib/auth";
+import { getTenantContext } from "@/lib/tenantContext";
 import { LeaveRequest } from "@/models/LeaveRequest";
 import { AuditLog } from "@/models/AuditLog";
+import { User } from "@/models/User";
 import mongoose from "mongoose";
 
 export async function POST(request: Request) {
@@ -12,9 +14,11 @@ export async function POST(request: Request) {
     const token = cookieStore.get("auth_token")?.value;
     const payload = token ? verifyAuthToken(token) : null;
     if (!payload) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-    // only admins may reject
     if (payload.role !== "admin") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+    const tenantContext = await getTenantContext();
+    const effectiveTenantId = tenantContext.effectiveTenantId;
+    if (!effectiveTenantId) return NextResponse.json({ error: "Tenant not found" }, { status: 403 });
 
     await connectDB();
     const body = await request.json();
@@ -23,6 +27,13 @@ export async function POST(request: Request) {
 
     const req = await LeaveRequest.findById(id);
     if (!req) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+    const owner = await User.findOne({
+      _id: req.user,
+      $or: [{ tenantId: effectiveTenantId }, { _id: effectiveTenantId }]
+    }).lean();
+    if (!owner) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
     if (req.status !== "pending") return NextResponse.json({ error: "Invalid state" }, { status: 400 });
 
     req.status = "rejected";

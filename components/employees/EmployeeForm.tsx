@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Calendar, Loader2, Mail, ShieldCheck, User2, UserSquare2 } from "lucide-react";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 type Technology = {
   id: string;
@@ -53,24 +54,29 @@ function roleLabel(role: TeamUser["role"]) {
 
 export default function EmployeeForm({ initialData, isNew = false }: EmployeeFormProps) {
   const router = useRouter();
-  const [form, setForm] = useState(
-    initialData
-      ? {
-          firstName: initialData.firstName,
-          lastName: initialData.lastName,
-          email: initialData.email,
-          role: initialData.role,
-          technology: initialData.technology?.id || "",
-          joinDate: initialData.joinDate ? initialData.joinDate.slice(0, 10) : "",
-          password: ""
-        }
-      : emptyForm
-  );
+  const { user } = useAuth();
+  const [form, setForm] = useState(emptyForm);
   const [technologies, setTechnologies] = useState<Technology[]>([]);
   const [saving, setSaving] = useState(false);
   const [techsLoading, setTechsLoading] = useState(true);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(initialData?.avatarUrl || null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const canCreateAdmin = user?.role === "super-admin";
+
+  useEffect(() => {
+    if (initialData) {
+      setForm({
+        firstName: initialData.firstName,
+        lastName: initialData.lastName,
+        email: initialData.email,
+        role: initialData.role,
+        technology: initialData.technology?.id || "",
+        joinDate: initialData.joinDate ? initialData.joinDate.slice(0, 10) : "",
+        password: ""
+      });
+      setAvatarPreview(initialData.avatarUrl || null);
+    }
+  }, [initialData]);
 
   useEffect(() => {
     async function loadTechnologies() {
@@ -140,13 +146,12 @@ export default function EmployeeForm({ initialData, isNew = false }: EmployeeFor
       const res = await fetch(url, { method, body: formData });
 
       if (!res.ok) {
-        const body = (await res.json().catch(() => null)) as { error?: string } | null;
-        throw new Error(body?.error || "Failed to save employee.");
+        const body = (await res.json().catch(() => null)) as { message?: string; error?: string } | null;
+        throw new Error(body?.error || body?.message || "Failed to save employee.");
       }
 
       toast.success(isNew ? "Employee created successfully." : "Employee updated successfully.");
       router.push("/employees");
-      router.refresh();
     } catch (e) {
       console.error(e);
       toast.error(e instanceof Error ? e.message : "Failed to save employee.");
@@ -286,7 +291,7 @@ export default function EmployeeForm({ initialData, isNew = false }: EmployeeFor
                   onChange={handleChange}
                   className="h-12 rounded-2xl border border-border-color bg-bg-primary/70 px-4 text-text-primary outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20"
                 >
-                  <option value="admin">Administrator</option>
+                  {canCreateAdmin ? <option value="admin">Administrator</option> : null}
                   <option value="manager">Manager</option>
                   <option value="hr">HR</option>
                   <option value="employee">Employee</option>

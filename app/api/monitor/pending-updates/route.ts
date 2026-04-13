@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { EmployeeMonitor } from "@/models/EmployeeMonitor";
 import { Project } from "@/models/Project";
+import { User } from "@/models/User";
+import { verifyAuthToken } from "@/lib/auth";
+import { cookies } from "next/headers";
+import { getTenantContext } from "@/lib/tenantContext";
 import { successResp, errorResp } from "@/lib/apiResponse";
 
 /**
@@ -11,6 +15,22 @@ import { successResp, errorResp } from "@/lib/apiResponse";
  */
 export async function GET(request: Request) {
     try {
+        const cookieStore = cookies();
+        const token = cookieStore.get("auth_token")?.value;
+        const payload = token ? verifyAuthToken(token) as any : null;
+
+        if (!payload) {
+            return NextResponse.json(errorResp("Unauthorized"), { status: 401 });
+        }
+
+        const tenantContext = await getTenantContext();
+        const effectiveTenantId = tenantContext.effectiveTenantId;
+        if (!effectiveTenantId) {
+            return NextResponse.json(errorResp("Tenant not found"), { status: 403 });
+        }
+
+        await connectDB();
+
         const { searchParams } = new URL(request.url);
         const userId = searchParams.get("userId");
 
@@ -18,12 +38,19 @@ export async function GET(request: Request) {
             return NextResponse.json(errorResp("userId parameter is required"), { status: 400 });
         }
 
-        await connectDB();
+        const user = await User.findOne({
+            _id: userId,
+            $or: [{ tenantId: effectiveTenantId }, { _id: effectiveTenantId }]
+        }).lean();
 
-        // 1. Find all active/non-archived projects where this user is a member
+        if (!user) {
+            return NextResponse.json(errorResp("Unauthorized"), { status: 403 });
+        }
+
         const assignedProjects = await Project.find({
             members: userId,
-            status: { $ne: "archived" }
+            status: { $ne: "archived" },
+            tenantId: effectiveTenantId
         }, "name _id").lean();
 
         const formattedAssignedProjects = assignedProjects.map(p => ({
@@ -31,7 +58,6 @@ export async function GET(request: Request) {
             name: p.name
         }));
 
-        // 2. Find monitor records where status is "stop" and no projects submitted
         const pendingRecords = await EmployeeMonitor.find({
             userId,
             status: "stop",
@@ -43,7 +69,6 @@ export async function GET(request: Request) {
         .sort({ date: -1, time: -1 })
         .lean();
 
-        // 3. Format according to requested response structure
         const pendingUpdates = pendingRecords.map((record: any) => ({
             date: record.date,
             _id: record._id.toString(),

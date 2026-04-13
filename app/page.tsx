@@ -1,4 +1,5 @@
 import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 import { verifyAuthToken } from '@/lib/auth';
 import AdminDashboard from '@/components/dashboard/AdminDashboard';
 import HRDashboard from '@/components/dashboard/HRDashboard';
@@ -28,6 +29,9 @@ export default async function DashboardPage({ searchParams }: Props) {
   const role = payload.role;
   const userId = payload.sub;
 
+  if (role === 'super-admin') {
+    redirect('/auth/super-admin/admins');
+  }
   if (role === 'admin') return <AdminDashboard />;
   if (role === 'hr') return <HRDashboard userId={userId} filters={filters} />;
   if (role === 'manager') return <ManagerDashboard userId={userId} filters={filters} />;

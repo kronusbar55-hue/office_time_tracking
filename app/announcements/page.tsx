@@ -16,8 +16,11 @@ export default function AnnouncementsPage() {
   const [activeCategory, setActiveCategory] = useState("All");
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("latest");
+  const [expiryFilter, setExpiryFilter] = useState("all");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [stats, setStats] = useState({ total: 0, unread: 0, pinned: 0 });
+  const [hasUserInteracted, setHasUserInteracted] = useState(false);
+  const [previousAnnouncementCount, setPreviousAnnouncementCount] = useState(0);
 
   const fetchAnnouncements = useCallback(async () => {
     setLoading(true);
@@ -25,7 +28,8 @@ export default function AnnouncementsPage() {
       const query = new URLSearchParams({
         category: activeCategory,
         search,
-        sort
+        sort,
+        expiryFilter
       }).toString();
 
       const res = await fetch(`/api/announcements?${query}`);
@@ -33,6 +37,12 @@ export default function AnnouncementsPage() {
 
       const data = await res.json();
       setAnnouncements(data);
+
+      // Check if new announcements arrived and play sound
+      if (hasUserInteracted && data.length > previousAnnouncementCount && previousAnnouncementCount > 0) {
+        playNotificationSound();
+      }
+      setPreviousAnnouncementCount(data.length);
 
       // Update stats based on results (simplified for demo)
       setStats({
@@ -46,11 +56,76 @@ export default function AnnouncementsPage() {
     } finally {
       setLoading(false);
     }
-  }, [activeCategory, search, sort]);
+  }, [activeCategory, search, sort, expiryFilter, hasUserInteracted, previousAnnouncementCount]);
+
+  // Track user interaction for sound autoplay
+  useEffect(() => {
+    const handleUserInteraction = () => {
+      setHasUserInteracted(true);
+    };
+
+    // Listen for user interactions
+    document.addEventListener('click', handleUserInteraction);
+    document.addEventListener('keydown', handleUserInteraction);
+    document.addEventListener('touchstart', handleUserInteraction);
+
+    return () => {
+      document.removeEventListener('click', handleUserInteraction);
+      document.removeEventListener('keydown', handleUserInteraction);
+      document.removeEventListener('touchstart', handleUserInteraction);
+    };
+  }, []);
+
+  // Play notification sound
+  const playNotificationSound = () => {
+    try {
+      // Try to play audio file first
+      const audio = new Audio('/notification.mp3');
+      audio.volume = 0.3;
+      audio.play().catch(err => {
+        console.log('Audio file not found, using fallback beep:', err);
+        // Fallback: Create a simple beep sound using Web Audio API
+        playFallbackBeep();
+      });
+    } catch (error) {
+      console.log('Audio creation failed, using fallback:', error);
+      playFallbackBeep();
+    }
+  };
+
+  // Fallback beep sound using Web Audio API
+  const playFallbackBeep = () => {
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      oscillator.frequency.setValueAtTime(800, audioContext.currentTime); // 800Hz beep
+      oscillator.type = 'sine';
+
+      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime); // Low volume
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3); // Fade out
+
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.3); // 300ms beep
+    } catch (error) {
+      console.log('Fallback beep failed:', error);
+    }
+  };
 
   useEffect(() => {
     fetchAnnouncements();
   }, [fetchAnnouncements]);
+
+  // Set initial announcement count after first load
+  useEffect(() => {
+    if (!loading && announcements.length > 0 && previousAnnouncementCount === 0) {
+      setPreviousAnnouncementCount(announcements.length);
+    }
+  }, [loading, announcements.length, previousAnnouncementCount]);
 
   const canCreate = user?.role === "admin" || user?.role === "hr";
 
@@ -95,6 +170,8 @@ export default function AnnouncementsPage() {
           search={search}
           onSearchChange={setSearch}
           onSortChange={setSort}
+          expiryFilter={expiryFilter}
+          onExpiryFilterChange={setExpiryFilter}
         />
 
         {loading ? (

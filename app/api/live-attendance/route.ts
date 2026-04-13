@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import { User } from "@/models/User";
 import { EmployeeMonitor } from "@/models/EmployeeMonitor";
 import { successResp, errorResp } from "@/lib/apiResponse";
+import { getTenantContext } from "@/lib/tenantContext";
 
 export async function GET(request: Request) {
     try {
@@ -16,6 +17,12 @@ export async function GET(request: Request) {
             return NextResponse.json(errorResp("Unauthorized: Admin or HR access only"), { status: 403 });
         }
 
+        const tenantContext = await getTenantContext();
+        const effectiveTenantId = tenantContext.effectiveTenantId;
+        if (!effectiveTenantId) {
+            return NextResponse.json(errorResp("Tenant not found"), { status: 403 });
+        }
+
         await connectDB();
 
         const { searchParams } = new URL(request.url);
@@ -24,20 +31,25 @@ export async function GET(request: Request) {
 
         const today = new Date().toISOString().split("T")[0];
 
-        // Get all active users
-        const users = await User.find({ isDeleted: false, isActive: true })
+        const users = await User.find({
+            isDeleted: false,
+            isActive: true,
+            $or: [
+                { tenantId: effectiveTenantId },
+                { _id: effectiveTenantId }
+            ]
+        })
             .select("firstName lastName email avatarUrl technology role updatedAt")
             .populate("technology", "name")
             .lean();
 
-        const userIds = users.map((u: any) => u._id.toString());
+        const userIds = users.map((user: any) => user._id.toString());
 
-        // Get the latest monitor record for each user for today using aggregation
         const latestMonitorRecords = await EmployeeMonitor.aggregate([
             {
                 $match: {
-                    userId: { $in: userIds },
-                    date: today
+                    date: today,
+                    userId: { $in: userIds }
                 }
             },
             {
@@ -67,7 +79,6 @@ export async function GET(request: Request) {
                 rawStatus = latest.status || "IDLE";
                 lastActivityAt = latest.createdAt;
 
-                // Map monitor status to UI status
                 const upRaw = rawStatus.toUpperCase();
                 if (upRaw === "IN_MEETING") {
                     status = "MEETING";
@@ -76,7 +87,7 @@ export async function GET(request: Request) {
                 } else if (upRaw === "ON_BREAK") {
                     status = "BREAK";
                 } else {
-                    status = "IN"; // Default to IN if we have a record
+                    status = "IN";
                 }
             }
 
@@ -94,7 +105,6 @@ export async function GET(request: Request) {
             };
         });
 
-        // Filtering
         let filteredMembers = members;
         if (search) {
             filteredMembers = filteredMembers.filter(m =>
@@ -106,7 +116,6 @@ export async function GET(request: Request) {
             filteredMembers = filteredMembers.filter(m => m.status === filterStatus);
         }
 
-        // Summary calculation
         const summary = {
             total: members.length,
             in: members.filter(m => m.status === "IN").length,

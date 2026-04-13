@@ -3,17 +3,23 @@ import { cookies } from "next/headers";
 import { connectDB } from "@/lib/db";
 import { Announcement } from "@/models/Announcement";
 import { verifyAuthToken } from "@/lib/auth";
+import { getTenantContext } from "@/lib/tenantContext";
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
     try {
         await connectDB();
+    const { payload, effectiveTenantId, isSuperAdmin } = await getTenantContext();
+    if (!payload) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
         const { searchParams } = new URL(req.url);
         const category = searchParams.get("category");
         const search = searchParams.get("search");
         const sort = searchParams.get("sort") || "latest";
+        const expiryFilter = searchParams.get("expiryFilter") || "all";
 
         const query: any = { isActive: true };
 
@@ -32,14 +38,37 @@ export async function GET(req: NextRequest) {
             });
         }
 
-        // Filter out expired announcements
-        andConditions.push({
-            $or: [
-                { expiresAt: { $exists: false } },
-                { expiresAt: null },
-                { expiresAt: { $gt: new Date() } }
-            ]
-        });
+        // Handle expiry filter
+        const now = new Date();
+        const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+        if (expiryFilter === "active") {
+            // Only show active (non-expired) announcements
+            andConditions.push({
+                $or: [
+                    { expiresAt: { $exists: false } },
+                    { expiresAt: null },
+                    { expiresAt: { $gt: now } }
+                ]
+            });
+        } else if (expiryFilter === "expiring-soon") {
+            // Show announcements expiring within 7 days
+            andConditions.push({
+                expiresAt: { $lte: sevenDaysFromNow, $gt: now }
+            });
+        } else if (expiryFilter === "expired") {
+            // Show only expired announcements
+            andConditions.push({
+                expiresAt: { $lte: now }
+            });
+        } else {
+            // "all" - show all announcements (don't filter by expiry)
+            // No additional conditions needed
+        }
+
+        if (!isSuperAdmin) {
+            query.tenantId = effectiveTenantId;
+        }
 
         if (andConditions.length > 0) {
             query.$and = andConditions;
@@ -69,11 +98,8 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
     try {
-        const cookieStore = cookies();
-        const token = cookieStore.get("auth_token")?.value;
-        if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-        const payload = verifyAuthToken(token);
+        const { payload, effectiveTenantId, isSuperAdmin } = await getTenantContext();
+        if (!payload) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         if (!payload || (payload.role !== "admin" && payload.role !== "hr")) {
             return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
@@ -88,13 +114,16 @@ export async function POST(req: NextRequest) {
         }
 
         if (isPinned) {
-            const pinnedCount = await Announcement.countDocuments({ isPinned: true, isActive: true });
+            const pinnedCountQuery: any = { isPinned: true, isActive: true };
+            if (!isSuperAdmin) pinnedCountQuery.tenantId = effectiveTenantId;
+            const pinnedCount = await Announcement.countDocuments(pinnedCountQuery);
             if (pinnedCount >= 3) {
                 return NextResponse.json({ error: "Maximum 3 pinned announcements allowed" }, { status: 400 });
             }
         }
 
         const announcement = await Announcement.create({
+            tenantId: effectiveTenantId,
             title,
             description,
             category,

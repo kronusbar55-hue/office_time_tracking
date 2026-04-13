@@ -42,9 +42,6 @@ export default function LiveTimerDisplay() {
     }
 
     fetchWeather();
-    // Refresh every 30 minutes
-    const interval = setInterval(fetchWeather, 30 * 60 * 1000);
-    return () => clearInterval(interval);
   }, []);
 
   if (loading) {

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useRef, useState } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 
 interface BreakItem {
   startTime: string;
@@ -57,8 +57,39 @@ export function TimeTrackingProvider({ children, shiftHoursTarget = 8 }: { child
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const sessionRef = useRef<SessionData | null>(null);
+  function updateDurationSnapshot(session: SessionData | null) {
+    if (!session) {
+      setWorkedMs(0);
+      setBreakMs(0);
+      setCurrentBreakMs(0);
+      setOvertimeMs(0);
+      setRemainingMs(0);
+      return;
+    }
+
+    const now = Date.now();
+    const clockInMs = new Date(session.clockIn).getTime();
+    let totalBreakMs = 0;
+    let activeBreakMs = 0;
+
+    session.breaks?.forEach((brk) => {
+      const startMs = new Date(brk.startTime).getTime();
+      const endMs = brk.endTime ? new Date(brk.endTime).getTime() : now;
+      const duration = Math.max(0, endMs - startMs);
+      totalBreakMs += duration;
+      if (!brk.endTime) activeBreakMs = duration;
+    });
+
+    const worked = Math.max(0, now - clockInMs - totalBreakMs);
+    setWorkedMs(worked);
+    setBreakMs(totalBreakMs);
+    setCurrentBreakMs(activeBreakMs);
+
+    const overtime = Math.max(0, worked - shiftHoursTarget * 3600000);
+    setOvertimeMs(overtime);
+    const remaining = Math.max(0, shiftHoursTarget * 3600000 - worked);
+    setRemainingMs(remaining);
+  }
 
   async function refreshActive() {
     try {
@@ -67,6 +98,7 @@ export function TimeTrackingProvider({ children, shiftHoursTarget = 8 }: { child
         setActive(false);
         setSessionData(null);
         setOngoingBreak(false);
+        updateDurationSnapshot(null);
         return;
       }
       const data = await res.json();
@@ -82,64 +114,28 @@ export function TimeTrackingProvider({ children, shiftHoursTarget = 8 }: { child
           clockIn: activeData.clockIn || "",
           breaks
         });
+        updateDurationSnapshot({
+          id: activeData.id || "",
+          clockIn: activeData.clockIn || "",
+          breaks
+        });
         const hasOngoing = breaks.some((b: { startTime: string; endTime: string | null }) => b.endTime === null);
         setOngoingBreak(!!hasOngoing);
       } else {
         setSessionData(null);
         setOngoingBreak(false);
+        updateDurationSnapshot(null);
       }
     } catch (e) {
       setActive(false);
       setSessionData(null);
       setOngoingBreak(false);
+      updateDurationSnapshot(null);
     }
   }
 
-  // keep a ref to sessionData so interval callback reads latest
-  useEffect(() => {
-    sessionRef.current = sessionData;
-  }, [sessionData]);
-
   useEffect(() => {
     void refreshActive();
-
-    intervalRef.current = setInterval(() => {
-      const now = Date.now();
-      const s = sessionRef.current;
-      if (!s) {
-        setWorkedMs(0);
-        setBreakMs(0);
-        setCurrentBreakMs(0);
-        setOvertimeMs(0);
-        setRemainingMs(0);
-        return;
-      }
-
-      const clockInMs = new Date(s.clockIn).getTime();
-      let totalBreakMs = 0;
-      let activeBreakMs = 0;
-      s.breaks?.forEach((brk) => {
-        const startMs = new Date(brk.startTime).getTime();
-        const endMs = brk.endTime ? new Date(brk.endTime).getTime() : now;
-        const duration = Math.max(0, endMs - startMs);
-        totalBreakMs += duration;
-        if (!brk.endTime) activeBreakMs = duration;
-      });
-
-      const worked = Math.max(0, now - clockInMs - totalBreakMs);
-      setWorkedMs(worked);
-      setBreakMs(totalBreakMs);
-      setCurrentBreakMs(activeBreakMs);
-
-      const overtime = Math.max(0, worked - shiftHoursTarget * 3600000);
-      setOvertimeMs(overtime);
-      const remaining = Math.max(0, shiftHoursTarget * 3600000 - worked);
-      setRemainingMs(remaining);
-    }, 1000);
-
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
   }, [shiftHoursTarget]);
 
   async function postAndRefresh(url: string) {

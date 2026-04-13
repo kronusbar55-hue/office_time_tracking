@@ -6,8 +6,7 @@ const fetch = globalThis.fetch;
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: 'admin.technotoil@gmail.com', password: 'Admin@1234' })
     });
-    console.log('status', res.status);
-    console.log(await res.text());
+
   } catch (err) {
     console.error('ERR', err);
   }

@@ -8,6 +8,5 @@ const bcrypt = require("bcryptjs");
   const hash = await bcrypt.hash("Admin@1234", 10);
   await db.collection("users").updateOne({ email: "admin.technotoil@gmail.com" }, { $set: { passwordHash: hash } });
   const u = await db.collection("users").findOne({ email: "admin.technotoil@gmail.com" });
-  console.log("updated", u ? u.passwordHash : "not found");
   await client.close();
 })();

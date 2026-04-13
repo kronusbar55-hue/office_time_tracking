@@ -20,7 +20,7 @@ export async function POST(request: Request) {
   }
 
   // Robust User model retrieval
-  const UserModel = User || (mongoose.models && mongoose.models.User) || mongoose.model("User");
+  const UserModel = User;
   const user = await UserModel.findOne({
     email: email.toLowerCase(),
     isDeleted: false
@@ -36,9 +36,36 @@ export async function POST(request: Request) {
     return NextResponse.json(errorResp("Invalid credentials"), { status: 401 });
   }
 
+  // Generate unique session ID
+  const sessionId = crypto.randomUUID();
+
+  // Update user's session ID using updateOne to ensure it's saved
+  await UserModel.updateOne(
+    { _id: user._id },
+    { $set: { sessionId: sessionId } }
+  );
+
+  // Handle tenant setup for admin users
+  if (user.role === "admin" && !user.tenantId) {
+    user.tenantId = user._id;
+    await UserModel.updateMany(
+      {
+        _id: { $ne: user._id },
+        isDeleted: false,
+        role: { $ne: "admin" },
+        $or: [{ tenantId: null }, { tenantId: { $exists: false } }]
+      },
+      {
+        $set: { tenantId: user._id }
+      }
+    );
+  }
+
   const token = signAuthToken({
     sub: user._id.toString(),
-    role: user.role
+    role: user.role,
+    tenantId: user.tenantId ? user.tenantId.toString() : null,
+    sessionId: sessionId
   });
 
   // Fetch assigned projects

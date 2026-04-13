@@ -4,6 +4,7 @@ export type TechnologyStatus = "active" | "inactive";
 
 export interface ITechnology {
   _id: Types.ObjectId;
+  tenantId?: Types.ObjectId | null;
   name: string;
   status: TechnologyStatus;
   createdAt?: Date;
@@ -12,6 +13,11 @@ export interface ITechnology {
 
 const TechnologySchema = new Schema<ITechnology>(
   {
+    tenantId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      index: true
+    },
     name: {
       type: String,
       required: true,
@@ -30,6 +36,8 @@ const TechnologySchema = new Schema<ITechnology>(
     timestamps: true
   }
 );
+
+TechnologySchema.index({ tenantId: 1, name: 1 });
 
 export const Technology: Model<ITechnology> =
   (models.Technology as Model<ITechnology>) || model<ITechnology>("Technology", TechnologySchema);

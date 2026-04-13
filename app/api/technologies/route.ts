@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { Technology } from "@/models/Technology";
+import { getTenantContext } from "@/lib/tenantContext";
 
 export async function GET(request: Request) {
   await connectDB();
@@ -9,9 +10,17 @@ export async function GET(request: Request) {
     const url = new URL(request.url);
     const includeInactive = url.searchParams.get("includeInactive") === "true";
 
+    const { payload, effectiveTenantId, isSuperAdmin } = await getTenantContext();
+    if (!payload) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const filter: Record<string, unknown> = {};
     if (!includeInactive) {
       filter.status = "active";
+    }
+    if (!isSuperAdmin) {
+      filter.tenantId = effectiveTenantId;
     }
 
     const list = await Technology.find(filter).sort({ name: 1 }).lean();
@@ -33,6 +42,10 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   await connectDB();
+  const { payload, effectiveTenantId } = await getTenantContext();
+  if (!payload) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   const contentType = request.headers.get("content-type") || "";
 
@@ -54,12 +67,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
     }
 
-    const existing = await Technology.findOne({ name: { $regex: `^${name}$`, $options: "i" } }).lean();
+    const existing = await Technology.findOne({
+      tenantId: effectiveTenantId,
+      name: { $regex: `^${name}$`, $options: "i" }
+    }).lean();
     if (existing) {
       return NextResponse.json({ error: "Technology with this name already exists" }, { status: 409 });
     }
 
-    const created = await Technology.create({ name, status: status === "inactive" ? "inactive" : "active" });
+    const created = await Technology.create({
+      tenantId: effectiveTenantId,
+      name,
+      status: status === "inactive" ? "inactive" : "active"
+    });
 
     return NextResponse.json(
       {

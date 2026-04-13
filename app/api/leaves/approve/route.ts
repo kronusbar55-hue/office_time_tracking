@@ -2,11 +2,13 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { verifyAuthToken } from "@/lib/auth";
+import { getTenantContext } from "@/lib/tenantContext";
 import { LeaveRequest } from "@/models/LeaveRequest";
 import { LeaveType } from "@/models/LeaveType";
 import { LeaveBalance } from "@/models/LeaveBalance";
 import { TimeSession } from "@/models/TimeSession";
 import { AuditLog } from "@/models/AuditLog";
+import { User } from "@/models/User";
 import mongoose from "mongoose";
 
 export async function POST(request: Request) {
@@ -15,6 +17,11 @@ export async function POST(request: Request) {
     const token = cookieStore.get("auth_token")?.value;
     const payload = token ? verifyAuthToken(token) : null;
     if (!payload) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (payload.role !== "admin") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+    const tenantContext = await getTenantContext();
+    const effectiveTenantId = tenantContext.effectiveTenantId;
+    if (!effectiveTenantId) return NextResponse.json({ error: "Tenant not found" }, { status: 403 });
 
     await connectDB();
     const body = await request.json();
@@ -23,8 +30,6 @@ export async function POST(request: Request) {
 
     const session = await mongoose.startSession();
     session.startTransaction();
-    // only admins may approve (managers are read-only in this system)
-    if (payload.role !== "admin") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
     try {
       const req = await LeaveRequest.findById(id).session(session);
@@ -32,6 +37,16 @@ export async function POST(request: Request) {
         await session.abortTransaction();
         return NextResponse.json({ error: "Not found" }, { status: 404 });
       }
+
+      const owner = await User.findOne({
+        _id: req.user,
+        $or: [{ tenantId: effectiveTenantId }, { _id: effectiveTenantId }]
+      }).lean();
+      if (!owner) {
+        await session.abortTransaction();
+        return NextResponse.json({ error: "Not found" }, { status: 404 });
+      }
+
       if (req.status !== "pending") {
         await session.abortTransaction();
         return NextResponse.json({ error: "Invalid state" }, { status: 400 });
@@ -43,7 +58,6 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Leave type missing" }, { status: 400 });
       }
 
-      // calculate minutes
       const s = new Date(req.startDate + "T00:00:00");
       const e = new Date(req.endDate + "T00:00:00");
       const totalDays = Math.floor((e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24)) + 1;
@@ -51,7 +65,6 @@ export async function POST(request: Request) {
       if (req.duration === "full-day") totalMinutes = totalDays * 480;
       else totalMinutes = 240;
 
-      // deduct balance if paid leave
       if (lt.annualQuota > 0) {
         const year = new Date(req.startDate).getFullYear();
         const bal = await LeaveBalance.findOne({ user: req.user, year, leaveType: req.leaveType }).session(session);
@@ -73,7 +86,6 @@ export async function POST(request: Request) {
       req.managerComment = managerComment || "";
       await req.save({ session });
 
-      // Attendance integration: create TimeSession placeholders so attendance queries can pick up leave.
       try {
         for (let dt = new Date(req.startDate + "T00:00:00"); dt <= new Date(req.endDate + "T00:00:00"); dt.setDate(dt.getDate() + 1)) {
           const dateStr = dt.toISOString().slice(0, 10);
@@ -96,7 +108,6 @@ export async function POST(request: Request) {
         console.warn("Failed to create TimeSession placeholders for approved leave", e);
       }
 
-      // Audit
       try {
         await AuditLog.create({
           action: "leave_approve",
@@ -111,9 +122,7 @@ export async function POST(request: Request) {
       } catch (e) {
         console.warn("Failed to write audit log for leave approve", e);
       }
-      // Attendance integration: for each approved date we could mark attendance as leave.
-      // For simplicity, create a completed TimeSession placeholder with 0 work minutes to mark day as leave if needed elsewhere.
-      // (Detailed attendance integration should update attendance API to consult LeaveRequest records.)
+
       await session.commitTransaction();
       session.endSession();
       return NextResponse.json({ data: { success: true } });

@@ -3,7 +3,7 @@ import { connectDB } from "@/lib/db";
 import { Task } from "@/models/Task";
 import { cookies } from "next/headers";
 import { verifyAuthToken } from "@/lib/auth";
-import cloudinary from "@/lib/cloudinary";
+import { getTenantCloudinary } from "@/lib/cloudinary";
 import TaskActivityLog from "@/models/TaskActivityLog";
 import { User } from "@/models/User";
 
@@ -104,7 +104,8 @@ export async function POST(request: Request, { params }: { params: Params }) {
         const base64 = buffer.toString("base64");
         const dataUri = `data:${f.type};base64,${base64}`;
 
-        const res = await cloudinary.uploader.upload(dataUri, {
+        const cloudinaryInstance = await getTenantCloudinary(payload.tenantId);
+        const res = await cloudinaryInstance.uploader.upload(dataUri, {
           folder: `tasks/attachments/${params.id}`,
           resource_type: "auto",
           format: "webp",
@@ -217,7 +218,8 @@ export async function DELETE(request: Request, { params }: { params: Params }) {
 
     // Delete from Cloudinary
     try {
-      await cloudinary.uploader.destroy(publicId);
+      const cloudinaryInstance = await getTenantCloudinary(payload.tenantId);
+      await cloudinaryInstance.uploader.destroy(publicId);
     } catch (error) {
       console.error("Cloudinary delete failed:", error);
       // Continue anyway - remove from DB

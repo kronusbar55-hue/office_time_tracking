@@ -44,7 +44,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // Public routes should not trigger session check
-  const PUBLIC_ROUTES = ["/login", "/register", "/forgot-password"];
+  const PUBLIC_ROUTES = ["/login", "/register", "/forgot-password", "/auth/super-admin/login"];
 
   function isPublicRoute(p?: string | null) {
     if (!p) return false;
@@ -145,10 +145,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       void fetch("/api/auth/logout", { method: "POST", credentials: "include", headers: { Accept: "application/json" } });
     } catch {}
 
-    // Clear client storage
+    // Clear client storage and cookies
     try {
       localStorage.removeItem(STORAGE_KEY);
       sessionStorage.clear();
+      document.cookie = `auth_token=; Path=/; Expires=${new Date(0).toUTCString()}; SameSite=Lax`;
+      document.cookie = `auth_token=; Path=/; Expires=${new Date(0).toUTCString()}; SameSite=None; Secure`;
       document.cookie.split(";").forEach(function(c) {
         document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date(0).toUTCString() + ";path=/");
       });
@@ -163,6 +165,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       window.location.href = "/login";
     }
   };
+
+  // Session validation interval
+  useEffect(() => {
+    if (!token || !user || isPublicRoute(pathname)) {
+      return;
+    }
+
+    const validateSession = async () => {
+      try {
+        const res = await fetch("/api/auth/validate-session", {
+          method: "POST",
+          credentials: "include",
+          headers: { Accept: "application/json" }
+        });
+
+        if (!res.ok) {
+          console.warn("Session validation failed, logging out");
+          logout();
+          return;
+        }
+
+        const data = await res.json();
+        if (!data.success || !data.data?.valid) {
+          console.warn("Session invalid, logging out");
+          logout();
+        }
+      } catch (error) {
+        console.error("Session validation error:", error);
+        // Don't logout on network errors, just log
+      }
+    };
+
+    // Validate immediately
+    validateSession();
+
+    // Set up interval to validate every 5 minutes
+    const interval = setInterval(validateSession, 5 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [token, user, pathname, logout]);
 
   const value = useMemo(() => ({
     user,

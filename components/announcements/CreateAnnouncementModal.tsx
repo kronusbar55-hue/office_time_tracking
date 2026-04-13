@@ -19,6 +19,29 @@ export function CreateAnnouncementModal({ isOpen, onClose, onSuccess, announceme
         expiresAt: announcement?.expiresAt ? new Date(announcement.expiresAt).toISOString().split('T')[0] : '',
     });
 
+    // Fallback beep sound using Web Audio API
+    const playFallbackBeep = () => {
+        try {
+            const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.frequency.setValueAtTime(800, audioContext.currentTime); // 800Hz beep
+            oscillator.type = 'sine';
+
+            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime); // Low volume
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3); // Fade out
+
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.3); // 300ms beep
+        } catch (error) {
+            console.log('Fallback beep failed:', error);
+        }
+    };
+
     if (!isOpen) return null;
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -45,6 +68,22 @@ export function CreateAnnouncementModal({ isOpen, onClose, onSuccess, announceme
             toast.success(announcement ? 'Announcement updated' : 'Announcement published');
             onSuccess();
             onClose();
+            
+            // Play notification sound for new announcements
+            if (!announcement) { // Only for new announcements, not updates
+                try {
+                    const audio = new Audio('/notification.mp3');
+                    audio.volume = 0.3;
+                    audio.play().catch(err => {
+                        console.log('Audio file not found, using fallback beep:', err);
+                        // Fallback beep
+                        playFallbackBeep();
+                    });
+                } catch (error) {
+                    console.log('Audio creation failed, using fallback:', error);
+                    playFallbackBeep();
+                }
+            }
         } catch (error: any) {
             toast.error(error.message);
         } finally {

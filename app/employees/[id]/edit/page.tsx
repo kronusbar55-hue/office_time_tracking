@@ -31,8 +31,8 @@ export default function EditEmployeePage() {
       try {
         const res = await fetch(`/api/users/${id}`);
         if (!res.ok) throw new Error("Failed to load employee profile.");
-        const data = (await res.json()) as Employee;
-        setEmployee(data);
+        const json = (await res.json()) as { success: boolean; data: Employee };
+        setEmployee(json.data);
       } catch (e) {
         console.error(e);
         setError("Could not load this employee.");

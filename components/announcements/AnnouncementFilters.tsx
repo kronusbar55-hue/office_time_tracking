@@ -9,6 +9,8 @@ interface FiltersProps {
     search: string;
     onSearchChange: (search: string) => void;
     onSortChange: (sort: string) => void;
+    expiryFilter: string;
+    onExpiryFilterChange: (filter: string) => void;
 }
 
 export function AnnouncementFilters({
@@ -16,7 +18,9 @@ export function AnnouncementFilters({
     onCategoryChange,
     search,
     onSearchChange,
-    onSortChange
+    onSortChange,
+    expiryFilter,
+    onExpiryFilterChange
 }: FiltersProps) {
     return (
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -46,6 +50,17 @@ export function AnnouncementFilters({
                         className="w-full rounded-xl border border-border-color/50 bg-bg-secondary/50 py-2 pl-10 pr-4 text-sm text-text-primary placeholder-slate-500 ring-blue-500/20 transition-all focus:border-blue-500 focus:outline-none focus:ring-4"
                     />
                 </div>
+
+                <select
+                    value={expiryFilter}
+                    onChange={(e) => onExpiryFilterChange(e.target.value)}
+                    className="rounded-xl border border-border-color/50 bg-bg-secondary/50 px-4 py-2 text-sm text-text-secondary focus:outline-none"
+                >
+                    <option value="all">All Announcements</option>
+                    <option value="active">Active Only</option>
+                    <option value="expiring-soon">Expiring Soon (7 days)</option>
+                    <option value="expired">Expired</option>
+                </select>
 
                 <select
                     onChange={(e) => onSortChange(e.target.value)}

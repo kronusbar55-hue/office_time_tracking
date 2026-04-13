@@ -8,6 +8,7 @@ export interface IUser {
     email: string;
     passwordHash: string;
     role: RoleName;
+    tenantId?: Types.ObjectId | null;
     manager?: Types.ObjectId | null;
     technology?: Types.ObjectId | null;
     joinDate?: Date;
@@ -19,6 +20,7 @@ export interface IUser {
     themePreference?: "light" | "dark" | "system";
     department?: string;
     shiftHours?: number;
+    sessionId?: string;
 }
 
 const UserSchema = new Schema<IUser>(
@@ -46,9 +48,15 @@ const UserSchema = new Schema<IUser>(
         },
         role: {
             type: String,
-            enum: ["admin", "manager", "employee", "hr"],
+            enum: ["super-admin", "admin", "manager", "employee", "hr"],
             required: true,
             default: "employee"
+        },
+        tenantId: {
+            type: Schema.Types.ObjectId,
+            ref: "User",
+            default: null,
+            index: true
         },
         manager: {
             type: Schema.Types.ObjectId,
@@ -93,6 +101,10 @@ const UserSchema = new Schema<IUser>(
         shiftHours: {
             type: Number,
             default: 8
+        },
+        sessionId: {
+            type: String,
+            default: null
         }
     },
     {

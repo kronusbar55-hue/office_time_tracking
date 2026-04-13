@@ -1,25 +1,41 @@
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
-import { verifyAuthToken } from "@/lib/auth";
+import { getTenantContext } from "@/lib/tenantContext";
 import { LeaveRequest } from "@/models/LeaveRequest";
 import { User } from "@/models/User";
 import mongoose from "mongoose";
 
 export async function GET() {
   try {
-    const cookieStore = cookies();
-    const token = cookieStore.get("auth_token")?.value;
-    const payload = token ? verifyAuthToken(token) : null;
+    const tenantContext = await getTenantContext();
+    const payload = tenantContext.payload;
+    const effectiveTenantId = tenantContext.effectiveTenantId;
+
     if (!payload) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!effectiveTenantId) return NextResponse.json({ error: "Tenant not found" }, { status: 403 });
 
     await connectDB();
 
-    // fetch leaves pending for manager's team
     const uid = new mongoose.Types.ObjectId(payload.sub);
-    // simple approach: find users where manager == uid
-    const teamMembers = await User.find({ manager: uid }).select("_id").lean();
-    const memberIds = teamMembers.map((m) => m._id);
+    let memberIds: mongoose.Types.ObjectId[] = [];
+
+    if (payload.role === "manager") {
+      const teamMembers = await User.find({ manager: uid, $or: [{ tenantId: effectiveTenantId }, { _id: effectiveTenantId }] })
+        .select("_id")
+        .lean();
+      memberIds = teamMembers.map((m) => m._id as mongoose.Types.ObjectId);
+    } else if (payload.role === "admin") {
+      const tenantUsers = await User.find({ isDeleted: false, $or: [{ tenantId: effectiveTenantId }, { _id: effectiveTenantId }] })
+        .select("_id")
+        .lean();
+      memberIds = tenantUsers.map((m) => m._id as mongoose.Types.ObjectId);
+    } else {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    if (memberIds.length === 0) {
+      return NextResponse.json({ data: [] });
+    }
 
     const pending = await LeaveRequest.find({ user: { $in: memberIds }, status: "pending" }).sort({ appliedAt: -1 }).lean();
 

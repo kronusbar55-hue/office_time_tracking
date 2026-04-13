@@ -14,7 +14,6 @@ async function sendEmail(
 ): Promise<boolean> {
   try {
     // TODO: Integrate with actual email service (nodemailer, SendGrid, etc.)
-    console.log(`[EMAIL] To: ${recipient}, Subject: ${subject}`);
     return true;
   } catch (err) {
     console.error("[sendEmail] error:", err);
@@ -29,7 +28,6 @@ async function sendPushNotification(
 ): Promise<boolean> {
   try {
     // TODO: Integrate with Firebase Cloud Messaging or Apple Push Notification service
-    console.log(`[PUSH] UserId: ${userId}, Title: ${title}`);
     return true;
   } catch (err) {
     console.error("[sendPushNotification] error:", err);
@@ -43,7 +41,6 @@ async function sendSlackMessage(
 ): Promise<boolean> {
   try {
     // TODO: Integrate with Slack webhook
-    console.log(`[SLACK] Channel: ${channel}, Message: ${message}`);
     return true;
   } catch (err) {
     console.error("[sendSlackMessage] error:", err);

@@ -8,7 +8,8 @@ import { verifyAuthToken } from "@/lib/auth";
 import { captureAuditLogs } from "@/lib/taskAudit";
 import { TaskActivityLog } from "@/models/TaskActivityLog";
 import mongoose from "mongoose";
-import cloudinary from "@/lib/cloudinary";
+import { getTenantCloudinary } from "@/lib/cloudinary";
+import { TenantSettings } from "@/models/TenantSettings";
 
 async function getUserFromRequest() {
   const cookieStore = cookies();
@@ -58,15 +59,31 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       }
 
       // Process new files
+      const user = await getUserFromRequest();
+      if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
       const files = formData.getAll("attachments");
       for (const f of files) {
         if (f && typeof f === "object" && "size" in f && (f as any).size > 0) {
           const file = f as any;
+          // Validate file size (5MB)
+          const MAX_SIZE = 5 * 1024 * 1024;
+          if (file.size > MAX_SIZE) {
+            return NextResponse.json({ error: `File ${file.name} exceeds 5MB limit` }, { status: 400 });
+          }
+
+          // Validate file type
+          const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+          if (!allowedTypes.includes(file.type)) {
+            return NextResponse.json({ error: `File ${file.name} has unsupported type: ${file.type}. Only JPEG, PNG, and WebP are allowed.` }, { status: 400 });
+          }
+
           const buffer = Buffer.from(await file.arrayBuffer());
           try {
             const base64 = buffer.toString("base64");
             const dataUri = `data:${file.type};base64,${base64}`;
-            const res = await cloudinary.uploader.upload(dataUri, {
+            const cloudinaryInstance = await getTenantCloudinary(user.tenantId);
+            const res = await cloudinaryInstance.uploader.upload(dataUri, {
               folder: `tasks/attachments`,
               resource_type: "auto",
               format: "webp",
@@ -79,11 +96,12 @@ export async function PUT(request: Request, { params }: { params: { id: string }
               fileName: file.name || "attachment",
               fileSize: file.size,
               mimeType: file.type || "image/jpeg",
-              uploadedBy: (await getUserFromRequest())?.sub,
+              uploadedBy: user.sub,
               uploadedAt: new Date()
             });
-          } catch (e) {
+          } catch (e: any) {
             console.error("Cloudinary upload failed", e);
+            throw e; // Propagate the configuration error
           }
         }
       }
@@ -123,6 +141,14 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     } else if (isEmployee) {
       // Employees can only update status and assignee
       allowed = ["status", "assignee"];
+    }
+
+    // Ensure Cloudinary is configured for the tenant before allowing task operations
+    const settings = await TenantSettings.findOne({ tenantId: user.tenantId || user.sub });
+    if (!settings || !settings.cloudinary?.cloudName) {
+      return NextResponse.json({ 
+        error: "Action blocked: Cloudinary is not configured. Please set up your organization's storage credentials in settings." 
+      }, { status: 400 });
     }
 
     const update: any = {};
@@ -216,9 +242,9 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     }
 
     return NextResponse.json({ data: updated });
-  } catch (e) {
+  } catch (e: any) {
     console.error(e);
-    return NextResponse.json({ error: "Failed to update" }, { status: 500 });
+    return NextResponse.json({ error: e.message || "Failed to update" }, { status: 500 });
   }
 }
 

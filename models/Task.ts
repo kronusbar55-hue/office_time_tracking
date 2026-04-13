@@ -22,6 +22,7 @@ export interface IAttachment {
 
 export interface ITask {
   _id: Types.ObjectId;
+  tenantId: Types.ObjectId;
   key: string;
   title: string;
   summary?: string; // alias for title
@@ -58,6 +59,12 @@ const TaskSchema = new Schema<ITask>(
       required: true,
       unique: true,
       trim: true
+    },
+    tenantId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true
     },
     title: {
       type: String,
@@ -187,7 +194,11 @@ const TaskSchema = new Schema<ITask>(
 );
 
 TaskSchema.index({ project: 1, key: 1 });
+TaskSchema.index({ tenantId: 1, isDeleted: 1, createdAt: -1 });
 TaskSchema.index({ project: 1, assignee: 1, status: 1, createdAt: -1 });
+TaskSchema.index({ assignee: 1, isDeleted: 1, createdAt: -1 });
+TaskSchema.index({ project: 1, isDeleted: 1, status: 1, createdAt: -1 });
+TaskSchema.index({ reporter: 1, isDeleted: 1, createdAt: -1 });
 
 export const Task: Model<ITask> =
   (models.Task as Model<ITask>) || model<ITask>("Task", TaskSchema);

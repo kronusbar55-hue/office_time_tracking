@@ -9,7 +9,7 @@ import { LeaveBalance } from "@/models/LeaveBalance";
 import { User } from "@/models/User";
 import { AuditLog } from "@/models/AuditLog";
 import { successResp, errorResp } from "@/lib/apiResponse";
-import cloudinary from "@/lib/cloudinary";
+import { getTenantCloudinary } from "@/lib/cloudinary";
 import mongoose from "mongoose";
 
 function isWeekend(dateStr: string) {
@@ -54,28 +54,21 @@ export async function POST(request: Request) {
       for (const f of files) {
         if (f && f instanceof File && f.size > 0) {
           const buffer = Buffer.from(await f.arrayBuffer());
-          // upload to Cloudinary
-          try {
-            const base64 = buffer.toString('base64');
-            const dataUri = `data:${f.type};base64,${base64}`;
-            const res = await cloudinary.uploader.upload(dataUri, {
-              folder: 'leaves/attachments',
-              resource_type: 'auto'
-            });
-            attachments.push({ url: res.secure_url, filename: f.name, mimeType: f.type, publicId: res.public_id, size: res.bytes });
-          } catch (e) {
-            console.warn('Cloudinary upload failed, falling back to local save', e);
-            // fallback to local storage (best-effort)
-            const ext = f.name.split('.').pop() || 'dat';
-            const fileName = `${crypto.randomUUID()}.${ext}`;
-            const { writeFile, mkdir } = await import('fs/promises');
-            const path = (await import('path')).default;
-            const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'leave');
-            await mkdir(uploadDir, { recursive: true });
-            const filePath = path.join(uploadDir, fileName);
-            await writeFile(filePath, buffer);
-            attachments.push({ url: `/uploads/leave/${fileName}`, filename: f.name, mimeType: f.type });
-          }
+          // upload to Cloudinary (Strict policy: no local fallback)
+          const base64 = buffer.toString('base64');
+          const dataUri = `data:${f.type};base64,${base64}`;
+          const cloudinaryInstance = await getTenantCloudinary(payload.tenantId);
+          const res = await cloudinaryInstance.uploader.upload(dataUri, {
+            folder: 'leaves/attachments',
+            resource_type: 'auto'
+          });
+          attachments.push({
+            url: res.secure_url,
+            filename: f.name,
+            mimeType: f.type,
+            publicId: res.public_id,
+            size: res.bytes
+          });
         }
       }
     } else {
@@ -83,7 +76,6 @@ export async function POST(request: Request) {
     }
 
     const userId = new mongoose.Types.ObjectId(payload.sub);
-    console.log("[leaves/apply] userId:", userId);
     const { leaveType: leaveTypeInput, startDate, endDate, duration, reason, ccUsers = [] } = fields;
 
     if (!leaveTypeInput || !startDate || !endDate || !reason) {
@@ -91,7 +83,6 @@ export async function POST(request: Request) {
       return NextResponse.json(errorResp("Missing required fields"), { status: 400 });
     }
 
-    console.log("[leaves/apply] payload", { leaveTypeInput, startDate, endDate, duration, reason, attachmentsCount: attachments.length });
 
     // basic validation: no weekends
     const s = new Date(startDate + "T00:00:00");
@@ -120,7 +111,7 @@ export async function POST(request: Request) {
     if (!lt) {
       // try find by exact name (case-insensitive) or code
       const escaped = String(leaveTypeInput).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      lt = await LeaveType.findOne({ $or: [ { name: new RegExp('^' + escaped + '$', 'i') }, { code: String(leaveTypeInput).toUpperCase() } ] }).lean();
+      lt = await LeaveType.findOne({ $or: [{ name: new RegExp('^' + escaped + '$', 'i') }, { code: String(leaveTypeInput).toUpperCase() }] }).lean();
     }
 
     if (!lt) {

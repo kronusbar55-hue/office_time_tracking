@@ -141,12 +141,10 @@ export async function aggregateSessionIntoDailyRecord(session: any) {
 export function initScheduler() {
     if (isSchedulerRunning) return;
 
-    console.log("Initializing Scheduler...");
 
     // Job 1: Auto-Absent Mark at 12:00 PM
     // Runs every day at 12:00 PM
     cron.schedule("0 12 * * *", async () => {
-        console.log("[Scheduler] Running Auto-Absent Job");
         try {
             await connectDB();
             const today = new Date().toISOString().split("T")[0];
@@ -178,9 +176,7 @@ export function initScheduler() {
                         breakMinutes: 0,
                         notes: "Auto-marked as Absent by System"
                     });
-                    console.log(
-                        `[Scheduler] Marked user ${emp.email} as Absent`
-                    );
+
                 }
             }
         } catch (e) {
@@ -190,7 +186,6 @@ export function initScheduler() {
 
     // Job 2: Auto-Close Stuck Sessions at 11:59 PM
     cron.schedule("59 23 * * *", async () => {
-        console.log("[Scheduler] Running Auto-Close Sessions Job");
         try {
             await connectDB();
             const today = new Date().toISOString().split("T")[0];
@@ -225,9 +220,7 @@ export function initScheduler() {
                 // After closing the session, aggregate it into the daily CheckInOut record
                 await aggregateSessionIntoDailyRecord(session);
 
-                console.log(
-                    `[Scheduler] Auto-closed session for user ${session.user}`
-                );
+
             }
         } catch (e) {
             console.error("[Scheduler] Auto-Close Job Failed:", e);
@@ -235,5 +228,4 @@ export function initScheduler() {
     });
 
     isSchedulerRunning = true;
-    console.log("Scheduler initialized.");
 }

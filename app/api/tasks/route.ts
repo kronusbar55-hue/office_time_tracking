@@ -4,13 +4,15 @@ import { connectDB } from "@/lib/db";
 import { Task } from "@/models/Task";
 import { Project } from "@/models/Project";
 import { User } from "@/models/User";
+import { getTenantContext } from "@/lib/tenantContext";
 import { TaskCounter } from "@/models/TaskCounter";
 import TaskActivityLog from "@/models/TaskActivityLog";
 import { verifyAuthToken } from "@/lib/auth";
 import { captureAuditLogs } from "@/lib/taskAudit";
-import cloudinary from "@/lib/cloudinary";
+import { getTenantCloudinary } from "@/lib/cloudinary";
 import { Comment } from "@/models/Comment";
 import SubTask from "@/models/SubTask";
+import { TenantSettings } from "@/models/TenantSettings";
 
 export async function GET(request: Request) {
   try {
@@ -33,12 +35,17 @@ export async function GET(request: Request) {
     const payload = token ? verifyAuthToken(token) : null;
     if (!payload) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+    const { effectiveTenantId, isSuperAdmin } = await getTenantContext();
     const userId = payload.sub;
 
     // Fetch latest user info from DB to avoid staleness issues with JWT roles
     const currentUser = await User.findById(userId).select("role").lean() as any;
     if (!currentUser) return NextResponse.json({ error: "User not found" }, { status: 401 });
     const userRole = String(currentUser.role || "").toLowerCase();
+
+    if (!isSuperAdmin) {
+      query.tenantId = effectiveTenantId;
+    }
 
     // Role-based visibility
     if (userRole === "admin" || userRole === "hr") {
@@ -50,9 +57,12 @@ export async function GET(request: Request) {
       const projectIds = myProjects.map(p => p._id);
       query.project = { $in: projectIds };
       if (assignee) query.assignee = assignee;
-    } else {
+    } else if (userRole === "employee") {
       // employee: only tasks assigned to them
       query.assignee = userId;
+    } else {
+      // Forbidden other roles
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     if (project) query.project = project;
@@ -66,36 +76,39 @@ export async function GET(request: Request) {
       ];
     }
 
-    const total = await Task.countDocuments(query);
+    // Fetch tasks and total count in parallel
+    const [total, tasks] = await Promise.all([
+      Task.countDocuments(query),
+      Task.find(query)
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .populate({ path: "project", select: "name" })
+        .populate({ path: "assignee", select: "firstName lastName email" })
+        .populate({ path: "reporter", select: "firstName lastName email" })
+        .lean()
+    ]);
 
-    const tasks = await Task.find(query)
-      .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .populate({ path: "project", select: "name" })
-      .populate({ path: "assignee", select: "firstName lastName email" })
-      .populate({ path: "reporter", select: "firstName lastName email" })
-      .lean();
-
-    // Augment with comment counts
     const taskIds = tasks.map(t => t._id);
-    const commentCounts = await Comment.aggregate([
-      { $match: { taskId: { $in: taskIds } } },
-      { $group: { _id: "$taskId", count: { $sum: 1 } } }
-    ]);
-    const countsMap = new Map(commentCounts.map(c => [c._id.toString(), c.count]));
 
-    // Augment with subtask stats
-    const subtaskStats = await SubTask.aggregate([
-      { $match: { parentTask: { $in: taskIds }, isDeleted: false } },
-      {
-        $group: {
-          _id: "$parentTask",
-          total: { $sum: 1 },
-          done: { $sum: { $cond: [{ $eq: ["$status", "done"] }, 1, 0] } }
+    // Parallelize aggregations for comments and subtasks
+    const [commentCounts, subtaskStats] = await Promise.all([
+      Comment.aggregate([
+        { $match: { taskId: { $in: taskIds } } },
+        { $group: { _id: "$taskId", count: { $sum: 1 } } }
+      ]),
+      SubTask.aggregate([
+        { $match: { parentTask: { $in: taskIds }, isDeleted: false } },
+        {
+          $group: {
+            _id: "$parentTask",
+            total: { $sum: 1 },
+            done: { $sum: { $cond: [{ $eq: ["$status", "done"] }, 1, 0] } }
+          }
         }
-      }
+      ])
     ]);
+    const countsMap = new Map(commentCounts.map((c) => [c._id.toString(), c.count]));
     const subtaskStatsMap = new Map(subtaskStats.map(s => [s._id.toString(), { total: s.total, done: s.done }]));
 
     const augmentedTasks = tasks.map(t => {
@@ -137,7 +150,13 @@ export async function POST(request: Request) {
     const token = cookieStore.get("auth_token")?.value;
     const payload = token ? verifyAuthToken(token) : null;
     if (!payload) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    if (!(payload.role === "admin" || payload.role === "manager" || payload.role === "hr")) {
+    const { effectiveTenantId, isSuperAdmin } = await getTenantContext();
+    const currentUser = await User.findById(payload.sub).select("_id role tenantId").lean() as any;
+    if (!currentUser) return NextResponse.json({ error: "User not found" }, { status: 401 });
+    const currentRole = String(currentUser.role || "").toLowerCase();
+    const effectiveTenant = effectiveTenantId;
+
+    if (!(currentRole === "admin" || currentRole === "manager" || currentRole === "hr")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -163,22 +182,21 @@ export async function POST(request: Request) {
           // Validate file size (5MB)
           const MAX_SIZE = 5 * 1024 * 1024;
           if (file.size > MAX_SIZE) {
-            console.warn(`File exceeds 5MB limit`);
-            continue;
+            return NextResponse.json({ error: `File ${file.name} exceeds 5MB limit` }, { status: 400 });
           }
 
           // Validate file type
           const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
           if (!allowedTypes.includes(file.type)) {
-            console.warn(`File has unsupported type: ${file.type}`);
-            continue;
+            return NextResponse.json({ error: `File ${file.name} has unsupported type: ${file.type}. Only JPEG, PNG, and WebP are allowed.` }, { status: 400 });
           }
 
           const buffer = Buffer.from(await file.arrayBuffer());
           try {
             const base64 = buffer.toString("base64");
             const dataUri = `data:${file.type};base64,${base64}`;
-            const res = await cloudinary.uploader.upload(dataUri, {
+            const cloudinaryInstance = await getTenantCloudinary(effectiveTenantId);
+            const res = await cloudinaryInstance.uploader.upload(dataUri, {
               folder: `tasks/attachments`,
               resource_type: "auto",
               format: "webp",
@@ -196,7 +214,7 @@ export async function POST(request: Request) {
             });
           } catch (e) {
             console.error(`Cloudinary upload failed:`, e);
-            continue;
+            throw e; // Fail fast and report the exact configuration error
           }
         }
       }
@@ -217,32 +235,57 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    const proj = await Project.findById(project).lean();
+    // Ensure Cloudinary is configured for the tenant before allowing task operations
+    const settings = await TenantSettings.findOne({ tenantId: effectiveTenantId });
+    if (!settings?.cloudinary?.cloudName) {
+      return NextResponse.json({ error: "Cloudinary settings not found. Please configure your Cloudinary credentials in the settings page before managing tasks." }, { status: 400 });
+    }
+
+    const proj = await Project.findOne({ _id: project, ...(isSuperAdmin ? {} : { tenantId: effectiveTenant }) }).lean();
     if (!proj) return NextResponse.json({ error: "Project not found" }, { status: 404 });
 
     const rep = await User.findById(reporter).lean();
     if (!rep) return NextResponse.json({ error: "Reporter not found" }, { status: 404 });
 
-    // Get next sequence for project
+    // Build a prefix from project key (unique)
+    const prefix = proj.key || (proj.name || "PRJ")
+      .split(/\s+/)
+      .map((w) => w[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 4);
+
+    // Get next sequence for project (initial attempt)
     const counter = await TaskCounter.findOneAndUpdate(
       { project },
       { $inc: { seq: 1 } },
       { new: true, upsert: true }
     );
 
-    const seq = (counter && (counter as any).seq) || 1;
+    let seq = (counter && (counter as any).seq) || 1;
+    let key = `${prefix}-${seq}`;
 
-    // Build a prefix from project name (safe fallback to last 4 of id)
-    const prefix = (proj.name || "PRJ")
-      .split(/\s+/)
-      .map((w) => w[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 4) || String(project).slice(-4).toUpperCase();
-
-    const key = `${prefix}-${seq}`;
+    // Robust collision check: ensure the generated key doesn't exist.
+    // If it does (e.g. from manual entry/import), find the next available one.
+    let isDuplicate = true;
+    while (isDuplicate) {
+      const existingTask = await Task.findOne({ key, isDeleted: false, tenantId: effectiveTenant }).select("_id").lean();
+      if (!existingTask) {
+        isDuplicate = false;
+      } else {
+        // Increment and update counter if needed to stay in sync
+        const newCounter = await TaskCounter.findOneAndUpdate(
+          { project },
+          { $inc: { seq: 1 } },
+          { new: true, upsert: true }
+        );
+        seq = (newCounter as any).seq;
+        key = `${prefix}-${seq}`;
+      }
+    }
 
     const created = await Task.create({
+      tenantId: effectiveTenantId,
       key,
       title,
       description: description || "",
@@ -285,8 +328,8 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ data: populated }, { status: 201 });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Tasks POST error:", error);
-    return NextResponse.json({ error: "Failed to create task" }, { status: 500 });
+    return NextResponse.json({ error: error.message || "Failed to create task" }, { status: 500 });
   }
 }

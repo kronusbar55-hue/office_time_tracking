@@ -1,6 +1,7 @@
 "use client";
 
 import { ReactNode, useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
 import AuthGuard from "@/components/auth/AuthGuard";
@@ -9,16 +10,23 @@ interface DashboardShellProps {
   children: ReactNode;
 }
 
+const PUBLIC_ROUTES = ["/login", "/register", "/forgot-password", "/auth/super-admin/login"];
+function isPublicRoute(pathname?: string | null) {
+  if (!pathname) return false;
+  return PUBLIC_ROUTES.some((route) => pathname === route || pathname.startsWith(route + "/"));
+}
+
 export function DashboardShell({ children }: DashboardShellProps) {
+  const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  if (!mounted) {
-    // Return the minimum shell to match the server-side render structure
-    // This helps avoid hydration mismatches by keeping the tree depth consistent
+  const showShell = mounted && !isPublicRoute(pathname);
+
+  if (!showShell) {
     return (
       <div className="flex min-h-screen bg-bg-primary dark:bg-bg-primary transition-colors duration-200">
         <div className="flex flex-1 flex-col overflow-hidden">

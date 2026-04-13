@@ -7,6 +7,7 @@ import { EmployeeMonitor } from "@/models/EmployeeMonitor";
 import { successResp, errorResp } from "@/lib/apiResponse";
 import { startOfDay, endOfDay, eachDayOfInterval, format, parseISO } from "date-fns";
 import { timeToMinutes } from "@/lib/monitorUtils";
+import { getTenantContext } from "@/lib/tenantContext";
 
 export async function GET(request: Request) {
     try {
@@ -16,6 +17,12 @@ export async function GET(request: Request) {
 
         if (!payload || (payload.role !== "admin" && payload.role !== "hr")) {
             return NextResponse.json(errorResp("Unauthorized: Admin or HR access only"), { status: 403 });
+        }
+
+        const tenantContext = await getTenantContext();
+        const effectiveTenantId = tenantContext.effectiveTenantId;
+        if (!effectiveTenantId) {
+            return NextResponse.json(errorResp("Tenant not found"), { status: 403 });
         }
 
         await connectDB();
@@ -36,12 +43,17 @@ export async function GET(request: Request) {
         const days = eachDayOfInterval({ start, end });
         const dateStrings = days.map(d => format(d, "yyyy-MM-dd"));
 
-        // User filter
-        const userFilter: any = { isDeleted: false, isActive: true };
+        const userFilter: any = {
+            isDeleted: false,
+            isActive: true,
+            $or: [{ tenantId: effectiveTenantId }, { _id: effectiveTenantId }]
+        };
         if (department && department !== "all") userFilter.department = department;
         if (userId) userFilter._id = userId;
         if (search) {
             userFilter.$or = [
+                { tenantId: effectiveTenantId },
+                { _id: effectiveTenantId },
                 { firstName: { $regex: search, $options: "i" } },
                 { lastName: { $regex: search, $options: "i" } },
                 { email: { $regex: search, $options: "i" } }
@@ -54,7 +66,17 @@ export async function GET(request: Request) {
 
         const userIds = users.map((u: any) => u._id.toString());
 
-        // Aggregate all monitor data for the range at once
+        if (userId && !userIds.includes(userId)) {
+            return NextResponse.json(successResp("Reports retrieved", {
+                period: { start: startDateStr, end: endDateStr },
+                summary: {
+                    memberCount: 0,
+                    totalOrganizationHours: 0
+                },
+                members: []
+            }));
+        }
+
         const monitorData = await EmployeeMonitor.aggregate([
             {
                 $match: {
@@ -89,7 +111,6 @@ export async function GET(request: Request) {
 
                 const breakMs = timeToMinutes(dayData?.maxBreak || "00:00:00") * 60000;
                 
-                // Calculate session based on first and last screenshot/record times
                 let sessionMs = 0;
                 if (dayData?.firstIn && dayData?.lastOut) {
                     sessionMs = new Date(dayData.lastOut).getTime() - new Date(dayData.firstIn).getTime();
@@ -99,9 +120,6 @@ export async function GET(request: Request) {
 
                 const trackedMs = ((dayData?.workSeconds || 0) + (dayData?.idleSeconds || 0)) * 1000;
                 let workMs = Math.max(0, sessionMs - breakMs);
-                
-                // Fallback: If tracked activity exists but session-break logic yields less 
-                // (e.g. breakMs is larger than sessionMs due to reporting issues), use trackedMs.
                 if (trackedMs > workMs || sessionMs === 0) {
                     workMs = trackedMs;
                 }

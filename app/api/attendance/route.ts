@@ -54,24 +54,20 @@ export async function GET(request: Request) {
     const dateStr = dateParam;
     const now = new Date();
 
-    let userQuery = User.find({ isDeleted: false, isActive: true }).populate({
-      path: "technology",
-      select: "name"
-    });
+    const [users, sessions] = await Promise.all([
+      User.find({ 
+        isDeleted: false, 
+        isActive: true,
+        ...(technology && technology !== "all" ? { technology } : {})
+      })
+        .populate({ path: "technology", select: "name" })
+        .lean(),
+      TimeSession.find({ date: dateStr }).lean()
+    ]);
 
-    if (technology && technology !== "all") {
-      userQuery = userQuery.where("technology").equals(technology);
-    }
-
-    const users = await userQuery.lean();
-    const userIds = users.map((u: { _id: unknown }) => u._id);
-
-    const sessions = await TimeSession.find({
-      user: { $in: userIds },
-      date: dateStr
-    }).lean();
-
-    const sessionIds = sessions.map((s: { _id: unknown }) => s._id);
+    const userIdsSet = new Set(users.map((u: any) => u._id.toString()));
+    const relevantSessions = sessions.filter((s: any) => userIdsSet.has(s.user.toString()));
+    const sessionIds = relevantSessions.map((s: any) => s._id);
     const breaks =
       sessionIds.length > 0
         ? await TimeSessionBreak.find({ timeSession: { $in: sessionIds } }).lean()

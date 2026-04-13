@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { verifyAuthToken } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { User } from "@/models/User";
+import { SUPER_ADMIN_EMAIL, SUPER_ADMIN_ROLE } from "@/lib/superAdmin";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,18 @@ export async function GET() {
   const payload = verifyAuthToken(token);
   if (!payload) {
     return NextResponse.json({ user: null }, { status: 401 });
+  }
+
+  if (payload.role === SUPER_ADMIN_ROLE) {
+    return NextResponse.json({
+      user: {
+        id: payload.sub,
+        firstName: "Super",
+        lastName: "Admin",
+        email: SUPER_ADMIN_EMAIL,
+        role: SUPER_ADMIN_ROLE
+      }
+    });
   }
 
   await connectDB();

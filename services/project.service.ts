@@ -1,10 +1,18 @@
 import { Project } from "@/models/Project";
 import { ProjectCounter } from "@/models/ProjectCounter";
+import { User } from "@/models/User";
 import { Types } from "mongoose";
 //
 export class ProjectService {
     static async createProject(data: { name: string; key: string; description?: string; ownerId: string }) {
+        const owner = await User.findById(data.ownerId).select("_id role tenantId").lean() as any;
+        const effectiveTenantId =
+            owner && String(owner.role).toLowerCase() === "admin"
+                ? owner._id
+                : owner?.tenantId || new Types.ObjectId(data.ownerId);
+
         const project = await Project.create({
+            tenantId: effectiveTenantId,
             name: data.name,
             key: data.key.toUpperCase(),
             description: data.description,

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { connectDB } from "@/lib/db";
 import { Announcement } from "@/models/Announcement";
-import { verifyAuthToken } from "@/lib/auth";
+import { getTenantContext } from "@/lib/tenantContext";
 
 export const dynamic = 'force-dynamic';
 
@@ -12,9 +12,17 @@ export async function GET(
 ) {
     try {
         await connectDB();
-        const announcement = await Announcement.findById(params.id)
-            .populate("createdBy", "firstName lastName avatarUrl")
-            .lean();
+    const { payload, effectiveTenantId, isSuperAdmin } = await getTenantContext();
+    if (!payload) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const findQuery: any = { _id: params.id };
+    if (!isSuperAdmin) findQuery.tenantId = effectiveTenantId;
+
+    const announcement = await Announcement.findOne(findQuery)
+      .populate("createdBy", "firstName lastName avatarUrl")
+      .lean();
 
         if (!announcement || !announcement.isActive) {
             return NextResponse.json({ error: "Announcement not found" }, { status: 404 });
@@ -31,26 +39,28 @@ export async function PUT(
     { params }: { params: { id: string } }
 ) {
     try {
-        const cookieStore = cookies();
-        const token = cookieStore.get("auth_token")?.value;
-        if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-        const payload = verifyAuthToken(token);
-        if (!payload || (payload.role !== "admin" && payload.role !== "hr")) {
+        await connectDB();
+        const { payload, effectiveTenantId, isSuperAdmin } = await getTenantContext();
+        if (!payload) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        if (payload.role !== "admin" && payload.role !== "hr") {
             return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 
-        await connectDB();
         const body = await req.json();
         const { title, description, category, isPinned, expiresAt } = body;
 
-        const announcement = await Announcement.findById(params.id);
+        const announcement = await Announcement.findOne({
+            _id: params.id,
+            ...(isSuperAdmin ? {} : { tenantId: effectiveTenantId })
+        });
         if (!announcement || !announcement.isActive) {
             return NextResponse.json({ error: "Announcement not found" }, { status: 404 });
         }
 
         if (isPinned && !announcement.isPinned) {
-            const pinnedCount = await Announcement.countDocuments({ isPinned: true, isActive: true });
+            const pinnedCountQuery: any = { isPinned: true, isActive: true };
+            if (!isSuperAdmin) pinnedCountQuery.tenantId = effectiveTenantId;
+            const pinnedCount = await Announcement.countDocuments(pinnedCountQuery);
             if (pinnedCount >= 3) {
                 return NextResponse.json({ error: "Maximum 3 pinned announcements allowed" }, { status: 400 });
             }
@@ -75,17 +85,17 @@ export async function DELETE(
     { params }: { params: { id: string } }
 ) {
     try {
-        const cookieStore = cookies();
-        const token = cookieStore.get("auth_token")?.value;
-        if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-        const payload = verifyAuthToken(token);
-        if (!payload || payload.role !== "admin") {
+        await connectDB();
+        const { payload, effectiveTenantId, isSuperAdmin } = await getTenantContext();
+        if (!payload) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        if (payload.role !== "admin") {
             return NextResponse.json({ error: "Only Admin can delete announcements" }, { status: 403 });
         }
 
-        await connectDB();
-        const announcement = await Announcement.findById(params.id);
+        const announcement = await Announcement.findOne({
+            _id: params.id,
+            ...(isSuperAdmin ? {} : { tenantId: effectiveTenantId })
+        });
         if (!announcement) {
             return NextResponse.json({ error: "Announcement not found" }, { status: 404 });
         }

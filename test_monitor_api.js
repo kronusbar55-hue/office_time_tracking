@@ -25,8 +25,6 @@ async function testUpload() {
         });
 
         const data = await response.json();
-        console.log('Response Status:', response.status);
-        console.log('Response Data:', JSON.stringify(data, null, 2));
     } catch (error) {
         console.error('Error:', error.message);
     }

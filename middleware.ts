@@ -6,19 +6,21 @@ import type { NextRequest } from 'next/server';
 // perform full authorization server-side.
 
 const ROLE_PATHS: Array<{ prefix: string; allowed: string[] }> = [
-  { prefix: '/dashboard/admin', allowed: ['admin'] },
-  { prefix: '/dashboard/manager', allowed: ['manager'] },
-  { prefix: '/admin', allowed: ['admin'] },
-  { prefix: '/live-attendance', allowed: ['admin', 'hr'] },
-  { prefix: '/employees', allowed: ['admin', 'hr'] },
-  { prefix: '/monitor', allowed: ['admin', 'manager', 'employee', 'hr'] },
-  { prefix: '/technologies', allowed: ['admin', 'hr'] },
-  { prefix: '/project-updates', allowed: ['admin', 'manager'] },
-  { prefix: '/reports', allowed: ['admin', 'hr'] },
-  { prefix: '/projects', allowed: ['admin', 'manager', 'employee'] },
-  { prefix: '/tasks', allowed: ['admin', 'manager', 'employee'] },
-  { prefix: '/leaves', allowed: ['admin', 'hr', 'manager', 'employee'] },
-  { prefix: '/check-in-out', allowed: ['manager'] }
+  { prefix: '/dashboard/super-admin', allowed: ['super-admin'] },
+  { prefix: '/auth/super-admin/admins', allowed: ['super-admin'] },
+  { prefix: '/dashboard/admin', allowed: ['admin', 'super-admin'] },
+  { prefix: '/dashboard/manager', allowed: ['manager', 'admin', 'super-admin'] },
+  { prefix: '/admin', allowed: ['admin', 'super-admin'] },
+  { prefix: '/live-attendance', allowed: ['admin', 'hr', 'super-admin'] },
+  { prefix: '/employees', allowed: ['admin', 'hr', 'super-admin'] },
+  { prefix: '/monitor', allowed: ['admin', 'manager', 'employee', 'hr', 'super-admin'] },
+  { prefix: '/technologies', allowed: ['admin', 'hr', 'super-admin'] },
+  { prefix: '/project-updates', allowed: ['admin', 'manager', 'super-admin'] },
+  { prefix: '/reports', allowed: ['admin', 'hr', 'super-admin'] },
+  { prefix: '/projects', allowed: ['admin', 'manager', 'employee', 'super-admin'] },
+  { prefix: '/tasks', allowed: ['admin', 'manager', 'employee', 'super-admin'] },
+  { prefix: '/leaves', allowed: ['admin', 'hr', 'manager', 'employee', 'super-admin'] },
+  { prefix: '/check-in-out', allowed: ['manager', 'admin', 'super-admin'] }
 ];
 
 function parseJwtPayload(token?: string) {
@@ -56,7 +58,7 @@ export function middleware(req: NextRequest) {
 export const config = {
   matcher: [
     '/admin/:path*',
-    '/dashboard/admin/:path*',
+    '/dashboard/:path*',
     '/live-attendance/:path*',
     '/monitor/:path*',
     '/technologies/:path*',
@@ -66,6 +68,7 @@ export const config = {
     '/projects/:path*',
     '/tasks/:path*',
     '/leaves/:path*',
-    '/check-in-out/:path*'
+    '/check-in-out/:path*',
+    '/auth/super-admin/admins/:path*'
   ]
 };

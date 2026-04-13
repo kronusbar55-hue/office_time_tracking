@@ -4,6 +4,7 @@ export type ProjectStatus = "active" | "on_hold" | "completed" | "archived";
 
 export interface IProject {
   _id: Types.ObjectId;
+  tenantId: Types.ObjectId;
   name: string;
   key: string;
   clientName?: string;
@@ -23,6 +24,12 @@ const ProjectSchema = new Schema<IProject>(
       type: String,
       required: true,
       trim: true
+    },
+    tenantId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true
     },
     key: {
       type: String,
@@ -75,6 +82,10 @@ const ProjectSchema = new Schema<IProject>(
 );
 
 ProjectSchema.index({ name: 1 });
+ProjectSchema.index({ tenantId: 1, status: 1, createdAt: -1 });
+ProjectSchema.index({ members: 1 });
+ProjectSchema.index({ createdBy: 1 });
+ProjectSchema.index({ status: 1 });
 
 
 export const Project: Model<IProject> =

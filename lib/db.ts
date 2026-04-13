@@ -29,6 +29,7 @@ import "@/models/SubTaskTemplate";
 import "@/models/IssueHierarchy";
 import "@/models/Announcement";
 import "@/models/EmployeeMonitor";
+import "@/models/TenantSettings";
 
 
 const MONGODB_URI = process.env.MONGODB_URI;

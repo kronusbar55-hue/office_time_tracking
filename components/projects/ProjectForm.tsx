@@ -14,6 +14,7 @@ type MemberOption = {
 type Project = {
   id: string;
   name: string;
+  key?: string;
   clientName?: string;
   description?: string;
   status: "active" | "on_hold" | "completed" | "archived";
@@ -44,32 +45,39 @@ const emptyProjectForm = {
 
 export default function ProjectForm({ initialData, isNew = false }: ProjectFormProps) {
   const router = useRouter();
-  const [form, setForm] = useState(initialData ? {
-    name: initialData.name,
-    key: (initialData as any).key || "",
-    clientName: initialData.clientName || "",
-    description: initialData.description || "",
-    status: initialData.status
-  } : emptyProjectForm);
-
-  const [selectedMembers, setSelectedMembers] = useState<string[]>(
-    initialData?.members.map(m => m.id) || []
-  );
+  const [form, setForm] = useState(emptyProjectForm);
+  const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const [users, setUsers] = useState<MemberOption[]>([]);
   const [saving, setSaving] = useState(false);
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [memberSearch, setMemberSearch] = useState("");
-  const [logoPreview, setLogoPreview] = useState<string | null>(initialData?.logoUrl || null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (initialData) {
+      setForm({
+        name: initialData.name,
+        key: initialData.key || "",
+        clientName: initialData.clientName || "",
+        description: initialData.description || "",
+        status: initialData.status
+      });
+      setSelectedMembers(initialData.members.map(m => m.id));
+      setLogoPreview(initialData.logoUrl || null);
+    }
+  }, [initialData]);
 
   useEffect(() => {
     async function loadUsers() {
       try {
         const res = await fetch("/api/users");
         if (!res.ok) return;
-        const data = (await res.json()) as UserListItem[];
+        const json = await res.json();
+        // Handle both Array and Wrapped formats if any
+        const userList = Array.isArray(json) ? json : (json.users || json.data || []);
         setUsers(
-          data.map((u) => ({
+          userList.map((u: UserListItem) => ({
             id: u.id,
             name: `${u.firstName} ${u.lastName}`,
             avatarUrl: u.avatarUrl
@@ -110,14 +118,13 @@ export default function ProjectForm({ initialData, isNew = false }: ProjectFormP
       const res = await fetch(url, { method, body: formData });
       if (!res.ok) {
         const body = (await res.json().catch(() => null)) as
-          | { error?: string }
+          | { message?: string; error?: string }
           | null;
-        throw new Error(body?.error || "Failed to save project");
+        throw new Error(body?.error || body?.message || "Failed to save project");
       }
 
       toast.success(isNew ? "Project created successfully!" : "Project updated successfully!");
       router.push("/projects");
-      router.refresh();
     } catch (e) {
       console.error(e);
       toast.error(e instanceof Error ? e.message : "Failed to save project.");
@@ -158,7 +165,6 @@ export default function ProjectForm({ initialData, isNew = false }: ProjectFormP
       </div>
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column - Main Details */}
         <div className="lg:col-span-2 space-y-6">
           <div className="rounded-3xl bg-card/40 border border-border-color p-8 shadow-xl backdrop-blur-sm">
             <h3 className="text-sm font-black text-text-primary uppercase tracking-widest mb-6 flex items-center gap-2">
@@ -186,7 +192,7 @@ export default function ProjectForm({ initialData, isNew = false }: ProjectFormP
                     className="w-full bg-bg-primary/50 border border-border-color rounded-2xl px-5 py-3.5 text-sm text-text-primary placeholder:text-text-secondary/50 focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all outline-none uppercase font-mono"
                     placeholder="PHX"
                   />
-                  <p className="text-[9px] text-text-secondary/60 italic ml-1 italic">Short prefix for ticket IDs</p>
+                  <p className="text-[9px] text-text-secondary/60 italic ml-1 italic font-bold">Short prefix for ticket IDs</p>
                 </div>
               </div>
 
@@ -272,7 +278,6 @@ export default function ProjectForm({ initialData, isNew = false }: ProjectFormP
           </div>
         </div>
 
-        {/* Right Column - Status & Media */}
         <div className="space-y-6">
           <div className="rounded-3xl bg-card/40 border border-border-color p-8 shadow-xl backdrop-blur-sm">
             <h3 className="text-sm font-black text-text-primary uppercase tracking-widest mb-6">Execution Phase</h3>
@@ -299,82 +304,26 @@ export default function ProjectForm({ initialData, isNew = false }: ProjectFormP
               <div className="flex flex-col items-center gap-4">
                 <div className="h-32 w-32 rounded-3xl border-2 border-dashed border-border-color hover:border-accent/40 transition-all bg-bg-primary/20 flex items-center justify-center overflow-hidden group relative">
                   {logoPreview ? (
-                    <img src={logoPreview} alt="Logo" className="h-full w-full object-cover transition-transform group-hover:scale-110" />
+                    <img src={logoPreview} alt="Logo" className="h-full w-full object-cover transition-transform group-hover:scale-110 pointer-events-none" />
                   ) : (
-                    <Layout size={40} className="text-text-secondary/20" />
+                    <Layout size={40} className="text-text-secondary/20 pointer-events-none" />
+                  )}
+                  {!logoPreview && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-accent/10 backdrop-blur-sm pointer-events-none">
+                      <p className="text-[10px] font-black text-accent uppercase">Upload Logo</p>
+                    </div>
                   )}
                   <input
                     type="file"
                     accept="image/*"
                     onChange={handleLogoChange}
-                    className="absolute inset-0 opacity-0 cursor-pointer"
+                    className="absolute inset-0 opacity-0 cursor-pointer z-10"
                   />
-                  {!logoPreview && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-accent/10 backdrop-blur-sm">
-                      <p className="text-[10px] font-black text-accent uppercase">Upload Logo</p>
-                    </div>
-                  )}
                 </div>
                 <p className="text-[9px] text-text-secondary text-center uppercase tracking-tighter font-bold">Recommended: Square SVG or PNG (512x512)</p>
               </div>
             </div>
           </div>
-
-          <div className="rounded-3xl bg-bg-primary/20 border border-border-color p-8 text-center space-y-4">
-            <h3 className="text-xs font-black text-text-primary uppercase tracking-widest">Active Members</h3>
-            <div className="flex flex-wrap justify-center gap-2">
-              {selectedMembers.map(id => {
-                const user = users.find(u => u.id === id);
-                if (!user) return null;
-                return (
-                  <div key={id} className="h-10 w-10 rounded-xl overflow-hidden border-2 border-border-color/50 ring-2 ring-transparent hover:ring-accent transition-all" title={user.name}>
-                    {user.avatarUrl ? (
-                      <img src={user.avatarUrl} alt={user.name} className="h-full w-full object-cover" />
-                    ) : (
-                      <div className="h-full w-full flex items-center justify-center bg-bg-secondary text-[10px] font-black text-text-secondary">
-                        {user.name.split(" ").map(w => w[0]).join("")}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-              {selectedMembers.length === 0 && (
-                <p className="text-[10px] text-text-secondary/50 font-bold uppercase italic">No operatives assigned</p>
-              )}
-            </div>
-            {selectedMembers.length > 0 && (
-              <p className="text-[10px] font-black text-accent uppercase tracking-widest">{selectedMembers.length} Team Members</p>
-            )}
-          </div>
-
-          {/* {!isNew && (
-            <div className="rounded-3xl bg-rose-500/5 border border-rose-500/20 p-8 space-y-4">
-              <h3 className="text-xs font-black text-rose-500 uppercase tracking-widest">Danger Zone</h3>
-              <p className="text-[10px] text-text-secondary leading-relaxed">Archiving this project will hide it from the active projects list and may affect ongoing tasks.</p>
-              <button
-                type="button"
-                onClick={async () => {
-                  if (!window.confirm("Are you sure you want to archive this project?")) return;
-                  setSaving(true);
-                  try {
-                    const res = await fetch(`/api/projects/${initialData?.id}`, { method: "DELETE" });
-                    if (!res.ok) throw new Error("Failed to archive project");
-                    toast.success("Project archived successfully!");
-                    router.push("/projects");
-                  } catch (e) {
-                    console.error(e);
-                    toast.error("Could not archive project.");
-                  } finally {
-                    setSaving(false);
-                  }
-                }}
-                disabled={saving}
-                className="w-full bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white font-black uppercase tracking-widest text-[10px] py-3 rounded-xl border border-rose-500/20 transition-all disabled:opacity-50"
-              >
-                Archive Project
-              </button>
-            </div>
-          )} */}
 
           <div className="pt-4 flex flex-col gap-3">
              <button

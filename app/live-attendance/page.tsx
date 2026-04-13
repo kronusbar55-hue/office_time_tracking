@@ -72,8 +72,6 @@ export default function LiveAttendancePage() {
 
     useEffect(() => {
         fetchData();
-        const interval = setInterval(fetchData, 30000); // 30s poll
-        return () => clearInterval(interval);
     }, []);
 
     const filteredMembers = useMemo(() => {

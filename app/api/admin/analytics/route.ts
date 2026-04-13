@@ -10,7 +10,7 @@ export async function GET(request: Request) {
   if (!auth.ok) return auth.response;
 
   try {
-    const filters = parseAnalyticsFilters(request);
+    const filters = parseAnalyticsFilters(request, auth.payload);
     const snapshot = await AnalyticsService.getAnalyticsSnapshot(filters);
 
     return NextResponse.json({

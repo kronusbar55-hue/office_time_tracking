@@ -4,6 +4,7 @@ import { Types } from "mongoose";
 import { verifyAuthToken } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { Task, type TaskStatus } from "@/models/Task";
+import { User } from "@/models/User";
 import { IssueComment, TimeLog } from "@/models/IssueCollaboration";
 import { AuditLog } from "@/models/AuditLog";
 import { requirePermission } from "@/lib/jiraPermissions";
@@ -18,6 +19,10 @@ export async function POST(request: Request) {
     }
 
     await connectDB();
+    const currentUser = await User.findById(payload.sub).select("_id role tenantId").lean() as any;
+    if (!currentUser) {
+      return NextResponse.json(errorResp("User not found"), { status: 401 });
+    }
 
     const body = (await request.json().catch(() => ({}))) as {
       projectId: string;
@@ -42,8 +47,15 @@ export async function POST(request: Request) {
     // Generate key (PROJECT-1, PROJECT-2, etc.)
     const taskCount = await Task.countDocuments({ project: body.projectId });
     const key = `TSK-${taskCount + 1}`;
+    const effectiveTenantId =
+      String(currentUser.role).toLowerCase() === "admin"
+        ? String(currentUser._id)
+        : currentUser.tenantId
+          ? String(currentUser.tenantId)
+          : payload.tenantId || payload.sub;
 
     const task = await Task.create({
+      tenantId: effectiveTenantId,
       title: body.title,
       description: body.description,
       key,

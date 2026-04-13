@@ -2,10 +2,12 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { verifyAuthToken } from "@/lib/auth";
+import { getTenantContext } from "@/lib/tenantContext";
 import { LeaveRequest } from "@/models/LeaveRequest";
 import { LeaveType } from "@/models/LeaveType";
 import { LeaveBalance } from "@/models/LeaveBalance";
 import { AuditLog } from "@/models/AuditLog";
+import { User } from "@/models/User";
 import mongoose from "mongoose";
 
 export async function POST(request: Request) {
@@ -15,6 +17,10 @@ export async function POST(request: Request) {
     const payload = token ? verifyAuthToken(token) : null;
     if (!payload) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+    const tenantContext = await getTenantContext();
+    const effectiveTenantId = tenantContext.effectiveTenantId;
+    if (!effectiveTenantId) return NextResponse.json({ error: "Tenant not found" }, { status: 403 });
+
     await connectDB();
     const body = await request.json();
     const { id } = body;
@@ -23,12 +29,16 @@ export async function POST(request: Request) {
     const req = await LeaveRequest.findById(id);
     if (!req) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-    // allow employee to cancel their pending requests, or admin to cancel any
+    const owner = await User.findOne({
+      _id: req.user,
+      $or: [{ tenantId: effectiveTenantId }, { _id: effectiveTenantId }]
+    }).lean();
+    if (!owner) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
     const isOwner = String(req.user) === payload.sub;
     const isAdmin = payload.role === "admin";
     if (!isOwner && !isAdmin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-    // cancel pending directly
     if (req.status === "pending") {
       req.status = "cancelled";
       await req.save();
@@ -49,11 +59,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ data: { success: true } });
     }
 
-    // if approved, only admin can cancel and must restore balance
     if (req.status === "approved") {
       if (!isAdmin) return NextResponse.json({ error: "Cancellation requires admin approval" }, { status: 409 });
 
-      // revert balance for paid leaves
       const lt = await LeaveType.findById(req.leaveType).lean();
       if (lt && lt.annualQuota > 0) {
         const s = new Date(req.startDate + "T00:00:00");

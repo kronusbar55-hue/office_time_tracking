@@ -92,8 +92,11 @@ function TasksPageContent() {
   async function loadFilterData() {
     setLoadingFilters(true);
     try {
+      // For admin users, load all projects; for others, load only their projects
+      const projectsUrl = user?.role === "admin" ? "/api/projects" : "/api/projects?forCurrentUser=true";
+      
       const [projRes, tasksRes] = await Promise.all([
-        fetch("/api/projects?forCurrentUser=true"),
+        fetch(projectsUrl),
         fetch("/api/tasks?limit=1000")
       ]);
 

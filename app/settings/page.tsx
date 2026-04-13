@@ -1,16 +1,22 @@
+import CloudinarySettings from "@/components/settings/CloudinarySettings";
+
 export default function SettingsPage() {
   return (
-    <div className="space-y-4">
-      <h1 className="text-sm font-semibold text-text-primary">Settings</h1>
-      <p className="text-xs text-text-secondary">
-        Configure shifts, attendance rules, auto clock-out, weekends, and
-        holidays.
-      </p>
-      <div className="mt-4 h-40 rounded-xl border border-dashed border-border-color/80 bg-bg-secondary/40 text-center text-xs text-text-secondary">
-        <div className="flex h-full items-center justify-center">
-          Settings forms will appear here.
+    <div className="flex min-h-[calc(100vh-6rem)] flex-col gap-6 pb-6">
+      <section>
+        <div className="flex flex-col gap-2 mb-6">
+          <h1 className="text-2xl font-semibold text-text-primary md:text-3xl">Settings</h1>
+          <p className="text-sm text-text-secondary max-w-2xl">
+            Manage your organization&apos;s configurations, including storage, shifts, and system policies. 
+            All changes are applied to all members within your organization.
+          </p>
         </div>
-      </div>
+
+        <div className="grid gap-6 lg:grid-cols-2">
+            <CloudinarySettings />
+            {/* Future settings sections can go here */}
+        </div>
+      </section>
     </div>
   );
 }

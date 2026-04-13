@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { verifyAuthToken } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { Project } from "@/models/Project";
+import { getTenantContext } from "@/lib/tenantContext";
 
 export async function GET() {
   const cookieStore = cookies();
@@ -13,11 +14,18 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const tenantContext = await getTenantContext();
+  const effectiveTenantId = tenantContext.effectiveTenantId;
+  if (!effectiveTenantId) {
+    return NextResponse.json({ error: "Tenant not found" }, { status: 403 });
+  }
+
   await connectDB();
 
   const projects = await Project.find({
     status: { $ne: "archived" },
-    members: payload.sub
+    members: payload.sub,
+    tenantId: effectiveTenantId
   })
     .sort({ createdAt: -1 })
     .select({ _id: 1, name: 1 })

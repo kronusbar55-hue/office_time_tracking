@@ -79,13 +79,15 @@ export default function TaskForm({ initial, onSaved, onCancel, showHeader = true
     loadMeta();
   }, []);
 
-  const filteredUsers = projectId && projects.length > 0
-    ? (projects.find((p: any) => p.id === projectId)?.members || []).map((m: any) => ({
-        id: m.id,
-        firstName: m.firstName,
-        lastName: m.lastName
-      }))
-    : users;
+  const filteredUsers = user?.role === "admin" 
+    ? users 
+    : (projectId && projects.length > 0
+        ? (projects.find((p: any) => p.id === projectId)?.members || []).map((m: any) => ({
+            id: m.id,
+            firstName: m.firstName,
+            lastName: m.lastName
+          }))
+        : users);
 
   const validateAndAddFiles = (files: FileList | null) => {
     if (!files) return;
@@ -157,7 +159,7 @@ export default function TaskForm({ initial, onSaved, onCancel, showHeader = true
       });
       
       if (!isEdit) {
-        form.append("reporter", window.localStorage.getItem("userId") || "");
+        form.append("reporter", user?.id || "");
       }
 
       attachments.forEach(f => form.append("attachments", f));
@@ -353,7 +355,7 @@ export default function TaskForm({ initial, onSaved, onCancel, showHeader = true
             disabled={submitting}
             className="flex items-center gap-2 rounded-md bg-accent px-6 py-2.5 text-sm font-bold text-slate-900 hover:brightness-105 disabled:opacity-50"
           >
-            {submitting ? "Saving..." : <><Check size={18} /> Save Changes</>}
+            {submitting ? "Saving..." : <><Check size={18} /> {isEdit ? "Save Changes" : "Create Task"}</>}
           </button>
         )}
         <button

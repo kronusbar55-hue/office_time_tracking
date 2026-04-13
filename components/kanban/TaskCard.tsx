@@ -21,21 +21,25 @@ interface TaskCardProps {
 }
 
 const getPriorityIcon = (priority: string) => {
-    switch (priority) {
+    const p = String(priority || "").toUpperCase();
+    switch (p) {
+        case "CRITICAL":
         case "HIGHEST": return <AlertCircle className="h-3 w-3 text-rose-500" />;
         case "HIGH": return <ArrowUpCircle className="h-3 w-3 text-orange-500" />;
         case "MEDIUM": return <PlayCircle className="h-3 w-3 text-blue-500" />;
+        case "LOW":
         default: return <Clock className="h-3 w-3 text-text-secondary" />;
     }
 };
 
 const getTypeColor = (type: string) => {
-    // Theme-aware type badge colors with proper contrast in both light and dark modes
-    switch (type) {
+    const t = String(type || "").toUpperCase();
+    switch (t) {
         case "BUG": 
             return "bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30 dark:border-rose-500/40";
         case "STORY": 
             return "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 dark:border-emerald-500/40";
+        case "IMPROVEMENT":
         case "EPIC": 
             return "bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/30 dark:border-purple-500/40";
         case "TASK":

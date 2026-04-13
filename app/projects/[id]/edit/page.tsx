@@ -17,8 +17,8 @@ export default function EditProjectPage() {
       try {
         const res = await fetch(`/api/projects/${id}`);
         if (!res.ok) throw new Error("Failed to load project");
-        const data = await res.json();
-        setProject(data);
+        const json = await res.json();
+        setProject(json.data);
       } catch (e) {
         console.error(e);
         setError("Could not load project data.");

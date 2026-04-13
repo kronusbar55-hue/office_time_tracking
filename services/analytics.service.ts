@@ -659,6 +659,10 @@ async function resolveEmployees(filters: AnalyticsFilters) {
     query._id = filters.employeeId;
   }
 
+  if (filters.organizationId) {
+    query.tenantId = filters.organizationId;
+  }
+
   if (filters.department && filters.department !== "all") {
     query.department = filters.department;
   }

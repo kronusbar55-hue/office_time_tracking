@@ -24,13 +24,13 @@ export async function requireAdmin() {
   };
 }
 
-export function parseAnalyticsFilters(request: Request): AnalyticsFilters {
+export function parseAnalyticsFilters(request: Request, payload?: any): AnalyticsFilters {
   const { searchParams } = new URL(request.url);
   const today = new Date();
   const priorWeek = new Date(today);
   priorWeek.setDate(today.getDate() - 6);
 
-  return {
+  const filters: AnalyticsFilters = {
     startDate: searchParams.get("startDate") || priorWeek.toISOString().split("T")[0],
     endDate: searchParams.get("endDate") || today.toISOString().split("T")[0],
     employeeId: searchParams.get("employeeId") || undefined,
@@ -40,4 +40,11 @@ export function parseAnalyticsFilters(request: Request): AnalyticsFilters {
     page: Number(searchParams.get("page") || "1"),
     limit: Number(searchParams.get("limit") || "10")
   };
+
+  // Enforce tenant isolation
+  if (payload?.tenantId) {
+    filters.organizationId = payload.tenantId;
+  }
+
+  return filters;
 }

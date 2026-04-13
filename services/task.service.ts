@@ -31,6 +31,7 @@ export class TaskService {
 
         const task = await Task.create({
             ...data,
+            tenantId: (project as any).tenantId || new Types.ObjectId(data.reporterId),
             key: taskKey,
             reporter: new Types.ObjectId(data.reporterId),
             assignee: data.assigneeId ? new Types.ObjectId(data.assigneeId) : undefined,

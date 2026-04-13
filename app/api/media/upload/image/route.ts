@@ -1,12 +1,19 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
-import cloudinary from "@/lib/cloudinary";
+import { successResp, errorResp } from "@/lib/apiResponse";
+import { getTenantCloudinary } from "@/lib/cloudinary";
+import { getServerUser } from "@/lib/getServerUser";
 
 export async function POST(request: Request) {
   try {
     await connectDB();
     const contentType = request.headers.get('content-type') || '';
     if (!contentType.includes('multipart/form-data')) return NextResponse.json({ error: 'Expected multipart/form-data' }, { status: 400 });
+
+    const user = await getServerUser();
+    // Resolve tenantId: if the user's tenantId is missing, fallback to their own sub (id) which is the source of truth for an Admin.
+    const effectiveTenantId = user?.tenantId || user?.sub;
+    const cloudinary = await getTenantCloudinary(effectiveTenantId);
 
     const fd = await request.formData();
     const files = fd.getAll('file');
@@ -22,9 +29,9 @@ export async function POST(request: Request) {
       }
     }
 
-    return NextResponse.json({ data: uploaded });
+    return NextResponse.json(successResp("Media uploaded", uploaded));
   } catch (error) {
-    console.error('Media upload error', error);
-    return NextResponse.json({ error: 'Failed to upload media' }, { status: 500 });
+    console.error('Media upload error:', error);
+    return NextResponse.json(errorResp(error instanceof Error ? error.message : "Failed to upload media"), { status: 500 });
   }
 }

@@ -15,7 +15,6 @@ async function testUploadWithNewFields() {
     };
 
     try {
-        console.log('Sending POST request with new fields to:', url);
         const response = await fetch(url, {
             method: 'POST',
             headers: {
@@ -25,13 +24,9 @@ async function testUploadWithNewFields() {
         });
 
         const data = await response.json();
-        console.log('Response Status:', response.status);
-        console.log('Response Data:', JSON.stringify(data, null, 2));
-
+   
         if (response.status === 201 && data.success) {
-            console.log('Verification SUCCESS: New fields saved correctly.');
         } else {
-            console.log('Verification FAILED: Check response.');
         }
     } catch (error) {
         console.error('Error during verification:', error.message);

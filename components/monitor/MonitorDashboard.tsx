@@ -142,11 +142,6 @@ export default function MonitorDashboard() {
         fetchMonitorData();
     }, [selectedDate, selectedUserId, page]); // Refetch when filters or page change
 
-    useEffect(() => {
-        const interval = setInterval(fetchMonitorData, 30000); // Refresh every 30s
-        return () => clearInterval(interval);
-    }, [selectedDate, selectedUserId, page]);
-
     const selectedUserData = allUsers.find(u => (u._id || u.id) === selectedUserId);
 
     const getSummaryBorder = (avgDuration: number) => {

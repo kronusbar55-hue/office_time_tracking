@@ -1,8 +1,10 @@
 import jwt from "jsonwebtoken";
 
-type JwtPayload = {
+export type JwtPayload = {
   sub: string;
-  role: "admin" | "manager" | "employee" | "hr";
+  role: "super-admin" | "admin" | "manager" | "employee" | "hr";
+  tenantId?: string | null;
+  sessionId?: string;
 };
 
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-me";
@@ -20,4 +22,3 @@ export function verifyAuthToken(token: string): JwtPayload | null {
     return null;
   }
 }
-

@@ -9,19 +9,12 @@ interface LiveTimerProps {
     isActive?: boolean;
 }
 
-export default function LiveTimer({ initialSeconds = 0, isActive = false }: LiveTimerProps) {
+export default function LiveTimer({ initialSeconds = 0 }: LiveTimerProps) {
     const [seconds, setSeconds] = useState(initialSeconds);
 
     useEffect(() => {
-        let interval: any;
-        if (isActive) {
-            const startTime = Date.now() - seconds * 1000;
-            interval = setInterval(() => {
-                setSeconds(Math.floor((Date.now() - startTime) / 1000));
-            }, 1000);
-        }
-        return () => clearInterval(interval);
-    }, [isActive, seconds]);
+        setSeconds(initialSeconds);
+    }, [initialSeconds]);
 
     const formatTime = (totalSeconds: number) => {
         const h = Math.floor(totalSeconds / 3600);

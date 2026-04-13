@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
-import { ArrowRight, PencilLine, Plus, Search, Trash2, Users } from "lucide-react";
+import { ArrowRight, Key, PencilLine, Plus, Search, Trash2, Users } from "lucide-react";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 type TeamUser = {
   id: string;
@@ -136,6 +137,40 @@ export default function EmployeesPage() {
   }
 
   const activeUsers = useMemo(() => users.filter((user) => user.isActive).length, [users]);
+  const { user: currentUser } = useAuth();
+  const canResetPassword = currentUser?.role === "admin";
+
+  async function handleResetPassword(user: TeamUser) {
+    const password = window.prompt(`Enter new password for ${user.firstName} ${user.lastName}`);
+    if (!password) return;
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters.");
+      return;
+    }
+
+    if (!window.confirm(`Reset password for ${user.firstName} ${user.lastName}?`)) {
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/users/update-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email: user.email, password })
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => null) as { error?: string } | null;
+        throw new Error(body?.error || "Failed to reset password");
+      }
+
+      toast.success("Password reset successfully.");
+    } catch (e) {
+      console.error(e);
+      toast.error(e instanceof Error ? e.message : "Could not reset password.");
+    }
+  }
 
   return (
     <div className="flex min-h-[calc(100vh-6rem)] flex-col gap-6 pb-4">
@@ -292,7 +327,17 @@ export default function EmployeesPage() {
                             >
                               <PencilLine className="h-4 w-4" />
                             </Link>
+                            {canResetPassword && (
                             <button
+                              type="button"
+                              onClick={() => void handleResetPassword(user)}
+                              className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-border-color text-text-secondary transition hover:border-accent hover:text-accent"
+                              title="Reset Password"
+                            >
+                              <Key className="h-4 w-4" />
+                            </button>
+                          )}
+                          <button
                               type="button"
                               onClick={() => void handleDelete(user)}
                               className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-rose-500/30 text-rose-300 transition hover:border-rose-400 hover:text-rose-200"

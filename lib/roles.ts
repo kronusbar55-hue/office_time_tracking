@@ -1,4 +1,5 @@
 export const ROLES = {
+  SUPER_ADMIN: "super-admin",
   ADMIN: "admin",
   HR: "hr",
   MANAGER: "manager",
@@ -8,7 +9,13 @@ export const ROLES = {
 export type RoleKey = keyof typeof ROLES;
 export type RoleValue = typeof ROLES[RoleKey];
 
-export const NAV_CONFIG = [
+export const NAV_CONFIG: Array<{
+  label: string;
+  href: string;
+  icon: string;
+  allowed: RoleValue[];
+}> = [
+  { label: "Admin Accounts", href: "/auth/super-admin/admins", icon: "users", allowed: [ROLES.SUPER_ADMIN] },
   { label: "Dashboard", href: "/", icon: "dashboard", allowed: [ROLES.HR, ROLES.MANAGER, ROLES.EMPLOYEE] },
   { label: "Monitor", href: "/monitor", icon: "monitor", allowed: [ROLES.ADMIN, ROLES.MANAGER, ROLES.EMPLOYEE, ROLES.HR] },
   { label: "Live Attendance", href: "/live-attendance", icon: "time", allowed: [ROLES.ADMIN, ROLES.HR] },

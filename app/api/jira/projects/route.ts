@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { verifyAuthToken } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { Project } from "@/models/Project";
+import { User } from "@/models/User";
 import { ProjectMemberRole, ProjectRole } from "@/models/ProjectAutomation";
 import { IssueType, Status, Workflow } from "@/models/IssueWorkflow";
 import { requirePermission } from "@/lib/jiraPermissions";
@@ -17,6 +18,10 @@ export async function POST(request: Request) {
     }
 
     await connectDB();
+    const currentUser = await User.findById(payload.sub).select("_id role tenantId").lean() as any;
+    if (!currentUser) {
+      return NextResponse.json(errorResp("User not found"), { status: 401 });
+    }
 
     const body = (await request.json().catch(() => ({}))) as {
       name: string;
@@ -45,7 +50,14 @@ export async function POST(request: Request) {
     }
 
     // Create project
+    const effectiveTenantId =
+      String(currentUser.role).toLowerCase() === "admin"
+        ? String(currentUser._id)
+        : currentUser.tenantId
+          ? String(currentUser.tenantId)
+          : payload.tenantId || payload.sub;
     const project = await Project.create({
+      tenantId: effectiveTenantId,
       name: body.name,
       key: body.key.toUpperCase(),
       description: body.description,

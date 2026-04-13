@@ -2,6 +2,7 @@ import mongoose, { Schema, model, models, type Model, type Types } from "mongoos
 
 export interface IAnnouncement {
     _id: Types.ObjectId;
+    tenantId?: Types.ObjectId | null;
     title: string;
     description: string;
     category: 'General' | 'HR' | 'Policy' | 'Event' | 'Urgent';
@@ -30,6 +31,11 @@ const AnnouncementSchema = new Schema<IAnnouncement>(
             default: 'General',
             index: true
         },
+        tenantId: {
+            type: Schema.Types.ObjectId,
+            ref: 'User',
+            index: true
+        },
         isPinned: {
             type: Boolean,
             default: false,
@@ -53,7 +59,7 @@ const AnnouncementSchema = new Schema<IAnnouncement>(
     }
 );
 
-AnnouncementSchema.index({ createdAt: -1 });
+AnnouncementSchema.index({ tenantId: 1, createdAt: -1 });
 
 export const Announcement: Model<IAnnouncement> =
     (models.Announcement as Model<IAnnouncement>) || model<IAnnouncement>("Announcement", AnnouncementSchema);
