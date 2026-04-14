@@ -15,11 +15,10 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 
 export const metadata: Metadata = {
   title: "Technotoil WorkPortal",
-  description: "Internal work portal"
-};
-// Ensure favicon is served from public/favicon.ico — copy the file to public/
-metadata.icons = {
-  icon: "/favicon.ico"
+  description: "Internal work portal",
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
